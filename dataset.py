@@ -2,25 +2,28 @@ import cv2
 import numpy as np
 import os
 from analy import MY_ANALYSIS
+from generator_contour import  Generator_Contour,Save_Contour_pkl
 from analy import Save_signal_enum
 from scipy import signal 
 from image_trans import BaseTransform  
 from random import seed
 from random import random
+import pickle
+
 seed(1)
 Batch_size = 5
 Resample_size =71
 Path_length = 71
-Augment_limitation_flag = True
+Augment_limitation_flag = False
 Augment_add_lines = False
-Clip_mat_flag = True
-random_clip_flag = True
+Clip_mat_flag = False
+random_clip_flag = False
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
 
 class myDataloader(object):
     def __init__(self, batch_size,image_size,path_size):
-        self.dataroot = "../dataset/CostMatrix/"
-        self.signalroot ="../dataset/saved_stastics/" 
+        self.dataroot = "../dataset/For_contour_train/pic/"
+        self.signalroot ="../dataset/For_contour_train/label/" 
         self.read_all_flag=0
         self.read_record =0
         self.folder_pointer = 0
@@ -42,7 +45,7 @@ class myDataloader(object):
         number_i = 0
         # all_dir_list is subfolder list 
         #creat the image list point to the STASTICS TIS  list
-        saved_stastics = MY_ANALYSIS()
+        saved_stastics = Generator_Contour()
         #read all the folder list
         for subfold in self.all_dir_list:
             #if(number_i==0):
@@ -51,10 +54,15 @@ class myDataloader(object):
             self.folder_list[number_i] = this_folder_list2
 
             #change the dir firstly before read
-            saved_stastics.all_statics_dir = os.path.join(self.signalroot, subfold, 'signals.pkl')
-            self.signal[number_i]  =  saved_stastics.read_my_signal_results()
+            #saved_stastics.all_statics_dir = os.path.join(self.signalroot, subfold, 'contour.pkl')
+            this_contour_dir =  self.signalroot+ subfold+'/'+ 'contours.pkl' # for both linux and window
+
+            self.signal[number_i]  =  self.read_data(this_contour_dir)
             number_i +=1
             #read the folder list finished  get the folder list and all saved path
+    def read_data(self,root):
+        data = pickle.load(open(root,'rb'),encoding='iso-8859-1')
+        return data
     def gray_scale_augmentation(self,orig_gray) :
         random_scale = 0.7 + (1.5  - 0.7) * random()
         aug_gray = orig_gray * random_scale
@@ -105,18 +113,20 @@ class myDataloader(object):
             #this_img = cv2.resize(this_img, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
            
             #get the index of this Imag path
-            Path_Index_list = self.signal[self.folder_pointer].signals[Save_signal_enum.image_iD.value,:]
-            Path_Index_list = Path_Index_list.astype(int)
-            Path_Index_list = Path_Index_list.astype(str)
+            Path_Index_list = self.signal[self.folder_pointer].img_num[:]
+            #Path_Index_list = Path_Index_list.astype(int)
+            #Path_Index_list = Path_Index_list.astype(str)
 
             try:
-                Path_Index = Path_Index_list.tolist().index(Image_ID_str)
+                Path_Index = Path_Index_list.index(Image_ID)
             except ValueError:
                 print(Image_ID_str + "not path exsting")
 
             else:             
-                Path_Index = Path_Index_list.tolist().index(Image_ID_str)            
-                this_path = self.signal[self.folder_pointer].path_saving[Path_Index]
+                Path_Index = Path_Index_list.index(Image_ID)            
+                this_pathx = self.signal[self.folder_pointer].contoursx[Path_Index]
+                this_pathy = self.signal[self.folder_pointer].contoursy[Path_Index]
+
                 #path2 =  signal.resample(this_path, self.path_size)#resample the path
                 # concreate the image batch and path
                 this_gray  =   cv2.cvtColor(this_img, cv2.COLOR_BGR2GRAY)
@@ -131,22 +141,21 @@ class myDataloader(object):
                         this_gray  = np . clip( this_gray , clip_limitation,255) # change the clip value depend on the ID
                 if Augment_add_lines== True:
                     this_gray  = self.add_lines_to_matrix( this_gray  )
-                this_gray = self.gray_scale_augmentation(this_gray)
+                #this_gray = self.gray_scale_augmentation(this_gray)
                 H,W = this_gray.shape
-                piece_num  = int(W/H)
-                piece_W  = H
-                # fill the batch with small pieces
-                for  slice_point in range (piece_num):
-                    img_piece = this_gray[:,slice_point*piece_W:(slice_point+1)*piece_W]
-                    path_piece = this_path[slice_point*piece_W:(slice_point+1)*piece_W]
-                    #resample 
-                    img_piece = cv2.resize(img_piece, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
-                    path_piece =  signal.resample(path_piece, self.path_size)#resample the path
-                    self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]
-                    self.input_path [this_pointer , :] = path_piece
-                    this_pointer +=1
-                    if(this_pointer>=self.batch_size): # this batch has been filled
-                         break
+                clen = len(this_pathx)
+                img_piece = this_gray[:,this_pathx[0]:this_pathx[clen-1]]
+                path_piece = this_pathy
+                #resample 
+                img_piece = cv2.resize(img_piece, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
+                path_piece =  signal.resample(path_piece, self.path_size)#resample the path
+                path_piece =  path_piece*self.img_size/W#resample the path
+
+                self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]
+                self.input_path [this_pointer , :] = path_piece
+                this_pointer +=1
+                if(this_pointer>=self.batch_size): # this batch has been filled
+                        break
 
 
             i+=1

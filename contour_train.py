@@ -13,6 +13,9 @@ from analy import Save_signal_enum
 import cv2
 import numpy
 from image_trans import BaseTransform  
+from generator_contour import Generator_Contour,Save_Contour_pkl
+
+
 import os
 from dataset import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -24,7 +27,7 @@ if Visdom_flag == True:
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 
 
-pth_save_dir = "../out/deep_path_small_window/"
+pth_save_dir = "../out/deep_contour/"
  
 if not os.path.exists(pth_save_dir):
     os.makedirs(pth_save_dir)
@@ -212,7 +215,7 @@ while(1):
                  errD_real.data, D_x, 0, 0, 0))
         if Visdom_flag == True:
                 plotter.plot( 'LOSS', 'LOSS', 'LOSS', iteration_num, D_x.cpu().detach().numpy())
-        if read_id % 20 == 0 and Display_fig_flag== True:
+        if read_id % 1 == 0 and Display_fig_flag== True:
             #vutils.save_image(real_cpu,
             #        '%s/real_samples.png' % opt.outf,
             #        normalize=True)
@@ -242,7 +245,7 @@ while(1):
                 save_out[i]= min(save_out[i],Resample_size-1)
                 save_out[i]= max(save_out[i],0)    
                 show2[int(save_out[i]),i]=254
-                show2[int(path2[i]),i]=254
+                #show2[int(path2[i]),i]=254
 
 
             

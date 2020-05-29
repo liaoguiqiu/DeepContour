@@ -8,7 +8,7 @@ from torch.autograd import Variable
 import gan_body
 import arg_parse
 import imagenet
-
+from generator_contour import Generator_Contour
  
 
 opt = arg_parse.opt

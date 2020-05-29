@@ -30,6 +30,9 @@
     </Compile>
     <Compile Include="extract_imagenet.py" />
     <Compile Include="gan_body.py" />
+    <Compile Include="generator_contour.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="get_samples.py" />
     <Compile Include="imagenet.py" />
     <Compile Include="image_trans.py">
