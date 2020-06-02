@@ -144,14 +144,19 @@ class myDataloader(object):
                 #this_gray = self.gray_scale_augmentation(this_gray)
                 H,W = this_gray.shape
                 clen = len(this_pathx)
-                # crop the contour part to train
-                img_piece = this_gray[:,this_pathx[0]:this_pathx[clen-1]]
-                path_piece = this_pathy
+                #img_piece = this_gray[:,this_pathx[0]:this_pathx[clen-1]]
+                # no crop blank version 
+                img_piece = this_gray 
+                pathl = np.zeros(this_pathx[0])+ 2*H
+                pathr = np.zeros(W  - this_pathx[clen-1]) + 2*H
+                path_piece = np.append(pathl,this_pathy,axis=0)
+                path_piece = np.append(path_piece,pathr,axis=0)
+
                 #resample 
                 img_piece = cv2.resize(img_piece, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
                 path_piece =  signal.resample(path_piece, self.path_size)#resample the path
-                path_piece =  path_piece*self.img_size/W#resample the path
-
+                path_piece =  path_piece*self.img_size/H#resample the path
+                path_piece   = np.clip(path_piece,0,self.img_size)
                 self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]
                 self.input_path [this_pointer , :] = path_piece
                 this_pointer +=1
