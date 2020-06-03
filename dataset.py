@@ -11,7 +11,7 @@ from random import random
 import pickle
 
 seed(1)
-Batch_size = 30
+Batch_size = 100
 Resample_size =71
 Path_length = 71
 Augment_limitation_flag = False
@@ -141,7 +141,7 @@ class myDataloader(object):
                         this_gray  = np . clip( this_gray , clip_limitation,255) # change the clip value depend on the ID
                 if Augment_add_lines== True:
                     this_gray  = self.add_lines_to_matrix( this_gray  )
-                #this_gray = self.gray_scale_augmentation(this_gray)
+                this_gray = self.gray_scale_augmentation(this_gray)
                 H,W = this_gray.shape
                 clen = len(this_pathx)
                 # crop the contour part to train
@@ -155,8 +155,8 @@ class myDataloader(object):
                 self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]
                 self.input_path [this_pointer , :] = path_piece
                 this_pointer +=1
-                if(this_pointer>=self.batch_size): # this batch has been filled
-                        break
+                #if(this_pointer>=self.batch_size): # this batch has been filled
+                #        break
 
 
             i+=1

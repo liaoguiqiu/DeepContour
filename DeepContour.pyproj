@@ -31,6 +31,9 @@
     <Compile Include="dataset_full_path.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="deploy\validate.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="extract_imagenet.py" />
     <Compile Include="gan_body.py" />
     <Compile Include="generator_contour.py">
@@ -61,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="images" />
+    <Folder Include="deploy\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>
