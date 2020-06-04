@@ -11,9 +11,9 @@ from random import random
 import pickle
 
 seed(1)
-Batch_size = 100
-Resample_size =71
-Path_length = 71
+Batch_size = 1
+Resample_size =300
+Path_length = 300
 Augment_limitation_flag = False
 Augment_add_lines = False
 Clip_mat_flag = False
@@ -27,9 +27,9 @@ class myDataloader(object):
         self.read_all_flag=0
         self.read_record =0
         self.folder_pointer = 0
-        self.batch_size  = batch_size
-        self.img_size  = image_size
-        self.path_size  = path_size
+        self.batch_size  = Batch_size
+        self.img_size  = Resample_size
+        self.path_size  = Path_length
 
 
         self.input_image = np.zeros((batch_size,1,image_size,image_size))
@@ -150,9 +150,9 @@ class myDataloader(object):
                 #resample 
                 img_piece = cv2.resize(img_piece, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
                 path_piece =  signal.resample(path_piece, self.path_size)#resample the path
-                path_piece =  path_piece*self.img_size/W#resample the path
+                path_piece =  path_piece*self.img_size/H#resample the path
 
-                self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]
+                self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]/104.0
                 self.input_path [this_pointer , :] = path_piece
                 this_pointer +=1
                 #if(this_pointer>=self.batch_size): # this batch has been filled

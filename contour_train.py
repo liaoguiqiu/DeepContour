@@ -106,7 +106,7 @@ def weights_init(m):
 #netD = gan_body._netD_8()
 
 #Guiqiu Resnet version
-netD = gan_body._netD_8_multiscal_fusion()
+netD = gan_body._netD_8_multiscal_fusion300()
 #netD = gan_body._netD_Resnet()
 
 
@@ -180,7 +180,7 @@ while(1):
         #input = torch.from_numpy(numpy.float32(mydata_loader.input_image[0,:,:,:])) 
         input = input.to(device)                
    
-        patht= torch.from_numpy(numpy.float32(mydata_loader.input_path)/71.0 )
+        patht= torch.from_numpy(numpy.float32(mydata_loader.input_path)/Resample_size )
         #patht=patht.to(device)
                 
         #patht= torch.from_numpy(numpy.float32(mydata_loader.input_path[0,:])/71.0 )
@@ -225,9 +225,9 @@ while(1):
             #show the result
 
 
-            gray2  =   mydata_loader.input_image[0,0,:,:] +104
+            gray2  =   (mydata_loader.input_image[0,0,:,:] *104)+104
             show1 = gray2.astype(float)
-            path2 = mydata_loader.input_path[0,:]/71*(Resample_size-2)
+            path2 = mydata_loader.input_path[0,:]/Resample_size*(Resample_size-2)
             path2  = signal.resample(path2, Resample_size)
 
             for i in range ( len(path2)):

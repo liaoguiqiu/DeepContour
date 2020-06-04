@@ -189,128 +189,6 @@ class _netD_8(nn.Module):
 
         return x 
 
-class _netD_8_change_outactivation(nn.Module):
-    def __init__(self):
-        super(_netD_8_change_outactivation, self).__init__()
-        kernels = [6, 4, 4, 4, 2,2]
-        strides = [2, 2, 2, 2, 2,1]
-        pads =    [2, 1, 1, 1, 0,0]
-        layer_len = len(kernels)
-        #create the layer list
-        self.layers = nn.ModuleList()
-        for layer_pointer in range(layer_len):
-             # Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
-             # input is (nc) x 128 x 128
-            if  layer_pointer ==0:
-                this_input_depth = 3
-                this_output_depth = 16
-            else:
-                this_input_depth = this_output_depth
-                this_output_depth = this_output_depth*3
-
-
-    
-            if (layer_pointer == (layer_len-1)):
-                #self.layers = nn.Sequential(
-                #nn.Conv2d(this_input_depth, Path_length, kernels[layer_len -layer_pointer-1], strides[layer_len -layer_pointer-1], pads[layer_len -layer_pointer-1], bias=False),
-                #nn.Sigmoid()
-                # )
-                self.layers.append(
-                nn.Conv2d(this_input_depth, 1000, kernels[layer_pointer], strides[layer_pointer], pads[layer_pointer], bias=False),          
-                 )
-                #self.layers.append (
-                #nn.BatchNorm2d(1000),
-                #   )
-                #self.layers.append(
-                #nn. AdaptiveAvgPool2d(output_size=(1, 1)),    
-                # )
-                self.layers.append (
-                nn.LeakyReLU(0.2, inplace=False) #1
-                )
-                self.layers.append(
-                nn.Linear(1000, Path_length, bias=False),   #2       
-                 )
-                #self.layers.append (
-                #nn.BatchNorm2d(Path_length),
-                #   )
-                #self.layers.append (
-                #nn.BatchNorm2d(Path_length),
-                #   )
-                #self.layers.append(
-                #nn.Sigmoid()
-                # )
-            else:
-                  # input is (nc) x 64 x 64
-                self.layers.append (
-                nn.Conv2d(this_input_depth, this_output_depth, kernels[layer_pointer], strides[layer_pointer], pads[layer_pointer], bias=False),
-                )
-                self.layers.append (
-                nn.BatchNorm2d(this_output_depth),
-                   )
-                self.layers.append (
-                nn.LeakyReLU(0.2, inplace=False)
-                )
-            #self.layers.append(this_layer)
-    def forward(self, x):
-        #output = self.main(input)
-        #layer_len = len(kernels)
-        #for layer_point in range(layer_len):
-        #    if(layer_len==0):
-        #        output = self.layers[layer_point](input)
-        #    else:
-        #        output = self.layers[layer_point](output)
-        #for i, name in enumerate(self.layers):
-        #    x = self.layers[i](x)
-        for i, name in enumerate(self.layers):
-            x = self.layers[i](x)
-            if i == 15 :
-                x = x.view(Batch_size,-1).squeeze(1)# squess before fully connected 
-
-
-        return x 
-# mainly based on the resnet     
-class _netD_Resnet(nn.Module):
-    def __init__(self):
-        super(_netD_Resnet, self).__init__()
-
-        #layer_len = len(kernels)
-        #create the layer list
-        self.layers = nn.ModuleList()
-        #self.resnet18 = torchvision.models.resnet18(pretrained = False, **kwargs)
-        self.resnet18 = torchvision.models.resnet18(pretrained = False)
-        #self.resnet34 = torchvision.models.resnet34(pretrained = False)
-        #self.resnet101 = torchvision.models.resnet101(pretrained = False)
-
-
-
-        self.layers.append (self.resnet18)
-        self.layers.append (
-                nn.LeakyReLU(0.2, inplace=True)
-                )
-        self.layers.append(
-                nn.Linear(1000, Path_length, bias=False),          
-                 )
-                #self.layers.append (
-                #nn.BatchNorm2d(Path_length),
-                #   )
-        self.layers.append(
-                nn.Sigmoid()
-                 )
-            #self.layers.append(this_layer)
-    def forward(self, x):
-        #output = self.main(input)
-        #layer_len = len(kernels)
-        #for layer_point in range(layer_len):
-        #    if(layer_len==0):
-        #        output = self.layers[layer_point](input)
-        #    else:
-        #        output = self.layers[layer_point](output)
-        #for i, name in enumerate(self.layers):
-        #    x = self.layers[i](x)
-        for i, name in enumerate(self.layers):
-            x = self.layers[i](x)
-        return x 
-
 
     
 class _netD_8_multiscal_fusion(nn.Module):
@@ -464,6 +342,184 @@ class _netD_8_multiscal_fusion(nn.Module):
         side_out  = 0.6*side_out 
         x=0.4*x
         out  = side_out.add(x)
+        # return x
+        # return side_out
+        return out
+# mainly based on the resnet  
+
+    
+class _netD_8_multiscal_fusion300(nn.Module):
+    def __init__(self):
+        super(_netD_8_multiscal_fusion300, self).__init__()
+        kernels = [6, 4, 4, 4, 2,2]
+        strides = [2, 2, 2, 2, 2,1]
+        pads =    [2, 1, 1, 1, 0,0]
+        self.fully_connect_len  =1000
+        layer_len = len(kernels)
+
+        #a side branch predict with original iamge with rectangular kernel
+        # 300*300 - 150*300
+        feature = 6
+        self.side_branch1  =  nn.ModuleList()
+        self.side_branch1.append( nn.Sequential(
+             nn.Conv2d(3, feature,(4,3), (2,1), (1,1), bias=False),          
+             nn.BatchNorm2d(feature),
+             nn.LeakyReLU(0.1,inplace=True)
+            
+                                                    )
+                                 )
+        # 150*300 - 75*300
+
+        self.side_branch1.append( nn.Sequential(
+             nn.Conv2d(feature, feature*2,(4,3), (2,1), (1,1), bias=False),          
+             nn.BatchNorm2d(feature*2),
+             nn.LeakyReLU(0.1,inplace=True)
+            
+                                                    )
+                                 )
+        feature = feature *2
+        # 75*300  - 37*300
+
+        self.side_branch1.append( nn.Sequential(
+             nn.Conv2d(feature, feature*2,(4,3), (2,1), (1,1), bias=False),          
+             nn.BatchNorm2d(feature*2),
+             nn.LeakyReLU(0.1,inplace=True)
+            
+                                                    )
+                                 )
+        feature = feature *2
+        # 37*300  - 18*300
+
+        self.side_branch1.append( nn.Sequential(
+             nn.Conv2d(feature, feature*2,(4,3), (2,1), (1,1), bias=False),          
+             nn.BatchNorm2d(feature*2),
+             nn.LeakyReLU(0.1,inplace=True)
+            
+                                                    )
+                                 )
+        feature = feature *2
+        # 18*300  - 9*300
+
+        self.side_branch1.append( nn.Sequential(
+             nn.Conv2d(feature, feature*2,(4,3), (2,1), (1,1), bias=False),          
+             nn.BatchNorm2d(feature*2),
+             nn.LeakyReLU(0.1,inplace=True)
+            
+                                                    )
+                                 )
+        feature = feature *2
+        # 9*300  - 4*300
+
+        self.side_branch1.append( nn.Sequential(
+             nn.Conv2d(feature, feature*2,(4,3), (2,1), (1,1), bias=False),          
+             nn.BatchNorm2d(feature*2),
+             nn.LeakyReLU(0.1,inplace=True)
+            
+                                                    )
+                                 )
+        feature = feature *2
+        #self.side_branch1.append( nn.Sequential(
+        #     nn.Conv2d(256, 512,(64,3), (1,1), (0,1), bias=False),          
+        #     nn.BatchNorm2d(512),
+        #     nn.LeakyReLU(0.1,inplace=True)
+            
+        #                                            )
+        #                         )
+        self.side_branch1.append( nn.Sequential(
+             nn.Conv2d(feature, feature*2,(4,1), (1,1), (0,0), bias=False),          
+             nn.BatchNorm2d(feature*2),
+             nn.LeakyReLU(0.1,inplace=True)
+            
+                                                    )
+                                 )
+        feature = feature *2
+        self.side_branch1.append( nn.Sequential(
+              
+             nn.Conv2d(feature, 1,(1,1), (1,1), (0,0), bias=False)         
+             #nn.BatchNorm2d(1),
+             #nn.LeakyReLU(0.1,inplace=True)
+                                                    )
+                                 )
+
+        #create the layer list
+        self.layers = nn.ModuleList()
+        for layer_pointer in range(layer_len):
+             # Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
+             # input is (nc) x 128 x 128
+            if  layer_pointer ==0:
+                this_input_depth = 3
+                this_output_depth = 32
+            else:
+                this_input_depth = this_output_depth
+                this_output_depth = this_output_depth*3
+
+
+    
+            if (layer_pointer == (layer_len-1)):
+                #self.layers = nn.Sequential(
+                #nn.Conv2d(this_input_depth, Path_length, kernels[layer_len -layer_pointer-1], strides[layer_len -layer_pointer-1], pads[layer_len -layer_pointer-1], bias=False),
+                #nn.Sigmoid()
+                # )
+                self.layers.append(
+                nn.Conv2d(this_input_depth, self.fully_connect_len, kernels[layer_pointer], strides[layer_pointer], pads[layer_pointer], bias=False),          
+                 )
+                #self.layers.append (
+                #nn.BatchNorm2d(1000),
+                #   )
+                #self.layers.append(
+                #nn. AdaptiveAvgPool2d(output_size=(1, 1)),    
+                # )
+                self.layers.append (
+                nn.LeakyReLU(0.2, inplace=False) #1
+                )
+                self.layers.append(
+                nn.Linear(self.fully_connect_len, Path_length, bias=False),   #2       
+                 )
+                #self.layers.append (
+                #nn.BatchNorm2d(Path_length),
+                #   )
+                #self.layers.append (
+                #nn.BatchNorm2d(Path_length),
+                #   )
+                #self.layers.append(
+                #nn.Sigmoid()
+                # )
+            else:
+                  # input is (nc) x 64 x 64
+                self.layers.append (
+                nn.Conv2d(this_input_depth, this_output_depth, kernels[layer_pointer], strides[layer_pointer], pads[layer_pointer], bias=False),
+                )
+                self.layers.append (
+                nn.BatchNorm2d(this_output_depth),
+                   )
+                self.layers.append (
+                nn.LeakyReLU(0.2, inplace=False)
+                )
+            #self.layers.append(this_layer)
+    def forward(self, x):
+        #output = self.main(input)
+        #layer_len = len(kernels)
+        #for layer_point in range(layer_len):
+        #    if(layer_len==0):
+        #        output = self.layers[layer_point](input)
+        #    else:
+        #        output = self.layers[layer_point](output)
+        #for i, name in enumerate(self.layers):
+        #    x = self.layers[i](x)
+        side_out =x
+        for j, name in enumerate(self.side_branch1):
+            side_out = self.side_branch1[j](side_out)
+             
+        side_out = side_out.view(-1,Path_length).squeeze(1)# squess before fully connected 
+        for i, name in enumerate(self.layers):
+           x = self.layers[i](x)
+           if i == 15 :
+               x = x.view(-1,self.fully_connect_len).squeeze(1)# squess before fully connected 
+
+        #side_out  = 0.6*side_out 
+        #x=0.4*x
+        #out  = side_out.add(x)
+        out  = side_out
         # return x
         # return side_out
         return out

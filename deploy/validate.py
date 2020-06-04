@@ -15,17 +15,19 @@ import numpy
 from image_trans import BaseTransform  
 from generator_contour import Generator_Contour,Save_Contour_pkl
 import matplotlib.pyplot as plt
-Display_sig_flag = True
 from scipy import signal 
 from scipy.signal import find_peaks
+from scipy.ndimage import gaussian_filter1d
 
 
 import os
 from dataset import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
-Visdom_flag  = True 
+Visdom_flag  = False 
 Display_fig_flag = True
+Display_sig_flag = False
+
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
@@ -110,7 +112,7 @@ def weights_init(m):
 #netD = gan_body._netD_8()
 
 #Guiqiu Resnet version
-netD = gan_body._netD_8_multiscal_fusion()
+netD = gan_body._netD_8_multiscal_fusion300()
 #netD = gan_body._netD_Resnet()
 
 
@@ -184,18 +186,18 @@ while(1):
             len_b  = len(B_line)
             border1 = numpy.zeros(len_b) +1- 0.5*(1 - min(B_line))
             border2= numpy.ones(len_b)*1.1
-            peaks, _ = find_peaks(B_line, height=(border1, border2),distance=30,prominence=0.1)
+            peaks, _ = find_peaks(B_line, height=(border1, border2),distance=30,prominence=0.05)
             start = peaks[1]
             # to search border 
             for k  in range(ini_W):
                 this = B_line[start+k]
                 if this <=border1[start+k]:
-                    right  = start+k+100
+                    right  = start+k+200
                     break
             for k  in range(ini_W):
                 this = B_line[start-k]
                 if this <=border1[start-k]:
-                    left  = start-k+100
+                    left  = start-k
                     break
 
 
@@ -217,9 +219,9 @@ while(1):
         #mydata_loader .read_a_batch()
         #change to 3 chanels
         np_input = numpy.zeros((1,3,Resample_size,Resample_size)) # a batch with piece num
-        np_input[0,0,:,:] = img_piece - 104.0
-        np_input[0,1,:,:] = img_piece - 104.0
-        np_input[0,2,:,:] = img_piece - 104.0
+        np_input[0,0,:,:] = (img_piece - 104.0)/104.0
+        np_input[0,1,:,:] = (img_piece - 104.0)/104.0
+        np_input[0,2,:,:] = (img_piece - 104.0)/104.0
         
   
 
@@ -282,18 +284,28 @@ while(1):
         save_out = save_out.cpu().detach().numpy()
 
         save_out  = save_out  *(Resample_size)
+        #save_out = gaussian_filter1d(save_out,5)
         save_out  = signal.resample(save_out, Resample_size)
+        save_out = gaussian_filter1d(save_out,5)
+
 
         for i in range ( len(save_out)):
             save_out[i]= min(save_out[i],Resample_size-1)
             save_out[i]= max(save_out[i],0)    
             show2[int(save_out[i]),i]=254
             #show2[int(path2[i]),i]=254
-
-
+        ori_len  = right - left
+        save_out  = signal.resample(save_out, ori_len)
+        save_out =  save_out / Resample_size * ini_H
+        save_out  = numpy.clip(save_out,0,ini_H-1)
+        for i in range ( left,right):
+             
+            long[int(save_out[i-left]),i]=254
             
         #show3 = numpy.append(show1,show2,axis=1) # cascade
         cv2.imshow('Deeplearning one',show2.astype(numpy.uint8)) 
+        cv2.imshow('Deeplearning ori',long.astype(numpy.uint8)) 
+
 
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
