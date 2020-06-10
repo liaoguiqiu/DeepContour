@@ -34,6 +34,9 @@
     <Compile Include="deploy\validate.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="deploy\validate_full.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="extract_imagenet.py" />
     <Compile Include="gan_body.py" />
     <Compile Include="generator_contour.py">

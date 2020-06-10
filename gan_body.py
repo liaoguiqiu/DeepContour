@@ -351,9 +351,9 @@ class _netD_8_multiscal_fusion(nn.Module):
 class _netD_8_multiscal_fusion300(nn.Module):
     def __init__(self):
         super(_netD_8_multiscal_fusion300, self).__init__()
-        kernels = [6, 4, 4, 4, 2,2]
-        strides = [2, 2, 2, 2, 2,1]
-        pads =    [2, 1, 1, 1, 0,0]
+        kernels = [6, 4, 4, 4, 2,2,4]
+        strides = [2, 2, 2, 2, 2,2,1]
+        pads =    [2, 1, 1, 1, 0,0,0]
         self.fully_connect_len  =1000
         layer_len = len(kernels)
 
@@ -448,10 +448,10 @@ class _netD_8_multiscal_fusion300(nn.Module):
              # input is (nc) x 128 x 128
             if  layer_pointer ==0:
                 this_input_depth = 3
-                this_output_depth = 32
+                this_output_depth = 8
             else:
                 this_input_depth = this_output_depth
-                this_output_depth = this_output_depth*3
+                this_output_depth = this_output_depth*2
 
 
     
@@ -510,16 +510,17 @@ class _netD_8_multiscal_fusion300(nn.Module):
         for j, name in enumerate(self.side_branch1):
             side_out = self.side_branch1[j](side_out)
              
-        side_out = side_out.view(-1,Path_length).squeeze(1)# squess before fully connected 
+        side_out = side_out.view(-1,Path_length).squeeze(1)# squess before fully connected
+
         for i, name in enumerate(self.layers):
            x = self.layers[i](x)
-           if i == 15 :
+           if i == (len(self.layers)-2) :
                x = x.view(-1,self.fully_connect_len).squeeze(1)# squess before fully connected 
 
-        #side_out  = 0.6*side_out 
-        #x=0.4*x
-        #out  = side_out.add(x)
-        out  = side_out
+        side_out  = 0.6*side_out 
+        x=0.4*x
+        out  = side_out.add(x)
+        #out  = side_out
         # return x
         # return side_out
         return out

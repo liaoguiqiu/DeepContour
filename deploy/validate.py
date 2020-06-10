@@ -192,12 +192,12 @@ while(1):
             for k  in range(ini_W):
                 this = B_line[start+k]
                 if this <=border1[start+k]:
-                    right  = start+k+200
+                    right  = start+k+100
                     break
             for k  in range(ini_W):
                 this = B_line[start-k]
                 if this <=border1[start-k]:
-                    left  = start-k
+                    left  = start-k+100
                     break
 
 

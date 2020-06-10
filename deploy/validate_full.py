@@ -14,19 +14,25 @@ import cv2
 import numpy
 from image_trans import BaseTransform  
 from generator_contour import Generator_Contour,Save_Contour_pkl
+import matplotlib.pyplot as plt
+from scipy import signal 
+from scipy.signal import find_peaks
+from scipy.ndimage import gaussian_filter1d
 
 
 import os
 from dataset_full_path import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
-Visdom_flag  = True 
+Visdom_flag  = False 
 Display_fig_flag = True
+Display_sig_flag = False
+
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 
-
+validate_dir = "D:/PhD/trying/tradition_method/OCT/contour_vali/"
 pth_save_dir = "../out/deep_contour/"
  
 if not os.path.exists(pth_save_dir):
@@ -160,31 +166,79 @@ mydata_loader = myDataloader (Batch_size,Resample_size,Path_length)
 while(1):
     epoch+= 1
     #almost 900 pictures
-    while(1):
-        iteration_num +=1
-        read_id+=1
-        if (mydata_loader.read_all_flag ==1):
-            read_id =0
-            mydata_loader.read_all_flag =0
-            break
+    folderlist  = os.listdir(validate_dir)
+    start_num,_ =  os.path.splitext(folderlist[0])
+    start_num = int(start_num)
+    for i in range(len(folderlist)):
+        #a, b = os.path.splitext(i)
+            # 如果后缀名是“.xml”就旋转related的图像
+         
+        img_path = validate_dir + str(start_num) + ".jpg"
+        start_num+=1
+        img1 = cv2.imread(img_path)
+        img_piece  =   cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
+        ini_H,ini_W  = img_piece.shape
+        #img_piece = img_piece[0:ini_H,:]
+        ##img_piece = cv2.medianBlur(img_piece,5)
+        long =img_piece
+        #long = numpy.append(img_piece,img_piece,axis=1)
+        #long = numpy.append(long,img_piece,axis=1)
+        #B_line = numpy.sum(long, axis=0)/long.shape[0]
+        #B_line=  signal.medfilt(B_line,7)
+        #B_line= numpy.convolve(B_line, numpy.ones((200,))/200, mode='valid')
+        #B_line  = B_line/max(B_line)
+        #len_b  = len(B_line)
+        #border1 = numpy.zeros(len_b) +1- 0.5*(1 - min(B_line))
+        #border2= numpy.ones(len_b)*1.1
+        #peaks, _ = find_peaks(B_line, height=(border1, border2),distance=30,prominence=0.05)
+        #start = peaks[1]
+        ## to search border 
+        #for k  in range(ini_W):
+        #    this = B_line[start+k]
+        #    if this <=border1[start+k]:
+        #        right  = start+k+100
+        #        break
+        #for k  in range(ini_W):
+        #    this = B_line[start-k]
+        #    if this <=border1[start-k]:
+        #        left  = start-k+100
+        #        break
 
 
-        mydata_loader .read_a_batch()
+        #if Display_sig_flag == True:
+        #    fig = plt.figure()
+        #    ax = plt.axes()
+        #    ax.plot(B_line)
+
+        #    plt.plot(B_line)
+        #    plt.plot(border1, "--", color="gray")
+        #    plt.plot(border2, ":", color="gray")
+        #    plt.plot(peaks, B_line[peaks], "x")
+        #    plt.show()
+        #img_piece  = long[:,left:right]
+        img_piece = cv2.resize(img_piece, (Resample_size,Resample_size), interpolation=cv2.INTER_AREA)
+            
+
+
+        #mydata_loader .read_a_batch()
         #change to 3 chanels
-        ini_input = mydata_loader.input_image
-        np_input = numpy.append(ini_input,ini_input,axis=1)
-        np_input = numpy.append(np_input,ini_input,axis=1)
+        np_input = numpy.zeros((1,3,Resample_size,Resample_size)) # a batch with piece num
+        np_input[0,0,:,:] = (img_piece - 104.0)/104.0
+        np_input[0,1,:,:] = (img_piece - 104.0)/104.0
+        np_input[0,2,:,:] = (img_piece - 104.0)/104.0
+        
+  
 
         input = torch.from_numpy(numpy.float32(np_input)) 
         #input = input.to(device) 
         #input = torch.from_numpy(numpy.float32(mydata_loader.input_image[0,:,:,:])) 
         input = input.to(device)                
    
-        patht= torch.from_numpy(numpy.float32(mydata_loader.input_path)/Resample_size )
+        #patht= torch.from_numpy(numpy.float32(mydata_loader.input_path)/71.0 )
         #patht=patht.to(device)
                 
         #patht= torch.from_numpy(numpy.float32(mydata_loader.input_path[0,:])/71.0 )
-        patht=patht.to(device)
+        #patht=patht.to(device)
         #inputv = Variable(input)
         # using unsqueeze is import  for with out bactch situation
         #inputv = Variable(input.unsqueeze(0))
@@ -197,25 +251,20 @@ while(1):
         #inputv = Variable(input.unsqueeze(0))
         #patht =patht.view(-1, 1).squeeze(1)
 
-        labelv = Variable(patht)
+        #labelv = Variable(patht)
         output = netD(inputv)
-        output = output.view(Batch_size,Path_length).squeeze(1)
+        output = output[0,:]
         save_out  = output
-        netD.zero_grad()
-        errD_real = criterion(output, labelv)
-        errD_real.backward()
-        D_x = errD_real.data.mean()
-        optimizerD.step()
+        #netD.zero_grad()
+        #errD_real = criterion(output, labelv)
+        #errD_real.backward()
+        #D_x = errD_real.data.mean()
+        #optimizerD.step()
         # train with fake
         # if cv2.waitKey(12) & 0xFF == ord('q'):
         #       break 
          
-        print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
-              % (epoch, 0, read_id, 0,
-                 errD_real.data, D_x, 0, 0, 0))
-        if Visdom_flag == True:
-                plotter.plot( 'LOSS', 'LOSS', 'LOSS', iteration_num, D_x.cpu().detach().numpy())
-        if read_id % 1 == 0 and Display_fig_flag== True:
+         
             #vutils.save_image(real_cpu,
             #        '%s/real_samples.png' % opt.outf,
             #        normalize=True)
@@ -225,38 +274,43 @@ while(1):
             #show the result
 
 
-            gray2  =   (mydata_loader.input_image[0,0,:,:] *104)+104
-            show1 = gray2.astype(float)
-            path2 = mydata_loader.input_path[0,:] 
-            path2  = signal.resample(path2, Resample_size)
-            path2 = numpy.clip(path2,0,Resample_size-1)
-            for i in range ( len(path2)):
-                 
-                show1[int(path2[i]),i]=254
+        gray2  =   img_piece
+        show1 = gray2.astype(float)
+        #path2 = mydata_loader.input_path[0,:]/71*(Resample_size-2)
+        #path2  = signal.resample(path2, Resample_size)
+
+        #for i in range ( len(path2)):
+        #    path2[i]= min(path2[i],Resample_size-1)
+        #    path2[i]= max(path2[i],0)  
+        #    show1[int(path2[i]),i]=254
              
-            show2 =  gray2.astype(float)
-            save_out = save_out.cpu().detach().numpy()
+        show2 =  gray2.astype(float)
+        save_out = save_out.cpu().detach().numpy()
 
-            save_out  = save_out[0,:] *(Resample_size)
-            save_out  = signal.resample(save_out, Resample_size)
-            save_out = numpy.clip(save_out,0,Resample_size-1)
-            for i in range ( len(save_out)):
-                 
-                show2[int(save_out[i]),i]=254
-                #show2[int(path2[i]),i]=254
+        save_out  = save_out  *(Resample_size)
+        #save_out = gaussian_filter1d(save_out,5)
+        save_out  = signal.resample(save_out, Resample_size)
+        save_out = gaussian_filter1d(save_out,3)
 
 
+        for i in range ( len(save_out)):
+            save_out[i]= min(save_out[i],Resample_size-1)
+            save_out[i]= max(save_out[i],0)    
+            show2[int(save_out[i]),i]=254
+            #show2[int(path2[i]),i]=254
+        #ori_len  = right - left
+        save_out  = signal.resample(save_out, ini_W)
+        save_out =  save_out / Resample_size * ini_H
+        save_out  = numpy.clip(save_out,0,ini_H-1)
+        for i in range ( ini_W):
+             
+            long[int(save_out[i]),i]=254
             
-            show3 = numpy.append(show1,show2,axis=1) # cascade
-            cv2.imshow('Deeplearning one',show3.astype(numpy.uint8)) 
+        #show3 = numpy.append(show1,show2,axis=1) # cascade
+        cv2.imshow('Deeplearning one',show2.astype(numpy.uint8)) 
+        cv2.imshow('Deeplearning ori',long.astype(numpy.uint8)) 
 
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-              break
-    # do checkpointing
-    #torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch))
-    #torch.save(netD.state_dict(), '%s/netD_epoch_%d.pth' % (opt.outf, epoch
-    torch.save(netD.state_dict(), pth_save_dir+ "netD_epoch_"+str(epoch)+".pth")
-    #cv2.imwrite(Save_pic_dir  + str(epoch) +".jpg", show2)
-    cv2.imwrite(pth_save_dir  + str(epoch) +".jpg", show2)
-    if epoch >=5:
-        epoch =0
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+    

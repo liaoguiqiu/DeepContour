@@ -11,9 +11,9 @@ from random import random
 import pickle
 
 seed(1)
-Batch_size = 30
-Resample_size =71
-Path_length = 71
+Batch_size = 1
+Resample_size =300
+Path_length = 300
 Augment_limitation_flag = False
 Augment_add_lines = False
 Clip_mat_flag = False
@@ -146,22 +146,27 @@ class myDataloader(object):
                 clen = len(this_pathx)
                 #img_piece = this_gray[:,this_pathx[0]:this_pathx[clen-1]]
                 # no crop blank version 
+                factor=self.img_size/W
                 img_piece = this_gray 
-                pathl = np.zeros(this_pathx[0])+ 2*H
-                pathr = np.zeros(W  - this_pathx[clen-1]) + 2*H
+                img_piece = cv2.resize(img_piece, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
+                this_pathy =  signal.resample(this_pathy, int(clen*factor))#resample the path
+                #resample 
+                this_pathy =  this_pathy*self.img_size/H#resample the path
+
+                len1 = len(this_pathy)
+                pathl = np.zeros(int(this_pathx[0]*factor))+ 1.5*self.img_size
+                len2 = len(pathl)
+                pathr = np.zeros(self.img_size-len1-len2) + 1.5*self.img_size
                 path_piece = np.append(pathl,this_pathy,axis=0)
                 path_piece = np.append(path_piece,pathr,axis=0)
 
-                #resample 
-                img_piece = cv2.resize(img_piece, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
-                path_piece =  signal.resample(path_piece, self.path_size)#resample the path
-                path_piece =  path_piece*self.img_size/H#resample the path
-                path_piece   = np.clip(path_piece,0,self.img_size)
-                self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]
+                #path_piece   = np.clip(path_piece,0,self.img_size)
+                
+                self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]/104.0
                 self.input_path [this_pointer , :] = path_piece
                 this_pointer +=1
-                if(this_pointer>=self.batch_size): # this batch has been filled
-                        break
+                #if(this_pointer>=self.batch_size): # this batch has been filled
+                #        break
 
 
             i+=1
