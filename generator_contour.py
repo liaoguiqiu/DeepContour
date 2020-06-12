@@ -20,6 +20,30 @@ from analy_visdom import VisdomLinePlotter
 #from numba import jit
 import pickle
 from enum import Enum
+class Communicate(object):
+    def __init__(self ):
+        #set = Read_read_check_ROI_label()
+        #self.database_root = set.database_root
+        #check or create this path
+        #self.self_check_path_create(self.signal_data_path)
+        self.training= 1
+        self.writing = 2
+        self.pending = 1
+    def change_state(self):
+        if self.writing ==1:
+           self.writing =0
+        pass
+    def read_data(self,dir):
+        saved_path  = dir  + 'protocol.pkl'
+        self = pickle.load(open(saved_path,'rb'),encoding='iso-8859-1')
+        return self
+    def save_data(self,dir):
+        #save the data 
+        save_path = dir + 'protocol.pkl'
+        with open(save_path , 'wb') as f:
+            pickle.dump(self , f, pickle.HIGHEST_PROTOCOL)
+        pass
+
 class Save_Contour_pkl(object):
     def __init__(self ):
         #set = Read_read_check_ROI_label()

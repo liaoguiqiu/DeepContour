@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 from analy import MY_ANALYSIS
-from generator_contour import  Generator_Contour,Save_Contour_pkl
+from generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 from analy import Save_signal_enum
 from scipy import signal 
 from image_trans import BaseTransform  
@@ -19,14 +19,25 @@ Augment_add_lines = False
 Clip_mat_flag = False
 random_clip_flag = False
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
+ 
 
 class myDataloader(object):
     def __init__(self, batch_size,image_size,path_size):
+        # the variable for comunicating with generator
+        self.com_dir = "../dataset/telecom/"
+        self.talker = Communicate()
+        self.talker=self.talker.read_data(self.com_dir)
+        self.talker.training =1
+        self.talker.pending =0 # no pending so all folder can be writed
+        self.talker.writing =2 
+        self.talker.save_data(self.com_dir) # save
+        
+        
         self.dataroot = "../dataset/For_contour_train/pic/"
         self.signalroot ="../dataset/For_contour_train/label/" 
         self.read_all_flag=0
         self.read_record =0
-        self.folder_pointer = 0
+        self.folder_pointer = 1
         self.batch_size  = batch_size
         self.img_size  = image_size
         self.path_size  = path_size
@@ -90,9 +101,28 @@ class myDataloader(object):
 
         return matrix  
     def read_a_batch(self):
+
+        # communicate with another script
+         
+        # check
+        self.talker=self.talker.read_data(self.com_dir)
+
+        if self.talker.training ==1:
+           this_folder_dir = self.dataroot+"1/"
+           this_folder_list =  os.listdir(self.dataroot+"1/")
+           this_contour_dir =  self.signalroot+ "1/"+ 'contours.pkl' # for both linux and window
+           this_signal  =  self.read_data(this_contour_dir)
+           pass
+        elif self.talker.training ==2:
+           this_folder_dir = self.dataroot+"2/"
+           this_folder_list =  os.listdir(self.dataroot+"2/")
+           this_contour_dir =  self.signalroot+ "2/"+ 'contours.pkl' # for both linux and window
+           this_signal  =  self.read_data(this_contour_dir)
+           pass
+
         read_start = self.read_record
         #read_end  = self.read_record+ self.batch_size
-        thisfolder_len =  len (self.folder_list[self.folder_pointer])
+        thisfolder_len =  len (this_folder_list)
         
             #return self.input_image,self.input_path# if out this folder boundary, just returen
         this_pointer=0
@@ -102,18 +132,18 @@ class myDataloader(object):
             #this_pointer = i -read_start
             # get the all the pointers 
             #Image_ID , b = os.path.splitext(os.path.dirname(self.folder_list[self.folder_pointer][i]))
-            Path_dir,Image_ID =os.path.split(self.folder_list[self.folder_pointer][i])
+            Path_dir,Image_ID =os.path.split(this_folder_list[i])
             Image_ID_str,jpg = os.path.splitext(Image_ID)
             Image_ID = int(Image_ID_str)
             #start to read image and paths to fill in the input bach
-            this_image_path = self.folder_list[self.folder_pointer][i] # read saved path
+            this_image_path = this_folder_dir+this_folder_list[i] # read saved path
             this_img = cv2.imread(this_image_path)
 
             #resample 
             #this_img = cv2.resize(this_img, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
            
             #get the index of this Imag path
-            Path_Index_list = self.signal[self.folder_pointer].img_num[:]
+            Path_Index_list = this_signal.img_num[:]
             #Path_Index_list = Path_Index_list.astype(int)
             #Path_Index_list = Path_Index_list.astype(str)
 
@@ -124,8 +154,8 @@ class myDataloader(object):
 
             else:             
                 Path_Index = Path_Index_list.index(Image_ID)            
-                this_pathx = self.signal[self.folder_pointer].contoursx[Path_Index]
-                this_pathy = self.signal[self.folder_pointer].contoursy[Path_Index]
+                this_pathx = this_signal.contoursx[Path_Index]
+                this_pathy = this_signal.contoursy[Path_Index]
 
                 #path2 =  signal.resample(this_path, self.path_size)#resample the path
                 # concreate the image batch and path
@@ -173,10 +203,20 @@ class myDataloader(object):
             if (i>=thisfolder_len):
                 i=0
                 self.read_record =0
-                self.folder_pointer+=1
-                if (self.folder_pointer>= self.folder_num):
-                    self.read_all_flag =1
-                    self.folder_pointer =0
+                self.read_all_flag =1
+
+                #check
+                self.talker=self.talker.read_data(self.com_dir)
+                if self.talker.pending ==1:# pending , finish writing, so switch!
+                    self.talker.pending =0 # reset pending
+                    if self.talker.training==1:
+                        self.talker.training=2
+                    else:
+                        self.talker.training=1
+                    # change writing target
+                    
+                    self.talker.save_data(self.com_dir)
+
             if(this_pointer>=self.batch_size): # this batch has been filled
                 break
             pass

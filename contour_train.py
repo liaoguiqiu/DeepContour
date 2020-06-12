@@ -13,11 +13,11 @@ from analy import Save_signal_enum
 import cv2
 import numpy
 from image_trans import BaseTransform  
-from generator_contour import Generator_Contour,Save_Contour_pkl
+from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
 
 
 import os
-from dataset_full_path import myDataloader,Batch_size,Resample_size, Path_length
+from dataset_full_OLG import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = True 
