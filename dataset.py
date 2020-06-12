@@ -11,7 +11,7 @@ from random import random
 import pickle
 
 seed(1)
-Batch_size = 1
+Batch_size = 2
 Resample_size =300
 Path_length = 300
 Augment_limitation_flag = False
@@ -64,7 +64,7 @@ class myDataloader(object):
         data = pickle.load(open(root,'rb'),encoding='iso-8859-1')
         return data
     def gray_scale_augmentation(self,orig_gray) :
-        random_scale = 0.7 + (1.5  - 0.7) * random()
+        random_scale = 0.5 + (1.5  - 0.5) * random()
         aug_gray = orig_gray * random_scale
         aug_gray = np.clip(aug_gray, a_min = 1, a_max = 254)
 

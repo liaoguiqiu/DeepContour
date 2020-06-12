@@ -106,7 +106,7 @@ def weights_init(m):
 #netD = gan_body._netD_8()
 
 #Guiqiu Resnet version
-netD = gan_body._netD_8_multiscal_fusion300()
+netD = gan_body._netD_8_multiscal_fusion300_2()
 #netD = gan_body._netD_Resnet()
 
 
@@ -198,14 +198,30 @@ while(1):
         #patht =patht.view(-1, 1).squeeze(1)
 
         labelv = Variable(patht)
-        output = netD(inputv)
-        output = output.view(Batch_size,Path_length).squeeze(1)
-        save_out  = output
+        outputall = netD(inputv)
+        output = outputall[0].view(Batch_size,Path_length).squeeze(1)
+        output1 = outputall[1].view(Batch_size,Path_length).squeeze(1)
+        output2 = outputall[2].view(Batch_size,Path_length).squeeze(1)
+
+
         netD.zero_grad()
         errD_real = criterion(output, labelv)
-        errD_real.backward()
+        errD_real1 = criterion(output1, labelv)
+        errD_real2 = criterion(output2, labelv)
+        errD_real_fuse = 1.0*(errD_real+  errD_real1 +  0.5*errD_real2)
+        errD_real_fuse.backward()
+        
+        #errD_real.backward()
         D_x = errD_real.data.mean()
+        D_x1 = errD_real1.data.mean()
+        D_x2 = errD_real2.data.mean()
+        D_xf = errD_real_fuse.data.mean()
+
+
         optimizerD.step()
+
+        save_out  = output
+
         # train with fake
         # if cv2.waitKey(12) & 0xFF == ord('q'):
         #       break 
@@ -213,8 +229,11 @@ while(1):
         print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
               % (epoch, 0, read_id, 0,
                  errD_real.data, D_x, 0, 0, 0))
-        if Visdom_flag == True:
-                plotter.plot( 'LOSS', 'LOSS', 'LOSS', iteration_num, D_x.cpu().detach().numpy())
+        if read_id % 500 == 0 and Visdom_flag == True:
+                plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, D_x.cpu().detach().numpy())
+                plotter.plot( 'cLOSS1', 'cLOSS1', 'cLOSS1', iteration_num, D_x1.cpu().detach().numpy())
+                plotter.plot( 'cLOSS12', 'cLOSS2', 'cLOSS2', iteration_num, D_x2.cpu().detach().numpy())
+                plotter.plot( 'cLOSS_f', 'cLOSSf', 'cLOSSf', iteration_num, D_xf.cpu().detach().numpy())
         if read_id % 1 == 0 and Display_fig_flag== True:
             #vutils.save_image(real_cpu,
             #        '%s/real_samples.png' % opt.outf,

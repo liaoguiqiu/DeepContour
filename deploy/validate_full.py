@@ -112,7 +112,7 @@ def weights_init(m):
 #netD = gan_body._netD_8()
 
 #Guiqiu Resnet version
-netD = gan_body._netD_8_multiscal_fusion300()
+netD = gan_body._netD_8_multiscal_fusion300_2()
 #netD = gan_body._netD_Resnet()
 
 
@@ -253,7 +253,9 @@ while(1):
 
         #labelv = Variable(patht)
         output = netD(inputv)
+        output = output[0]
         output = output[0,:]
+
         save_out  = output
         #netD.zero_grad()
         #errD_real = criterion(output, labelv)
