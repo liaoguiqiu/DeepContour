@@ -11,7 +11,7 @@ from random import random
 import pickle
 
 seed(1)
-Batch_size = 5
+Batch_size = 1
 Resample_size =300
 Path_length = 300
 Augment_limitation_flag = False
@@ -27,9 +27,13 @@ class myDataloader(object):
         self.com_dir = "../dataset/telecom/"
         self.talker = Communicate()
         self.talker=self.talker.read_data(self.com_dir)
-        self.talker.training =1
+        if self.talker.writing==2:
+            self.talker.training =1
+        else:
+            self.talker.training =2
+
         self.talker.pending =0 # no pending so all folder can be writed
-        self.talker.writing =2 
+        #self.talker.writing =2 
         self.talker.save_data(self.com_dir) # save
         
         
@@ -75,7 +79,7 @@ class myDataloader(object):
         data = pickle.load(open(root,'rb'),encoding='iso-8859-1')
         return data
     def gray_scale_augmentation(self,orig_gray) :
-        random_scale = 0.3 + (1.5  - 0.3) * np.random.random_sample()
+        random_scale = 0.5 + (1.0  - 0.5) * np.random.random_sample()
         aug_gray = orig_gray * random_scale
         aug_gray = np.clip(aug_gray, a_min = 0, a_max = 254)
 
@@ -184,9 +188,9 @@ class myDataloader(object):
                 this_pathy =  this_pathy*self.img_size/H#resample the path
 
                 len1 = len(this_pathy)
-                pathl = np.zeros(int(this_pathx[0]*factor))+ 2*self.img_size
+                pathl = np.zeros(int(this_pathx[0]*factor))+ 1.2*self.img_size
                 len2 = len(pathl)
-                pathr = np.zeros(self.img_size-len1-len2) + 2*self.img_size
+                pathr = np.zeros(self.img_size-len1-len2) + 1.2*self.img_size
                 path_piece = np.append(pathl,this_pathy,axis=0)
                 path_piece = np.append(path_piece,pathr,axis=0)
 

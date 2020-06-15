@@ -208,8 +208,8 @@ while(1):
         errD_real = criterion(output, labelv)
         errD_real1 = criterion(output1, labelv)
         errD_real2 = criterion(output2, labelv)
-        errD_real_fuse = 1.0*(errD_real+  errD_real1 +  0.5*errD_real2)
-        errD_real_fuse.backward()
+        errD_real_fuse = 1.0*(errD_real+  0.1*errD_real1 +  0.1*errD_real2)
+        errD_real.backward()
         
         #errD_real.backward()
         D_x = errD_real.data.mean()
@@ -229,7 +229,7 @@ while(1):
         print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
               % (epoch, 0, read_id, 0,
                  errD_real.data, D_x, 0, 0, 0))
-        if read_id % 500 == 0 and Visdom_flag == True:
+        if read_id % 20 == 0 and Visdom_flag == True:
                 plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, D_x.cpu().detach().numpy())
                 plotter.plot( 'cLOSS1', 'cLOSS1', 'cLOSS1', iteration_num, D_x1.cpu().detach().numpy())
                 plotter.plot( 'cLOSS12', 'cLOSS2', 'cLOSS2', iteration_num, D_x2.cpu().detach().numpy())
