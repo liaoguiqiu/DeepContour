@@ -22,8 +22,8 @@ transform = BaseTransform(  Resample_size,[104])  #gray scale data
 
 class myDataloader(object):
     def __init__(self, batch_size,image_size,path_size):
-        self.dataroot = "../dataset/For_contour_train/pic/"
-        self.signalroot ="../dataset/For_contour_train/label/" 
+        self.dataroot = "../dataset/For_layers_train/pic/"
+        self.signalroot ="../dataset/For_layers_train/label/" 
         self.read_all_flag=0
         self.read_record =0
         self.folder_pointer = 0
@@ -33,7 +33,7 @@ class myDataloader(object):
 
 
         self.input_image = np.zeros((batch_size,1,image_size,image_size))
-        self.input_path = np.zeros((batch_size,path_size))
+        self.input_path = np.zeros((batch_size,4,path_size))
         self.all_dir_list = os.listdir(self.dataroot)
         self.folder_num = len(self.all_dir_list)
         # create the buffer list
@@ -104,7 +104,9 @@ class myDataloader(object):
             #Image_ID , b = os.path.splitext(os.path.dirname(self.folder_list[self.folder_pointer][i]))
             Path_dir,Image_ID =os.path.split(self.folder_list[self.folder_pointer][i])
             Image_ID_str,jpg = os.path.splitext(Image_ID)
-            Image_ID = int(Image_ID_str)
+            #Image_ID = int(Image_ID_str)
+            Image_ID = str(Image_ID_str)
+
             #start to read image and paths to fill in the input bach
             this_image_path = self.folder_list[self.folder_pointer][i] # read saved path
             this_img = cv2.imread(this_image_path)
@@ -123,7 +125,8 @@ class myDataloader(object):
                 print(Image_ID_str + "not path exsting")
 
             else:             
-                Path_Index = Path_Index_list.index(Image_ID)            
+                Path_Index = Path_Index_list.index(Image_ID)  
+                #for layers train alll  the x and y are list
                 this_pathx = self.signal[self.folder_pointer].contoursx[Path_Index]
                 this_pathy = self.signal[self.folder_pointer].contoursy[Path_Index]
 
@@ -141,30 +144,38 @@ class myDataloader(object):
                         this_gray  = np . clip( this_gray , clip_limitation,255) # change the clip value depend on the ID
                 if Augment_add_lines== True:
                     this_gray  = self.add_lines_to_matrix( this_gray  )
-                this_gray = self.gray_scale_augmentation(this_gray)
+                #this_gray = self.gray_scale_augmentation(this_gray)
                 H,W = this_gray.shape
-                clen = len(this_pathx)
+                c_num = len(this_pathx)
+
+                clen = len(this_pathx[0])
                 #img_piece = this_gray[:,this_pathx[0]:this_pathx[clen-1]]
                 # no crop blank version 
                 factor=self.img_size/W
                 img_piece = this_gray 
                 img_piece = cv2.resize(img_piece, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
-                this_pathy =  signal.resample(this_pathy, int(clen*factor))#resample the path
-                #resample 
-                this_pathy =  this_pathy*self.img_size/H#resample the path
+                for iter in range(c_num):
+                    # when consider about  the blaank area :
+                        #pathyiter =  signal.resample(this_pathy[iter], int(clen*factor))#resample the path
+                        ##resample 
+                        #pathyiter =  pathyiter*self.img_size/H#resample the path
 
-                # set the blank area ( left or right) of the contour to a specific high value 
-                len1 = len(this_pathy)
-                pathl = np.zeros(int(this_pathx[0]*factor))+ 2*self.img_size
-                len2 = len(pathl)
-                pathr = np.zeros(self.img_size-len1-len2) + 2*self.img_size
-                path_piece = np.append(pathl,this_pathy,axis=0)
-                path_piece = np.append(path_piece,pathr,axis=0)
+                        ## set the blank area ( left or right) of the contour to a specific high value 
+                        #pathl = np.zeros(int(this_pathx[iter][0]*factor))+ 2*self.img_size
+                        #len1 = len(pathyiter)
 
+                        #len2 = len(pathl)
+                        #pathr = np.zeros(self.img_size-len1-len2) + 2*self.img_size
+                        #path_piece = np.append(pathl,pathyiter,axis=0)
+                        #path_piece = np.append(path_piece,pathr,axis=0)
+                    pathyiter =  signal.resample(this_pathy[iter], self.img_size)#resample the path
+                    pathyiter =  pathyiter*self.img_size/H
+                    
+                    self.input_path [this_pointer ,iter, :] = pathyiter
                 #path_piece   = np.clip(path_piece,0,self.img_size)
                 
                 self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]/104.0
-                self.input_path [this_pointer , :] = path_piece
+                
                 this_pointer +=1
                 #if(this_pointer>=self.batch_size): # this batch has been filled
                 #        break

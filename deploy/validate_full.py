@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 from scipy import signal 
 from scipy.signal import find_peaks
 from scipy.ndimage import gaussian_filter1d
-
+from basic_trans import Basic_oper
 
 import os
 from dataset_full_path import myDataloader,Batch_size,Resample_size, Path_length
@@ -178,9 +178,12 @@ while(1):
         img1 = cv2.imread(img_path)
         img_piece  =   cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
         ini_H,ini_W  = img_piece.shape
-        #img_piece = img_piece[0:ini_H,:]
+        #img_piece = img_piece[300:ini_H,:]
         ##img_piece = cv2.medianBlur(img_piece,5)
-        long =img_piece
+        long =img_piece[250:ini_H,:]
+        ini_H,ini_W  = long.shape
+        img_piece  = long
+
         #long = numpy.append(img_piece,img_piece,axis=1)
         #long = numpy.append(long,img_piece,axis=1)
         #B_line = numpy.sum(long, axis=0)/long.shape[0]
@@ -216,16 +219,17 @@ while(1):
         #    plt.plot(peaks, B_line[peaks], "x")
         #    plt.show()
         #img_piece  = long[:,left:right]
+
         img_piece = cv2.resize(img_piece, (Resample_size,Resample_size), interpolation=cv2.INTER_AREA)
             
-
+        #img_piece = cv2.medianBlur(img_piece,5)
 
         #mydata_loader .read_a_batch()
         #change to 3 chanels
         np_input = numpy.zeros((1,3,Resample_size,Resample_size)) # a batch with piece num
-        np_input[0,0,:,:] = (img_piece - 104.0)/104.0
-        np_input[0,1,:,:] = (img_piece - 104.0)/104.0
-        np_input[0,2,:,:] = (img_piece - 104.0)/104.0
+        np_input[0,0,:,:] = (img_piece - 54.0)/54.0
+        np_input[0,1,:,:] = (img_piece - 54.0)/54.0
+        np_input[0,2,:,:] = (img_piece - 54.0)/54.0
         
   
 
@@ -292,25 +296,50 @@ while(1):
         save_out  = save_out  *(Resample_size)
         #save_out = gaussian_filter1d(save_out,5)
         save_out  = signal.resample(save_out, Resample_size)
-        save_out = gaussian_filter1d(save_out,3)
-
+        #save_out = gaussian_filter1d(save_out,3)
+        show3  = numpy.zeros((show2.shape[0],show2.shape[1],3))
+        show3[:,:,0]  =show3[:,:,1] = show3[:,:,2] = show2  
+         
+           
 
         for i in range ( len(save_out)):
             save_out[i]= min(save_out[i],Resample_size-1)
             save_out[i]= max(save_out[i],0)    
-            show2[int(save_out[i]),i]=254
+            show3[int(save_out[i]-1),i,2]=show3[int(save_out[i]-2),i,2]=254
+            show3[int(save_out[i]-3),i,2]=show3[int(save_out[i]-4),i,2]=254
+            if save_out[i] ==Resample_size-1:
+                show3[int(save_out[i]-1),i,1]=show3[int(save_out[i]-2),i,1]=254
+                show3[int(save_out[i]-3),i,1]=show3[int(save_out[i]-4),i,1]=254
             #show2[int(path2[i]),i]=254
         #ori_len  = right - left
+        padding = numpy.zeros((50,show2.shape[1],3))
+         
+        img  = numpy.append(padding,show3,axis=0)
+        circular1 = Basic_oper.tranfer_frome_rec2cir2(img) 
         save_out  = signal.resample(save_out, ini_W)
         save_out =  save_out / Resample_size * ini_H
         save_out  = numpy.clip(save_out,0,ini_H-1)
+                 
+        show  = numpy.zeros((long.shape[0],long.shape[1],3))
+        show[:,:,0]  =show[:,:,1] = show[:,:,2] = long  
         for i in range ( ini_W):
-             
-            long[int(save_out[i]),i]=254
-            
+            show[int(save_out[i]-1),i,0]=show[int(save_out[i]-2),i,0]=254
+            show[int(save_out[i]-3),i,0]=show[int(save_out[i]-4),i,0]=254
+            if save_out[i] ==ini_H-1:
+                show[int(save_out[i]-1),i,2]=show[int(save_out[i]-2),i,2]=254
+                show[int(save_out[i]-3),i,2]=show[int(save_out[i]-4),i,2]=254
+            #long[int(save_out[i]),i]=254
+        padding = numpy.zeros((200,long.shape[1],3))
+         
+        img  = numpy.append(padding,show,axis=0)
+        circular = Basic_oper.tranfer_frome_rec2cir2(img)    
         #show3 = numpy.append(show1,show2,axis=1) # cascade
         cv2.imshow('Deeplearning one',show2.astype(numpy.uint8)) 
-        cv2.imshow('Deeplearning ori',long.astype(numpy.uint8)) 
+        cv2.imshow('Deeplearning ori2',show.astype(numpy.uint8)) 
+        #cv2.imshow('Deeplearning ori3',circular.astype(numpy.uint8)) 
+        cv2.imshow('Deeplearning ori4',circular1.astype(numpy.uint8)) 
+
+
 
 
         if cv2.waitKey(1) & 0xFF == ord('q'):

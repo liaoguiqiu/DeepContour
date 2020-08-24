@@ -17,7 +17,7 @@ from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
 
 
 import os
-from dataset_full_OLG import myDataloader,Batch_size,Resample_size, Path_length
+from dataset_layers import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = True 
@@ -220,7 +220,7 @@ while(1):
 
         optimizerD.step()
 
-        save_out  = output2
+        save_out  = output
 
         # train with fake
         # if cv2.waitKey(12) & 0xFF == ord('q'):
