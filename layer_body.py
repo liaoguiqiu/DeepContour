@@ -333,18 +333,27 @@ class _netD_8_multiscal_fusion300_layer(nn.Module):
         self.side_branch2  =  nn.ModuleList()    
         self.side_branch2.append(  conv_keep_W(3,feature))
         # 150*300 - 75*150
+
         self.side_branch2.append(  conv_dv_2(feature,2*feature))#
         # 75*150  - 37*150
         feature = feature *2
+        self.side_branch2.append(  conv_keep_all(feature, feature))
+
         self.side_branch2.append(  conv_keep_W(feature,2*feature))
         # 37*150  - 18*75
         feature = feature *2
+        self.side_branch2.append(  conv_keep_all(feature, feature))
+
         self.side_branch2.append(  conv_dv_2(feature,2*feature))
         # 18*75  - 9*75
         feature = feature *2
+        self.side_branch2.append(  conv_keep_all(feature, feature))
+
         self.side_branch2.append(  conv_keep_W(feature,2*feature))
         # 9*75  - 4*75
         feature = feature *2
+        self.side_branch2.append(  conv_keep_all(feature, feature))
+
         self.side_branch2.append(  conv_keep_W(feature,2*feature))
 
         # 4*75  - 1*75
@@ -380,28 +389,28 @@ class _netD_8_multiscal_fusion300_layer(nn.Module):
              
         
 
-        #side_out2 =x
-        #for j, name in enumerate(self.side_branch2):
-        #    side_out2 = self.side_branch2[j](side_out2)
+        side_out2 =x
+        for j, name in enumerate(self.side_branch2):
+            side_out2 = self.side_branch2[j](side_out2)
              
 
         #fusion
-        #fuse1=self.branch1LU(side_out)
-        #side_out2 = nn.functional.interpolate(side_out2, size=(1, Path_length), mode='bilinear') 
+        fuse1=self.branch1LU(side_out)
+        side_out2 = nn.functional.interpolate(side_out2, size=(1, Path_length), mode='bilinear') 
 
-        #fuse2=self.branch2LU(side_out2)
+        fuse2=self.branch2LU(side_out2)
 
-        #fuse=torch.cat((fuse1,fuse2),1)
-        #fuse=self.fusion_layer(fuse)
-        ##local_bz,_,_,local_l = fuse.size() 
+        fuse=torch.cat((fuse1,fuse2),1)
+        fuse=self.fusion_layer(fuse)
+        #local_bz,_,_,local_l = fuse.size() 
 
-        #side_out = side_out.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
-        #side_out2 = side_out2.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
+        side_out = side_out.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
+        side_out2 = side_out2.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
 
-        #out  = fuse.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
+        out  = fuse.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
         
 
-        return side_out,side_out,side_out
+        return out,side_out,side_out2
 
         #return out,side_out,side_out2
 # mainly based on the resnet  

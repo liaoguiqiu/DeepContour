@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 from analy import MY_ANALYSIS
-from generator_contour import  Generator_Contour,Save_Contour_pkl
+from generator_contour import  Generator_Contour,Save_Contour_pkl,Generator_Contour_layers
 from analy import Save_signal_enum
 from scipy import signal 
 from image_trans import BaseTransform  
@@ -11,7 +11,7 @@ from random import random
 import pickle
 
 seed(1)
-Batch_size = 5
+Batch_size = 1
 Resample_size =300
 Path_length = 300
 Augment_limitation_flag = False
@@ -24,6 +24,7 @@ class myDataloader(object):
     def __init__(self, batch_size,image_size,path_size):
         self.dataroot = "../dataset/For_layers_train/pic/"
         self.signalroot ="../dataset/For_layers_train/label/" 
+        self.noisyflag = True
         self.read_all_flag=0
         self.read_record =0
         self.folder_pointer = 0
@@ -60,6 +61,52 @@ class myDataloader(object):
             self.signal[number_i]  =  self.read_data(this_contour_dir)
             number_i +=1
             #read the folder list finished  get the folder list and all saved path
+    def noisy(self,noise_typ,image):
+           if noise_typ == "none":
+              return image
+           if noise_typ == "blur":
+              blur =cv2.GaussianBlur(image,(5,5),0)
+              return blur
+           if noise_typ == "blur2":
+              blur =cv2.GaussianBlur(image,(7,7),0)
+              return blur
+           if noise_typ == "gauss_noise":
+              row,col = image.shape
+              mean = 0
+              var = 50
+              sigma = var**0.5
+              gauss = np.random.normal(mean,sigma,(row,col )) 
+              gauss = gauss.reshape(row,col ) 
+              noisy = image + gauss
+              return np.clip(noisy,0,254)
+           elif noise_typ == 's&p':
+              row,col  = image.shape
+              s_vs_p = 0.5
+              amount = 0.004
+              out = np.copy(image)
+              # Salt mode
+              num_salt = np.ceil(amount * image.size * s_vs_p)
+              coords = [np.random.randint(0, i - 1, int(num_salt))
+                      for i in image.shape]
+              out[coords] = 1
+
+              # Pepper mode
+              num_pepper = np.ceil(amount* image.size * (1. - s_vs_p))
+              coords = [np.random.randint(0, i - 1, int(num_pepper))
+                      for i in image.shape]
+              out[coords] = 0
+              return np.clip(out,0,254)
+           elif noise_typ == 'poisson':
+              vals = len(np.unique(image))
+              vals = 2 ** np.ceil(np.log2(vals))
+              noisy = np.random.poisson(image * vals) / float(vals)
+              return np.clip(noisy,0,254)
+           elif noise_typ =='speckle':
+              row,col  = image.shape
+              gauss = np.random.randn(row,col )
+              gauss = gauss.reshape(row,col )        
+              noisy = image + image * gauss
+              return np.clip(noisy,0,254)
     def read_data(self,root):
         data = pickle.load(open(root,'rb'),encoding='iso-8859-1')
         return data
@@ -104,8 +151,13 @@ class myDataloader(object):
             #Image_ID , b = os.path.splitext(os.path.dirname(self.folder_list[self.folder_pointer][i]))
             Path_dir,Image_ID =os.path.split(self.folder_list[self.folder_pointer][i])
             Image_ID_str,jpg = os.path.splitext(Image_ID)
+            Path_Index_list = self.signal[self.folder_pointer].img_num[:]
+
             #Image_ID = int(Image_ID_str)
-            Image_ID = str(Image_ID_str)
+            if type(Path_Index_list[0]) is str: 
+                Image_ID = str(Image_ID_str)
+            else:
+                Image_ID = int(Image_ID_str)
 
             #start to read image and paths to fill in the input bach
             this_image_path = self.folder_list[self.folder_pointer][i] # read saved path
@@ -115,7 +167,6 @@ class myDataloader(object):
             #this_img = cv2.resize(this_img, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
            
             #get the index of this Imag path
-            Path_Index_list = self.signal[self.folder_pointer].img_num[:]
             #Path_Index_list = Path_Index_list.astype(int)
             #Path_Index_list = Path_Index_list.astype(str)
 
@@ -142,8 +193,8 @@ class myDataloader(object):
                     else:
                         clip_limitation = np.random.random_sample()*20
                         this_gray  = np . clip( this_gray , clip_limitation,255) # change the clip value depend on the ID
-                if Augment_add_lines== True:
-                    this_gray  = self.add_lines_to_matrix( this_gray  )
+                #if Augment_add_lines== True:
+                #    this_gray  = self.add_lines_to_matrix( this_gray  )
                 #this_gray = self.gray_scale_augmentation(this_gray)
                 H,W = this_gray.shape
                 c_num = len(this_pathx)
@@ -154,6 +205,16 @@ class myDataloader(object):
                 factor=self.img_size/W
                 img_piece = this_gray 
                 img_piece = cv2.resize(img_piece, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
+                img_piece = self.gray_scale_augmentation(img_piece)
+                if self.noisyflag == True:
+
+                    img_piece  = self . noisy( "gauss_noise" ,  img_piece )
+                    img_piece  = self . noisy( "s&p" ,  img_piece )
+
+                    img_piece  = self . noisy( "poisson" ,  img_piece )
+                 
+
+
                 for iter in range(c_num):
                     # when consider about  the blaank area :
                         #pathyiter =  signal.resample(this_pathy[iter], int(clen*factor))#resample the path

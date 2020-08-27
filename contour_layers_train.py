@@ -14,7 +14,7 @@ from analy import Save_signal_enum
 import cv2
 import numpy
 from image_trans import BaseTransform  
-from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
+from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers
 
 
 import os
@@ -237,14 +237,14 @@ while(1):
 
         netD.zero_grad()
         errD_real = criterion(output, labelv)
-        #errD_real1 = criterion(output1, labelv)
-        #errD_real2 = criterion(output2, labelv)
-        #errD_real_fuse = 1.0*(errD_real+  0.00001*errD_real1 +  0.000001*errD_real2)
+        errD_real1 = criterion(output1, labelv)
+        errD_real2 = criterion(output2, labelv)
+        errD_real_fuse = 1.0*(errD_real+  0.1*errD_real1 +  0.1*errD_real2)
 
         #errD_real1.backward()errD_real = criterion(output, labelv)
-        errD_real1 = criterion(output1, labelv)
-        errD_real2 = criterion(output1, labelv)
-        errD_real_fuse =   0.1*errD_real1 +  0.1*errD_real2
+        #errD_real1 = criterion(output1, labelv)
+        #errD_real2 = criterion(output22, labelv)
+        #errD_real_fuse =   0.1*errD_real1 +  0.1*errD_real2
 
         errD_real_fuse.backward()
 
@@ -258,7 +258,7 @@ while(1):
 
         optimizerD.step()
 
-        save_out  = output1
+        save_out  = output
         # train with fake
         # if cv2.waitKey(12) & 0xFF == ord('q'):
         #       break 
