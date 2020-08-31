@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{bf6a4053-8842-49f4-bc13-3aa8116b1788}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>contour_layers_train.py</StartupFile>
+    <StartupFile>rendering.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -62,11 +62,20 @@
     <Compile Include="layer_body.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="layer_body_USN.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="layer_train_unspervised.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="main.py" />
     <Compile Include="contour_train.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PathNetbody.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="rendering.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="testDataReading.py">
