@@ -17,6 +17,7 @@ import cv2
 import numpy
 from image_trans import BaseTransform  
 from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers
+import rendering
 
 
 import os
@@ -112,7 +113,7 @@ def weights_init(m):
 netD = layer_body._netD_8_multiscal_fusion300_layer()
 net_Layer  = layer_body_USN._multiscal__layer__()
 net_attenuation = layer_body_USN._multiscal__attenuation__()
-
+net_intens   = layer_body_USN._multiscal__intensity__()
 
 #netD = gan_body._netD_Resnet()
 
@@ -120,20 +121,22 @@ net_attenuation = layer_body_USN._multiscal__attenuation__()
 
 
 netD.apply(weights_init)
+net_Layer.apply(weights_init)
+net_attenuation.apply(weights_init)
+net_intens .apply(weights_init)
+
 if opt.netD != '':
     netD.load_state_dict(torch.load(opt.netD))
+    net_Layer.load_state_dict(torch.load(opt.netD))
 print(netD)
- 
-
-net_Layer.apply(weights_init)
 #if opt.netD != '':
 #    netD.load_state_dict(torch.load(opt.netD))
 print(net_Layer)
-
-net_attenuation.apply(weights_init)
 #if opt.netD != '':
 #    netD.load_state_dict(torch.load(opt.netD))
 print(net_attenuation)
+print(net_intens)
+
 
 criterion = nn.L1Loss()
 criterion2  = nn.CrossEntropyLoss()
@@ -151,6 +154,8 @@ if opt.cuda:
     netD.cuda()
     net_Layer.cuda()
     net_attenuation.cuda()
+    net_intens.cuda()
+
 
     #netG.cuda()
     criterion.cuda()
@@ -165,6 +170,8 @@ fixed_noise = Variable(fixed_noise)
 optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
 optimizer_layer = optim.Adam(net_Layer.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
 optimizer_attenuation= optim.Adam(net_attenuation.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
+optimizer_intens= optim.Adam(net_intens.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
+
 
 #optimizerD = optim.SGD(netD.parameters(), lr=opt.lr,momentum= 0.9, weight_decay =2e-4 )
 
@@ -248,7 +255,10 @@ while(1):
         # predicti the layer position
         output_L = net_Layer(inputv)       
         output_A = net_attenuation(inputv)
-         
+        output_I = net_intens(inputv)
+        synthes  =  rendering.OCT_rendering(output_L,output_A,output_I,mydata_loader.batch_size)
+        synthes = (synthes -104.0)/104.0
+        inputv1  = inputv[:,0,:,:]
         #output_L1= outputall[1].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
 
 
@@ -261,29 +271,41 @@ while(1):
 
 
         netD.zero_grad()
-        errD_real = criterion(output, labelv)
-        errD_real1 = criterion(output1, labelv)
-        errD_real2 = criterion(output2, labelv)
-        errD_real_fuse = 1.0*(errD_real+  0.1*errD_real1 +  0.1*errD_real2)
+        net_Layer.zero_grad()
+        net_attenuation.zero_grad()
+        net_intens.zero_grad()
+        errD_real = criterion(synthes, inputv1)
+
+
+
+        #errD_real = criterion(output, labelv)
+        #errD_real1 = criterion(output1, labelv)
+        #errD_real2 = criterion(output2, labelv)
+        #errD_real_fuse = 1.0*(errD_real+  0.1*errD_real1 +  0.1*errD_real2)
 
         #errD_real1.backward()errD_real = criterion(output, labelv)
         #errD_real1 = criterion(output1, labelv)
         #errD_real2 = criterion(output22, labelv)
         #errD_real_fuse =   0.1*errD_real1 +  0.1*errD_real2
 
-        errD_real_fuse.backward()
+        errD_real.backward()
 
         
         #errD_real.backward()
         D_x = errD_real.data.mean()
-        D_x1 = errD_real1.data.mean()
-        D_x2 = errD_real2.data.mean()
-        D_xf = errD_real_fuse.data.mean()
+        #D_x1 = errD_real1.data.mean()
+        #D_x2 = errD_real2.data.mean()
+        #D_xf = errD_real_fuse.data.mean()
 
 
-        optimizerD.step()
+        #optimizerD.step()
+        optimizer_layer.step()
+        optimizer_attenuation.step()
+        optimizer_intens.step()
 
-        save_out  = output
+
+
+        save_out  = synthes
         # train with fake
         # if cv2.waitKey(12) & 0xFF == ord('q'):
         #       break 
@@ -293,9 +315,9 @@ while(1):
                  errD_real.data, D_x, 0, 0, 0))
         if read_id % 20 == 0 and Visdom_flag == True:
                 plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, D_x.cpu().detach().numpy())
-                plotter.plot( 'cLOSS1', 'cLOSS1', 'cLOSS1', iteration_num, D_x1.cpu().detach().numpy())
-                plotter.plot( 'cLOSS12', 'cLOSS2', 'cLOSS2', iteration_num, D_x2.cpu().detach().numpy())
-                plotter.plot( 'cLOSS_f', 'cLOSSf', 'cLOSSf', iteration_num, D_xf.cpu().detach().numpy())
+                #plotter.plot( 'cLOSS1', 'cLOSS1', 'cLOSS1', iteration_num, D_x1.cpu().detach().numpy())
+                #plotter.plot( 'cLOSS12', 'cLOSS2', 'cLOSS2', iteration_num, D_x2.cpu().detach().numpy())
+                #plotter.plot( 'cLOSS_f', 'cLOSSf', 'cLOSSf', iteration_num, D_xf.cpu().detach().numpy())
         if read_id % 1 == 0 and Display_fig_flag== True:
             #vutils.save_image(real_cpu,
             #        '%s/real_samples.png' % opt.outf,
@@ -308,32 +330,32 @@ while(1):
 
             gray2  =   (mydata_loader.input_image[0,0,:,:] *104)+104
             show1 = gray2.astype(float)
-            path2 = mydata_loader.input_path[0,:] 
-            #path2  = signal.resample(path2, Resample_size)
-            path2 = numpy.clip(path2,0,Resample_size-1)
+            #path2 = mydata_loader.input_path[0,:] 
+            ##path2  = signal.resample(path2, Resample_size)
+            #path2 = numpy.clip(path2,0,Resample_size-1)
             color1  = numpy.zeros((show1.shape[0],show1.shape[1],3))
             color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 
          
            
 
-            for i in range ( len(path2)):
-                color1 = draw_coordinates_color(color1,path2[i],i)
+            #for i in range ( len(path2)):
+            #    color1 = draw_coordinates_color(color1,path2[i],i)
                  
             
             
-            show2 =  gray2.astype(float)
             save_out = save_out.cpu().detach().numpy()
+            show2 =  save_out[0,:,:] *104 +104
 
-            save_out  = save_out[0,:] *(Resample_size)
-            #save_out  = signal.resample(save_out, Resample_size)
-            save_out = numpy.clip(save_out,0,Resample_size-1)
+            #save_out  = save_out[0,:] *(Resample_size)
+            ##save_out  = signal.resample(save_out, Resample_size)
+            #save_out = numpy.clip(save_out,0,Resample_size-1)
             color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
             color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
          
            
 
-            for i in range ( len(save_out)):
-                color = draw_coordinates_color(color,save_out[i],i)
+            #for i in range ( len(save_out)):
+            #    color = draw_coordinates_color(color,save_out[i],i)
                 
           
 

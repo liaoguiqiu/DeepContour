@@ -544,4 +544,136 @@ class _multiscal__attenuation__(nn.Module):
         return out#,side_out,side_out2
 
         #return out,side_out,side_out2
+        # This net s output multi attenation  ( here has 4 layers, so there should be 4 attenua)
+class _multiscal__intensity__(nn.Module):
+#output width=((W-F+2*P )/S)+1
+
+    def __init__(self):
+        super(_multiscal__intensity__, self).__init__()
+         
+        self.layer_num =4
+        #a side branch predict with original iamge with rectangular kernel
+        # 300*300 - 150*300
+        feature = 12
+        self.side_branch1  =  nn.ModuleList()    
+        self.side_branch1.append(  conv_keep_W(3,feature))
+        # 150*300 - 75*300
+        self.side_branch1.append(  conv_keep_all(feature, feature))
+        self.side_branch1.append(  conv_keep_W(feature,2*feature))
+        feature = feature *2
+        # 75*300  - 37*300
+        self.side_branch1.append(  conv_keep_all(feature, feature))
+        self.side_branch1.append(  conv_keep_W(feature,2*feature))
+        feature = feature *2
+        # 37*300  - 18*300
+        self.side_branch1.append(  conv_keep_all(feature, feature))
+        self.side_branch1.append(  conv_keep_W(feature,2*feature))
+        feature = feature *2
+        # 18*300  - 9*300
+        self.side_branch1.append(  conv_keep_all(feature, feature))
+        self.side_branch1.append(  conv_keep_W(feature,2*feature))
+        feature = feature *2
+        # 9*300  - 4*300
+
+        self.side_branch1.append(  conv_keep_W(feature,2*feature))
+        feature = feature *2
+        self.side_branch1.append(  conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0)))
+         
+        feature = feature *2
+        self.side_branch1.append( nn.Sequential(
+              
+             nn.Conv2d(feature, 1,(1,1), (1,1), (0,0), bias=False)         
+             #nn.BatchNorm2d(1),
+             #nn.LeakyReLU(0.1,inplace=True)
+                                                    )
+                                 )
+
+
+        #a side branch predict with original iamge with rectangular kernel
+        # 300*300 - 150*300
+        feature = 12
+        self.side_branch2  =  nn.ModuleList()    
+        self.side_branch2.append(  conv_keep_W(3,feature))
+        # 150*300 - 75*150
+
+        self.side_branch2.append(  conv_dv_2(feature,2*feature))#
+        # 75*150  - 37*150
+        feature = feature *2
+        self.side_branch2.append(  conv_keep_all(feature, feature))
+
+        self.side_branch2.append(  conv_keep_W(feature,2*feature))
+        # 37*150  - 18*75
+        feature = feature *2
+        self.side_branch2.append(  conv_keep_all(feature, feature))
+
+        self.side_branch2.append(  conv_dv_2(feature,2*feature))
+        # 18*75  - 9*75
+        feature = feature *2
+        self.side_branch2.append(  conv_keep_all(feature, feature))
+
+        self.side_branch2.append(  conv_keep_W(feature,2*feature))
+        # 9*75  - 4*75
+        feature = feature *2
+        self.side_branch2.append(  conv_keep_all(feature, feature))
+
+        self.side_branch2.append(  conv_keep_W(feature,2*feature))
+
+        # 4*75  - 1*75
+        feature = feature *2
+        self.side_branch2.append(  conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0)))
+        # 1*75  - 1*300
+         
+        feature = feature *2
+        self.side_branch2.append( nn.Sequential(
+              
+             nn.Conv2d(feature, 1,(1,1), (1,1), (0,0), bias=False)         
+             #nn.BatchNorm2d(1),
+             #nn.LeakyReLU(0.1,inplace=True)
+                                                    )
+                                 )
+        self.branch1LU = nn.LeakyReLU(0.1,inplace=True)
+        self.branch2LU = nn.LeakyReLU(0.1,inplace=True)
+        self.fusion_layer = nn.Conv2d(2,1,(1,3), (1,1), (0,1), bias=False)       
+
+    def forward(self, x):
+        #output = self.main(input)
+        #layer_len = len(kernels)
+        #for layer_point in range(layer_len):
+        #    if(layer_len==0):
+        #        output = self.layers[layer_point](input)
+        #    else:
+        #        output = self.layers[layer_point](output)
+        #for i, name in enumerate(self.layers):
+        #    x = self.layers[i](x)
+        side_out =x
+        for j, name in enumerate(self.side_branch1):
+            side_out = self.side_branch1[j](side_out)
+             
+        
+
+        side_out2 =x
+        for j, name in enumerate(self.side_branch2):
+            side_out2 = self.side_branch2[j](side_out2)
+             
+
+        #fusion
+        fuse1=self.branch1LU(side_out)
+        side_out2 = nn.functional.interpolate(side_out2, size=(1, Path_length), mode='bilinear') 
+
+        fuse2=self.branch2LU(side_out2)
+
+        fuse=torch.cat((fuse1,fuse2),1)
+        fuse=self.fusion_layer(fuse)
+        #local_bz,_,_,local_l = fuse.size() 
+
+        side_out = side_out.view(-1,1,Path_length).squeeze(1)# squess before fully connected
+        side_out2 = side_out2.view(-1,1,Path_length).squeeze(1)# squess before fully connected
+
+        out  = fuse.view(-1,1,Path_length).squeeze(1)# squess before fully connected
+        
+
+        return out#,side_out,side_out2
+
+        #return out,side_out,side_out2
+# mainly based on the resnet  
 # mainly based on the resnet  
