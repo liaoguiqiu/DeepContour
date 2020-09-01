@@ -6,8 +6,8 @@ import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torch.autograd import Variable
 import gan_body
-import layer_body_USN
 import layer_body
+import layer_generator_body
 
 import arg_parse
 import imagenet
@@ -17,7 +17,6 @@ import cv2
 import numpy
 from image_trans import BaseTransform  
 from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers
-import rendering
 
 
 import os
@@ -111,9 +110,7 @@ def weights_init(m):
 
 #Guiqiu Resnet version
 netD = layer_body._netD_8_multiscal_fusion300_layer()
-net_Layer  = layer_body_USN._multiscal__layer__()
-net_attenuation = layer_body_USN._multiscal__attenuation__()
-net_intens   = layer_body_USN._multiscal__intensity__()
+netG = layer_generator_body._generator__()
 
 #netD = gan_body._netD_Resnet()
 
@@ -121,26 +118,15 @@ net_intens   = layer_body_USN._multiscal__intensity__()
 
 
 netD.apply(weights_init)
-net_Layer.apply(weights_init)
-net_attenuation.apply(weights_init)
-net_intens .apply(weights_init)
+netG.apply(weights_init)
 
 if opt.netD != '':
     netD.load_state_dict(torch.load(opt.netD))
-    net_Layer.load_state_dict(torch.load('../out/deep_layers/netL_epoch_5.pth'))
-    net_attenuation.load_state_dict(torch.load('../out/deep_layers/netA_epoch_5.pth'))
-    net_intens.load_state_dict(torch.load('../out/deep_layers/netI_epoch_5.pth'))
+    netG.load_state_dict(torch.load('../out/deep_layers/netG_epoch_5.pth'))
 
-    #'../out/deep_layers/netD_epoch_5.pth'
+
 print(netD)
-#if opt.netD != '':
-#    netD.load_state_dict(torch.load(opt.netD))
-print(net_Layer)
-#if opt.netD != '':
-#    netD.load_state_dict(torch.load(opt.netD))
-print(net_attenuation)
-print(net_intens)
-
+ 
 
 criterion = nn.L1Loss()
 criterion2  = nn.CrossEntropyLoss()
@@ -156,11 +142,7 @@ fake_label = 0
 if opt.cuda:
     print("CUDA TRUE")
     netD.cuda()
-    net_Layer.cuda()
-    net_attenuation.cuda()
-    net_intens.cuda()
-
-
+    netG.cuda()
     #netG.cuda()
     criterion.cuda()
     input, label = input.cuda(), label.cuda()
@@ -172,10 +154,7 @@ fixed_noise = Variable(fixed_noise)
 # setup optimizer
 #optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
-optimizer_layer = optim.Adam(net_Layer.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
-optimizer_attenuation= optim.Adam(net_attenuation.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
-optimizer_intens= optim.Adam(net_intens.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
-
+optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
 
 #optimizerD = optim.SGD(netD.parameters(), lr=opt.lr,momentum= 0.9, weight_decay =2e-4 )
 
@@ -200,7 +179,7 @@ def draw_coordinates_color(img1,vy,color):
         elif color ==2:
            painter  = [0,0,254]
         else :
-           painter  = [254,254,0]
+           painter  = [0,0,0]
                     #path0  = signal.resample(path0, W)
         H,W,_ = img1.shape
         for j in range (W):
@@ -228,6 +207,9 @@ while(1):
         mydata_loader .read_a_batch()
         #change to 3 chanels
         ini_input = mydata_loader.input_image
+        real =  torch.from_numpy(numpy.float32(ini_input)) 
+        real = real.to(device)                
+
         np_input = numpy.append(ini_input,ini_input,axis=1)
         np_input = numpy.append(np_input,ini_input,axis=1)
 
@@ -256,33 +238,20 @@ while(1):
         labelv = Variable(patht)
         # just test the first boundary effect 
         #labelv  = labelv[:,0,:]
-        # predicti the layer position
-        output_L = net_Layer(inputv)       
-        output_A = net_attenuation(inputv)
-        output_I = net_intens(inputv)
-        synthes  =  rendering.OCT_rendering(output_L,output_A,output_I,mydata_loader.batch_size)
-        synthes = (synthes -104.0)/104.0
-        inputv1  = inputv[:,0,:,:]
-        #output_L1= outputall[1].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
-
-
+        Fake  = netG(labelv)
+        #outputall = netD(inputv)
+        #outputall =  outputall[:,:,0,:]
+        #output = outputall[0].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
         #output1 = outputall[1].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
         #output2 = outputall[2].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
-        #output = outputall[0]  
-        #output1 = outputall[1] 
-        #output2 = outputall[2]  
-        #output
+        ##output = outputall[0]  
+        ##output1 = outputall[1] 
+        ##output2 = outputall[2]  
+        ##output
 
 
-        netD.zero_grad()
-        net_Layer.zero_grad()
-        net_attenuation.zero_grad()
-        net_intens.zero_grad()
-        errD_real = criterion(synthes, inputv1)
-
-
-
-        #errD_real = criterion(output, labelv)
+        netG.zero_grad()
+        errD_real = criterion(Fake, real)
         #errD_real1 = criterion(output1, labelv)
         #errD_real2 = criterion(output2, labelv)
         #errD_real_fuse = 1.0*(errD_real+  0.1*errD_real1 +  0.1*errD_real2)
@@ -302,14 +271,9 @@ while(1):
         #D_xf = errD_real_fuse.data.mean()
 
 
-        #optimizerD.step()
-        optimizer_layer.step()
-        optimizer_attenuation.step()
-        optimizer_intens.step()
+        optimizerG.step()
 
-
-
-        save_out  = synthes
+        save_out  = Fake
         # train with fake
         # if cv2.waitKey(12) & 0xFF == ord('q'):
         #       break 
@@ -317,7 +281,7 @@ while(1):
         print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
               % (epoch, 0, read_id, 0,
                  errD_real.data, D_x, 0, 0, 0))
-        if read_id % 20 == 0 and Visdom_flag == True:
+        if read_id % 2 == 0 and Visdom_flag == True:
                 plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, D_x.cpu().detach().numpy())
                 #plotter.plot( 'cLOSS1', 'cLOSS1', 'cLOSS1', iteration_num, D_x1.cpu().detach().numpy())
                 #plotter.plot( 'cLOSS12', 'cLOSS2', 'cLOSS2', iteration_num, D_x2.cpu().detach().numpy())
@@ -332,34 +296,31 @@ while(1):
             #show the result
 
 
-            gray2  =   (mydata_loader.input_image[0,0,:,:] *104)+104
+            gray2  =   (mydata_loader.input_image[0,:,:] *104)+104
             show1 = gray2.astype(float)
-            #path2 = mydata_loader.input_path[0,:] 
-            ##path2  = signal.resample(path2, Resample_size)
-            #path2 = numpy.clip(path2,0,Resample_size-1)
-            color1  = numpy.zeros((show1.shape[0],show1.shape[1],3))
-            color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 
+            path2 = mydata_loader.input_path[0,:] 
+            #path2  = signal.resample(path2, Resample_size)
+            path2 = numpy.clip(path2,0,Resample_size-1)
+            color1  = numpy.zeros((show1.shape[2],show1.shape[1],3))
+            color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 [0,:,:]
          
            
 
-            #for i in range ( len(path2)):
-            #    color1 = draw_coordinates_color(color1,path2[i],i)
+            for i in range ( len(path2)):
+                color1 = draw_coordinates_color(color1,path2[i],i)
                  
             
             
-            save_out = save_out.cpu().detach().numpy()
-            show2 =  save_out[0,:,:] *104 +104
-             
-            layers  = output_L.cpu().detach().numpy()[0,:] *(Resample_size)
-            ##save_out  = signal.resample(save_out, Resample_size)
-            layers = numpy.clip(layers,0,Resample_size-1)
-            color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
+            show2 =  save_out[0,:,:].cpu().detach().numpy()*104+104
+
+            
+            color  = numpy.zeros((show2.shape[2],show2.shape[1],3))
             color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
          
            
 
-            for i in range ( len(layers)):
-                color = draw_coordinates_color(color,layers[i],i)
+            #for i in range ( len(path2)):
+            #    color = draw_coordinates_color(color,path2[i],i)
                 
           
 
@@ -375,13 +336,9 @@ while(1):
     # do checkpointing
     #torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch))
     #torch.save(netD.state_dict(), '%s/netD_epoch_%d.pth' % (opt.outf, epoch
-    #torch.save(netD.state_dict(), pth_save_dir+ "netD_epoch_"+str(epoch)+".pth")
-    torch.save(net_Layer.state_dict(), pth_save_dir+ "netL_epoch_"+str(epoch)+".pth")
-    torch.save(net_attenuation.state_dict(), pth_save_dir+ "netA_epoch_"+str(epoch)+".pth")
-    torch.save(net_intens.state_dict(), pth_save_dir+ "netI_epoch_"+str(epoch)+".pth")
-
+    torch.save(netG.state_dict(), pth_save_dir+ "netG_epoch_"+str(epoch)+".pth")
     #cv2.imwrite(Save_pic_dir  + str(epoch) +".jpg", show2)
-    cv2.imwrite(pth_save_dir  + str(epoch) +".jpg", show2)
+    #cv2.imwrite(pth_save_dir  + str(epoch) +".jpg", show2)
     if epoch >=5:
         epoch =0
 

@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import  arg_parse
 from arg_parse import kernels, strides, pads
-from  dataset import Path_length,Batch_size,Resample_size
+from  dataset_layers import Path_length,Batch_size,Resample_size
 import torchvision.models
 nz = int( arg_parse.opt.nz)
 ngf = int( arg_parse.opt.ngf)
@@ -315,7 +315,9 @@ class _multiscal__layer__(nn.Module):
 
         self.side_branch1.append(  conv_keep_W(feature,2*feature))
         feature = feature *2
-        self.side_branch1.append(  conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0)))
+        #self.side_branch1.append(  conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0))) # this is for 300
+        self.side_branch1.append(  conv_keep_W(feature,2*feature,k=(1,1),s=(1,1),p=(0,0)))
+
          
         feature = feature *2
         self.side_branch1.append( nn.Sequential(
@@ -358,7 +360,9 @@ class _multiscal__layer__(nn.Module):
 
         # 4*75  - 1*75
         feature = feature *2
-        self.side_branch2.append(  conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0)))
+        #self.side_branch2.append(  conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0))) # for 300
+        self.side_branch2.append(  conv_keep_W(feature,2*feature,k=(1,1),s=(1,1),p=(0,0)))
+
         # 1*75  - 1*300
          
         feature = feature *2
@@ -369,8 +373,10 @@ class _multiscal__layer__(nn.Module):
              #nn.LeakyReLU(0.1,inplace=True)
                                                     )
                                  )
-        self.branch1LU = nn.LeakyReLU(0.1,inplace=True)
-        self.branch2LU = nn.LeakyReLU(0.1,inplace=True)
+        #self.branch1LU = nn.LeakyReLU(0.1,inplace=True)
+        #self.branch2LU = nn.LeakyReLU(0.1,inplace=True)
+        self.branch1LU = nn.Tanh( )
+        self.branch2LU = nn.Tanh( )
         self.fusion_layer = nn.Conv2d(2*self.layer_num,self.layer_num,(1,3), (1,1), (0,1), bias=False)       
 
     def forward(self, x):
@@ -408,9 +414,12 @@ class _multiscal__layer__(nn.Module):
         side_out2 = side_out2.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
 
         out  = fuse.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
-        
+        final =out
+        # change the predcition as delta of layers
+        for k in range(1,self.layer_num):
+            final[:,k,:]=final[:,k,:] +  final[:,k-1,:]
 
-        return out#,side_out,side_out2
+        return final#,side_out,side_out2
 
 
 # This net s output multi attenation  ( here has 4 layers, so there should be 4 attenua)
@@ -446,7 +455,9 @@ class _multiscal__attenuation__(nn.Module):
 
         self.side_branch1.append(  conv_keep_W(feature,2*feature))
         feature = feature *2
-        self.side_branch1.append(  conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0)))
+        #self.side_branch1.append(  conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0)))
+        self.side_branch1.append(  conv_keep_W(feature,2*feature,k=(1,1),s=(1,1),p=(0,0)))
+
          
         feature = feature *2
         self.side_branch1.append( nn.Sequential(
@@ -489,7 +500,7 @@ class _multiscal__attenuation__(nn.Module):
 
         # 4*75  - 1*75
         feature = feature *2
-        self.side_branch2.append(  conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0)))
+        self.side_branch2.append(  conv_keep_W(feature,2*feature,k=(1,1),s=(1,1),p=(0,0))) # 4
         # 1*75  - 1*300
          
         feature = feature *2
@@ -500,8 +511,8 @@ class _multiscal__attenuation__(nn.Module):
              #nn.LeakyReLU(0.1,inplace=True)
                                                     )
                                  )
-        self.branch1LU = nn.LeakyReLU(0.1,inplace=True)
-        self.branch2LU = nn.LeakyReLU(0.1,inplace=True)
+        self.branch1LU = nn.Tanh( )
+        self.branch2LU = nn.Tanh( )
         self.fusion_layer = nn.Conv2d(2*self.layer_num,self.layer_num,(1,3), (1,1), (0,1), bias=False)       
 
     def forward(self, x):
@@ -577,7 +588,8 @@ class _multiscal__intensity__(nn.Module):
 
         self.side_branch1.append(  conv_keep_W(feature,2*feature))
         feature = feature *2
-        self.side_branch1.append(  conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0)))
+        #self.side_branch1.append(  conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0)))
+        self.side_branch1.append(  conv_keep_W(feature,2*feature,k=(1,1),s=(1,1),p=(0,0)))
          
         feature = feature *2
         self.side_branch1.append( nn.Sequential(
@@ -620,7 +632,9 @@ class _multiscal__intensity__(nn.Module):
 
         # 4*75  - 1*75
         feature = feature *2
-        self.side_branch2.append(  conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0)))
+        #self.side_branch2.append(  conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0)))
+        self.side_branch2.append(  conv_keep_W(feature,2*feature,k=(1,1),s=(1,1),p=(0,0)))
+
         # 1*75  - 1*300
          
         feature = feature *2
@@ -631,8 +645,8 @@ class _multiscal__intensity__(nn.Module):
              #nn.LeakyReLU(0.1,inplace=True)
                                                     )
                                  )
-        self.branch1LU = nn.LeakyReLU(0.1,inplace=True)
-        self.branch2LU = nn.LeakyReLU(0.1,inplace=True)
+        self.branch1LU = nn.Tanh( )
+        self.branch2LU = nn.Tanh( )
         self.fusion_layer = nn.Conv2d(2,1,(1,3), (1,1), (0,1), bias=False)       
 
     def forward(self, x):

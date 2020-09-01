@@ -4,15 +4,16 @@ import matplotlib.pyplot as plt
 import cv2
 import numpy as np
 def OCT_rendering(layers,atten_s,intens,Bz=5):
-    H  = 300 
-    W  = 300
+    H  = 64 
+    W  = 64
 
     I0= 400
+    atten_s = (0-atten_s)/400*1024/H
     layers = layers* H
     intens = intens * I0 # un normalized
     intens= intens.view(Bz,1,W)
     layer_num   = 4 
-    uii = -1/900
+    uii = -1/900*1024/H
     # remember to switch to cuda tensors  !!!
     #A  = torch.zeros([bz, 4,300], dtype=torch.float)
     #layers = torch.zeros([bz, 4,300], dtype=torch.float)
@@ -89,7 +90,7 @@ def OCT_rendering(layers,atten_s,intens,Bz=5):
     sum = torch.zeros([Bz, H,W], dtype=torch.float)
     for i in range(layer_num): 
         sum = sum+signal_extend[i,:,:,:]* window_extend[i,:,:,:]
-    sum =sum+60
+    sum =sum+30
     #one = sum[0,:,:] 
     #dis = one.cpu().detach().numpy() 
     #cv2.imshow('Deeplearning one',dis.astype(np.uint8)) 

@@ -12,8 +12,8 @@ import pickle
 
 seed(1)
 Batch_size = 5
-Resample_size =300
-Path_length = 300
+Resample_size =64
+Path_length = 64
 Augment_limitation_flag = False
 Augment_add_lines = False
 Clip_mat_flag = False
@@ -24,7 +24,7 @@ class myDataloader(object):
     def __init__(self, batch_size,image_size,path_size):
         self.dataroot = "../dataset/For_layers_train/pic/"
         self.signalroot ="../dataset/For_layers_train/label/" 
-        self.noisyflag = True
+        self.noisyflag = False
         self.read_all_flag=0
         self.read_record =0
         self.folder_pointer = 0
@@ -205,7 +205,7 @@ class myDataloader(object):
                 factor=self.img_size/W
                 img_piece = this_gray 
                 img_piece = cv2.resize(img_piece, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
-                img_piece = self.gray_scale_augmentation(img_piece)
+                #img_piece = self.gray_scale_augmentation(img_piece)
                 if self.noisyflag == True:
 
                     img_piece  = self . noisy( "gauss_noise" ,  img_piece )
