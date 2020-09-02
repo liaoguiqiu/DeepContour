@@ -12,8 +12,8 @@ import pickle
 
 seed(1)
 Batch_size = 5
-Resample_size =64
-Path_length = 64
+Resample_size =128
+Path_length = 128
 Augment_limitation_flag = False
 Augment_add_lines = False
 Clip_mat_flag = False

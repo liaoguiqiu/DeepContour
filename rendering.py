@@ -97,6 +97,21 @@ def OCT_rendering(layers,atten_s,intens,Bz=5):
     sum = sum.cuda()
     return sum
 
+def layers_visualized(layers,H):
+
+    bz,layer_n,W = layers.size() 
+    layers   =  layers * H
+    layers = layers.type(torch.IntTensor)
+    # out depth = 1
+    out  = torch.zeros([bz,1, H,W], dtype=torch.float)  
+    # every layer need to mask the front part :
+    for i in range(layer_n): 
+        for j in range(bz):
+            for k in range(W):
+                out[j,0,layers[j,i,k],k]=1
+    out   =( out  -0.5)/0.5
+    out  = out.cuda()
+    return out
  
 
 def pytorch_test():

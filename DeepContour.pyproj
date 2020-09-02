@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{bf6a4053-8842-49f4-bc13-3aa8116b1788}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>model\cGAN_build.py</StartupFile>
+    <StartupFile>layer_generator_cgan_trainpy.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -66,6 +66,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="layer_generator_body.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="layer_generator_cgan_trainpy.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="layer_generator_train.py">

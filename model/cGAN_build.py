@@ -1,12 +1,12 @@
 import time
 import torch
 from model.options.train_options import TrainOptions
-from base_model import BaseModel
+from model.base_model import BaseModel
 #from data import create_dataset
 #from models import create_model
 #from util.visualizer import Visualizer
 import importlib
-import pix2pix_model
+import model.pix2pix_model as pix2pix_model
 
 class CGAN_creator(object):
     def __init__(self):
