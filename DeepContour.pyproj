@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{bf6a4053-8842-49f4-bc13-3aa8116b1788}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>layer_generator_train.py</StartupFile>
+    <StartupFile>model\cGAN_build.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -78,6 +78,36 @@
     <Compile Include="contour_train.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="model\base_model.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\cGAN_build.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\networks.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\options\base_options.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\options\train_options.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\options\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\pix2pix_model.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\template_model.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\test_build.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\__init__py.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="PathNetbody.py">
       <SubType>Code</SubType>
     </Compile>
@@ -98,6 +128,8 @@
   <ItemGroup>
     <Folder Include="images" />
     <Folder Include="deploy\" />
+    <Folder Include="model\" />
+    <Folder Include="model\options\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>
