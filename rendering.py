@@ -100,6 +100,7 @@ def OCT_rendering(layers,atten_s,intens,Bz=5):
 def layers_visualized(layers,H):
 
     bz,layer_n,W = layers.size() 
+    #layers = layers +0.1
     layers   =  layers * H
     layers = layers.type(torch.IntTensor)
     # out depth = 1

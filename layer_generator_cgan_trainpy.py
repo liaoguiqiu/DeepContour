@@ -246,10 +246,10 @@ while(1):
         labelv = Variable(patht)
         # just test the first boundary effect 
         #labelv  = labelv[:,0,:]
-        realA = rendering.layers_visualized(labelv,Resample_size)
-        realB = real
-        #realA =  real
-        #realB =  rendering.layers_visualized(labelv,Resample_size)
+        #realA = rendering.layers_visualized(labelv,Resample_size)
+        #realB = real
+        realA =  real
+        realB =  rendering.layers_visualized(labelv,Resample_size)
 
         GANmodel.update_learning_rate()    # update learning rates in the beginning of every epoch.
         GANmodel.set_input(realA,realB)         # unpack data from dataset and apply preprocessing
