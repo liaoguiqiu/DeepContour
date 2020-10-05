@@ -1,6 +1,4 @@
-# this is the neweset cGAN implemetation, can swithch tthe AB domain to seg or gene
-# finished in spepetember , and latest check on 5th OCtober 2020
-
+# the run py script for sheal and contour detection, 5th October 2020 update
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
@@ -9,9 +7,7 @@ import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torch.autograd import Variable
 import gan_body
-import layer_body
-import layer_generator_body
-
+import layer_body_sheath
 import arg_parse
 import imagenet
 from analy import MY_ANALYSIS
@@ -20,11 +16,10 @@ import cv2
 import numpy
 from image_trans import BaseTransform  
 from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers
-from model import cGAN_build
-import rendering
+
 
 import os
-from dataset_layers import myDataloader,Batch_size,Resample_size, Path_length
+from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = True 
@@ -113,30 +108,16 @@ def weights_init(m):
 #netD = gan_body._netD_8()
 
 #Guiqiu Resnet version
-netD = layer_body._netD_8_multiscal_fusion300_layer()
-gancreator = cGAN_build.CGAN_creator()
-GANmodel= gancreator.creat_cgan()
+netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
 #netD = gan_body._netD_Resnet()
 
 
 
 
 netD.apply(weights_init)
-GANmodel.netD.apply(weights_init)
-GANmodel.netG.apply(weights_init)
-
-#netG.apply(weights_init)
-
 if opt.netD != '':
     netD.load_state_dict(torch.load(opt.netD))
-    #cGANG_epoch_
-    GANmodel.netG.load_state_dict(torch.load('../out/deep_layers/cGANG_epoch_5.pth'))
-    GANmodel.netD.load_state_dict(torch.load('../out/deep_layers/cGAND_epoch_5.pth'))
-
-
-print(GANmodel.netD)
-print(GANmodel.netG)
-
+print(netD)
  
 
 criterion = nn.L1Loss()
@@ -154,7 +135,6 @@ if opt.cuda:
     print("CUDA TRUE")
     netD.cuda()
     #netG.cuda()
-    #netG.cuda()
     criterion.cuda()
     input, label = input.cuda(), label.cuda()
     noise, fixed_noise = noise.cuda(), fixed_noise.cuda()
@@ -165,8 +145,6 @@ fixed_noise = Variable(fixed_noise)
 # setup optimizer
 #optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
-#optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
-
 #optimizerD = optim.SGD(netD.parameters(), lr=opt.lr,momentum= 0.9, weight_decay =2e-4 )
 
 
@@ -218,9 +196,6 @@ while(1):
         mydata_loader .read_a_batch()
         #change to 3 chanels
         ini_input = mydata_loader.input_image
-        real =  torch.from_numpy(numpy.float32(ini_input)) 
-        real = real.to(device)                
-
         np_input = numpy.append(ini_input,ini_input,axis=1)
         np_input = numpy.append(np_input,ini_input,axis=1)
 
@@ -250,69 +225,53 @@ while(1):
         # just test the first boundary effect 
         #labelv  = labelv[:,0,:]
 
-        ###
-        ###chnage the imout domain can use the same label to ralize generating or line segementation 
-        #realA = rendering.layers_visualized(labelv,Resample_size)
-        #realB = real
-        realA =  real
-        realB =  rendering.layers_visualized(labelv,Resample_size)
-
-        GANmodel.update_learning_rate()    # update learning rates in the beginning of every epoch.
-        GANmodel.set_input(realA,realB)         # unpack data from dataset and apply preprocessing
-        GANmodel.optimize_parameters()   # calculate loss functions, get gradients, update network weights
-
-         
-        #outputall = netD(inputv)
+        outputall = netD(inputv)
         #outputall =  outputall[:,:,0,:]
-        #output = outputall[0].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
-        #output1 = outputall[1].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
-        #output2 = outputall[2].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
-        ##output = outputall[0]  
-        ##output1 = outputall[1] 
-        ##output2 = outputall[2]  
-        ##output
+        output = outputall[0].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
+        output1 = outputall[1].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
+        output2 = outputall[2].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
+        #output = outputall[0]  
+        #output1 = outputall[1] 
+        #output2 = outputall[2]  
+        #output
 
 
-        #netG.zero_grad()
-        #errD_real = criterion(Fake, real)
-        ##errD_real1 = criterion(output1, labelv)
-        ##errD_real2 = criterion(output2, labelv)
-        ##errD_real_fuse = 1.0*(errD_real+  0.1*errD_real1 +  0.1*errD_real2)
+        netD.zero_grad()
+        errD_real = criterion(output, labelv)
+        errD_real1 = criterion(output1, labelv)
+        errD_real2 = criterion(output2, labelv)
+        errD_real_fuse = 1.0*(errD_real+  0.1*errD_real1 +  0.1*errD_real2)
 
-        ##errD_real1.backward()errD_real = criterion(output, labelv)
-        ##errD_real1 = criterion(output1, labelv)
-        ##errD_real2 = criterion(output22, labelv)
-        ##errD_real_fuse =   0.1*errD_real1 +  0.1*errD_real2
+        #errD_real1.backward()errD_real = criterion(output, labelv)
+        #errD_real1 = criterion(output1, labelv)
+        #errD_real2 = criterion(output22, labelv)
+        #errD_real_fuse =   0.1*errD_real1 +  0.1*errD_real2
 
-        #errD_real.backward()
+        errD_real_fuse.backward()
 
         
         #errD_real.backward()
-        D_x = GANmodel.loss_D.data.mean()
-        G_x = GANmodel.loss_G.data.mean()
-
-        #D_x1 = errD_real1.data.mean()
-        #D_x2 = errD_real2.data.mean()
-        #D_xf = errD_real_fuse.data.mean()
+        D_x = errD_real.data.mean()
+        D_x1 = errD_real1.data.mean()
+        D_x2 = errD_real2.data.mean()
+        D_xf = errD_real_fuse.data.mean()
 
 
-        #optimizerG.step()
+        optimizerD.step()
 
-        #save_out  = Fake
+        save_out  = output
         # train with fake
         # if cv2.waitKey(12) & 0xFF == ord('q'):
         #       break 
          
         print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
               % (epoch, 0, read_id, 0,
-                 G_x, D_x, 0, 0, 0))
+                 errD_real.data, D_x, 0, 0, 0))
         if read_id % 2 == 0 and Visdom_flag == True:
                 plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, D_x.cpu().detach().numpy())
-                plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, G_x.cpu().detach().numpy())
-
-                #plotter.plot( 'cLOSS1', 'cLOSS1', 'cLOSS1', iteration_num, D_x1.cpu().detach().numpy())
-                #plotter.plot( 'cLOSS12', 'cLOSS2', 'cLOSS2', iteration_num, D_x2.cpu().detach().numpy())
-                #plotter.plot( 'cLOSS_f', 'cLOSSf', 'cLOSSf', iteration_num, D_xf.cpu().detach().numpy())
+                plotter.plot( 'cLOSS1', 'cLOSS1', 'cLOSS1', iteration_num, D_x1.cpu().detach().numpy())
+                plotter.plot( 'cLOSS12', 'cLOSS2', 'cLOSS2', iteration_num, D_x2.cpu().detach().numpy())
+                plotter.plot( 'cLOSS_f', 'cLOSSf', 'cLOSSf', iteration_num, D_xf.cpu().detach().numpy())
         if read_id % 1 == 0 and Display_fig_flag== True:
             #vutils.save_image(real_cpu,
             #        '%s/real_samples.png' % opt.outf,
@@ -323,31 +282,34 @@ while(1):
             #show the result
 
 
-            gray2  =   realA[0,0,:,:].cpu().detach().numpy()*104+104
+            gray2  =   (mydata_loader.input_image[0,0,:,:] *104)+104
             show1 = gray2.astype(float)
-            #path2 = mydata_loader.input_path[0,:] 
-            ##path2  = signal.resample(path2, Resample_size)
-            #path2 = numpy.clip(path2,0,Resample_size-1)
+            path2 = mydata_loader.input_path[0,:] 
+            #path2  = signal.resample(path2, Resample_size)
+            path2 = numpy.clip(path2,0,Resample_size-1)
             color1  = numpy.zeros((show1.shape[0],show1.shape[1],3))
-            color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 [:,:]
+            color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 
          
            
 
-            #for i in range ( len(path2)):
-            #    color1 = draw_coordinates_color(color1,path2[i],i)
+            for i in range ( len(path2)):
+                color1 = draw_coordinates_color(color1,path2[i],i)
                  
-            saveout  = GANmodel.fake_B
             
-            show2 =  saveout[0,0,:,:].cpu().detach().numpy()*104+104
+            
+            show2 =  gray2.astype(float)
+            save_out = save_out.cpu().detach().numpy()
 
-            
+            save_out  = save_out[0,:] *(Resample_size)
+            #save_out  = signal.resample(save_out, Resample_size)
+            save_out = numpy.clip(save_out,0,Resample_size-1)
             color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
             color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
          
            
 
-            #for i in range ( len(path2)):
-            #    color = draw_coordinates_color(color,path2[i],i)
+            for i in range ( len(save_out)):
+                color = draw_coordinates_color(color,save_out[i],i)
                 
           
 
@@ -363,11 +325,9 @@ while(1):
     # do checkpointing
     #torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch))
     #torch.save(netD.state_dict(), '%s/netD_epoch_%d.pth' % (opt.outf, epoch
-    torch.save(GANmodel.netG.state_dict(), pth_save_dir+ "cGANG_epoch_"+str(epoch)+".pth")
-    torch.save(GANmodel.netD.state_dict(), pth_save_dir+ "cGAND_epoch_"+str(epoch)+".pth")
-
+    torch.save(netD.state_dict(), pth_save_dir+ "netD_epoch_"+str(epoch)+".pth")
     #cv2.imwrite(Save_pic_dir  + str(epoch) +".jpg", show2)
-    #cv2.imwrite(pth_save_dir  + str(epoch) +".jpg", show2)
+    cv2.imwrite(pth_save_dir  + str(epoch) +".jpg", show2)
     if epoch >=5:
         epoch =0
 

@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{bf6a4053-8842-49f4-bc13-3aa8116b1788}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>layer_train_unspervised.py</StartupFile>
+    <StartupFile>contour_sheath_train.py</StartupFile>
     <SearchPath />
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -28,6 +28,9 @@
     <Compile Include="contour_layers_train.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="contour_sheath_train.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="dataset.py">
       <SubType>Code</SubType>
     </Compile>
@@ -38,6 +41,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="dataset_layers.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="dataset_sheath.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="deploy\basic_trans.py">
@@ -60,6 +66,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="layer_body.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="layer_body_sheath.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="layer_body_USN.py">
