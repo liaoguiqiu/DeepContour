@@ -12,7 +12,7 @@ from random import random
 import pickle
 
 seed(1)
-Batch_size = 5
+Batch_size = 1
 Resample_size =300
 Path_length = 300
 Augment_limitation_flag = False
@@ -151,10 +151,10 @@ class myDataloader(object):
         #resample 
         this_pathy =  this_pathy*H2/H#unifrom
         # first determine the lef piece
-        pathl = np.zeros(int(px[0]*factor))+ 1.1*H2
+        pathl = np.zeros(int(px[0]*factor))+ 1.01*H2
         len1 = len(this_pathy)
         len2 = len(pathl)
-        pathr = np.zeros(W2-len1-len2) + 1.1*H2
+        pathr = np.zeros(W2-len1-len2) + 1.01*H2
         path_piece = np.append(pathl,this_pathy,axis=0)
         path_piece = np.append(path_piece,pathr,axis=0)
 
@@ -162,7 +162,7 @@ class myDataloader(object):
         #however because the label software can not label the leftmost and the rightmost points,
         #so it will be given a max value,  I crop the edge of the label, remember to crop the image correspondingly .
 
-        path_piece = signal.resample(path_piece[3:W2-3], W2)
+        #path_piece = signal.resample(path_piece[3:W2-3], W2)
         return path_piece
 
     def read_a_batch(self):

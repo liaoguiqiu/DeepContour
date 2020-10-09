@@ -15,7 +15,7 @@ from analy import Save_signal_enum
 import cv2
 import numpy
 from image_trans import BaseTransform  
-from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers
+from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers,Generator_Contour_sheath
 
 
 import os
@@ -29,7 +29,7 @@ if Visdom_flag == True:
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 
 
-pth_save_dir = "../out/deep_layers/"
+pth_save_dir = "../out/deep_sheath/"
  
 if not os.path.exists(pth_save_dir):
     os.makedirs(pth_save_dir)
@@ -240,7 +240,9 @@ while(1):
         errD_real = criterion(output, labelv)
         errD_real1 = criterion(output1, labelv)
         errD_real2 = criterion(output2, labelv)
-        errD_real_fuse = 1.0*(errD_real+  0.1*errD_real1 +  0.1*errD_real2)
+        #errD_real_fuse = 1.0*(errD_real+  0.1*errD_real1 +  0.1*errD_real2)
+        errD_real_fuse = 1.0*(errD_real )
+
 
         #errD_real1.backward()errD_real = criterion(output, labelv)
         #errD_real1 = criterion(output1, labelv)

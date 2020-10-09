@@ -1,6 +1,4 @@
-# this is the neweset cGAN implemetation, can swithch tthe AB domain to seg or gene
-# finished in spepetember , and latest check on 5th OCtober 2020
-
+# the run py script for sheal and contour detection, 5th October 2020 update
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
@@ -8,10 +6,10 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torch.autograd import Variable
-import gan_body
-import layer_body
-import layer_generator_body
-
+import gan_body 
+from model import cGAN_build # the mmodel
+ 
+import layer_body_sheath # the model
 import arg_parse
 import imagenet
 from analy import MY_ANALYSIS
@@ -19,14 +17,12 @@ from analy import Save_signal_enum
 import cv2
 import numpy
 from image_trans import BaseTransform  
-from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers
-from model import cGAN_build
-#import model. cGAN_build 
-
+from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers,Generator_Contour_sheath
 import rendering
 
+
 import os
-from dataset_layers import myDataloader,Batch_size,Resample_size, Path_length
+from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = True 
@@ -36,8 +32,9 @@ if Visdom_flag == True:
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 
 
+pth_save_dir = "../out/sheathCGAN/"
 pth_save_dir = "../out/deep_layers/"
- 
+
 if not os.path.exists(pth_save_dir):
     os.makedirs(pth_save_dir)
 from scipy import signal 
@@ -115,31 +112,26 @@ def weights_init(m):
 #netD = gan_body._netD_8()
 
 #Guiqiu Resnet version
-netD = layer_body._netD_8_multiscal_fusion300_layer()
-gancreator = cGAN_build.CGAN_creator()
-GANmodel= gancreator.creat_cgan()
+netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
+gancreator = cGAN_build.CGAN_creator() # the Cgan for the segmentation 
+GANmodel= gancreator.creat_cgan()  #  G and D are created here 
 #netD = gan_body._netD_Resnet()
 
 
 
 
-netD.apply(weights_init)
+#netD.apply(weights_init)
 GANmodel.netD.apply(weights_init)
 GANmodel.netG.apply(weights_init)
-
-#netG.apply(weights_init)
-
 if opt.netD != '':
-    netD.load_state_dict(torch.load(opt.netD))
-    #cGANG_epoch_
+    #netD.load_state_dict(torch.load(opt.netD))
     GANmodel.netG.load_state_dict(torch.load('../out/deep_layers/cGANG_epoch_5.pth'))
     GANmodel.netD.load_state_dict(torch.load('../out/deep_layers/cGAND_epoch_5.pth'))
 
-
 print(GANmodel.netD)
 print(GANmodel.netG)
+ # no longer use the mine nets 
 
- 
 
 criterion = nn.L1Loss()
 criterion2  = nn.CrossEntropyLoss()
@@ -156,7 +148,6 @@ if opt.cuda:
     print("CUDA TRUE")
     netD.cuda()
     #netG.cuda()
-    #netG.cuda()
     criterion.cuda()
     input, label = input.cuda(), label.cuda()
     noise, fixed_noise = noise.cuda(), fixed_noise.cuda()
@@ -167,8 +158,6 @@ fixed_noise = Variable(fixed_noise)
 # setup optimizer
 #optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
-#optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
-
 #optimizerD = optim.SGD(netD.parameters(), lr=opt.lr,momentum= 0.9, weight_decay =2e-4 )
 
 
@@ -257,7 +246,7 @@ while(1):
         #realA = rendering.layers_visualized(labelv,Resample_size)
         #realB = real
         realA =  real
-        realB =  rendering.layers_visualized(labelv,Resample_size)
+        realB =  rendering.layers_visualized_integer_encodeing(labelv,Resample_size)
 
         GANmodel.update_learning_rate()    # update learning rates in the beginning of every epoch.
         GANmodel.set_input(realA,realB)         # unpack data from dataset and apply preprocessing
@@ -340,7 +329,7 @@ while(1):
                  
             saveout  = GANmodel.fake_B
             
-            show2 =  saveout[0,0,:,:].cpu().detach().numpy()*104+104
+            show2 =  saveout[0,0,:,:].cpu().detach().numpy()*255 
 
             
             color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
@@ -360,6 +349,11 @@ while(1):
 
             cv2.imshow('Deeplearning one',show4.astype(numpy.uint8)) 
 
+            real_label = GANmodel.real_B
+            show5 =  real_label[0,0,:,:].cpu().detach().numpy()*255 
+            cv2.imshow('real',show5.astype(numpy.uint8)) 
+
+
             if cv2.waitKey(1) & 0xFF == ord('q'):
               break
     # do checkpointing
@@ -372,4 +366,5 @@ while(1):
     #cv2.imwrite(pth_save_dir  + str(epoch) +".jpg", show2)
     if epoch >=5:
         epoch =0
+
 

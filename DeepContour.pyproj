@@ -5,8 +5,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{bf6a4053-8842-49f4-bc13-3aa8116b1788}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>contour_sheath_train.py</StartupFile>
-    <SearchPath />
+    <StartupFile>contour_sheath_CGAN_train.py</StartupFile>
+    <SearchPath>model</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
@@ -26,6 +26,9 @@
     <Compile Include="arithmetic.py" />
     <Compile Include="classifier_svm.py" />
     <Compile Include="contour_layers_train.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="contour_sheath_CGAN_train.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="contour_sheath_train.py">
@@ -117,7 +120,7 @@
     <Compile Include="model\test_build.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="model\__init__py.py">
+    <Compile Include="model\__init__.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PathNetbody.py">

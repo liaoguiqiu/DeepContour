@@ -28,9 +28,9 @@ parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. de
 #parser.add_argument('--netG', default='../DCGANproject/out/netG_epoch_50.pth', help="path to netG (to continue training)")
 #parser.add_argument('--netD', default='../DCGANproject/out/netD_epoch_50.pth', help="path to netD (to continue training)")
 parser.add_argument('--netG', default='', help="path to netG (to continue training)")
-#parser.add_argument('--netD', default='../out/deep_layers/netD_epoch_5.pth', help="path to netD (to continue training)")
-#parser.add_argument('--netD', default='../out/deep_contour/netD_epoch_1.pth', help="path to netD (to continue training)")
-parser.add_argument('--netD', default='', help="path to netD (to continue training)")
+parser.add_argument('--netD', default='../out/deep_layers/netD_epoch_5.pth', help="path to netD (to continue training)")
+#parser.add_argument('--netD', default='../out/deep_contour/netD_epoch_5.pth', help="path to netD (to continue training)")
+#parser.add_argument('--netD', default='', help="path to netD (to continue training)")
 
 parser.add_argument('--outf', default='../DeepPathFinding/out/', help='folder to output images and model checkpoints')
 parser.add_argument('--manualSeed', type=int, help='manual seed')

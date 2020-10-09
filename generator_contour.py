@@ -102,3 +102,16 @@ class Generator_Contour_layers(object):
         data = pickle.load(open(root,'rb'),encoding='iso-8859-1')
         return data
     pass
+class Generator_Contour_sheath(object):
+    def __init__(self ):
+        #set = Read_read_check_ROI_label()
+        #self.database_root = set.database_root
+        #check or create this path
+        #self.self_check_path_create(self.signal_data_path)
+        self.img_num= []
+        self.contoursx = []
+        self.contoursy = []
+    def read_data(self,root):
+        data = pickle.load(open(root,'rb'),encoding='iso-8859-1')
+        return data
+    pass
