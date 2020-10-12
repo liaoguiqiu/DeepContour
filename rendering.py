@@ -132,6 +132,31 @@ def layers_visualized_integer_encodeing(layers,H): # this is for sheath contour 
     #out   =( out  -0.5)/0.5
     out  = out.cuda()
     return out
+def layers_visualized_OneHot_encodeing(layers,H): # this is for sheath contour segmentation 
+    # inetgral encoding return a  one channel map with different numers 
+    bz,layer_n,W = layers.size() 
+    #layers = layers +0.1
+    layers   =  layers * H
+    layers = layers.type(torch.IntTensor)
+    layers = torch.clamp(layers, 0, H)
+    # out depth = 3
+    out  = torch.zeros([bz,3, H,W], dtype=torch.float) #  has three channels of output, the none target area is zero 
+    # every layer need to mask the front part :
+    #for i in range(layer_n): 
+    for j in range(bz):
+        for k in range(W):
+            out[j,0,layers[j,0,k]:layers[j,1,k],k]= 1 # first chnnel is the backgrond 
+            #out[j,0,layers[j,1,k]:H,k]=1 #  
+
+            out[j,1,0:layers[j,0,k] ,k]=1 # second channel is the sheath, albels is 1
+
+            out[j,2,layers[j,1,k]:H,k]=1 # third  channel is the sheath, albels is 1
+
+
+
+    #out   =( out  -0.5)/0.5
+    out  = out.cuda()
+    return out
  
 
 def pytorch_test():

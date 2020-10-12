@@ -1,4 +1,6 @@
-# the run py script for sheal and contour detection, 5th October 2020 update
+# the run py script for sheal and contour detection, 12thth October 2020 update
+# the model build function should be the same and, with differnt encodign method and saving path
+#
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
@@ -24,6 +26,7 @@ import rendering
 import os
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+Continue_flag = False
 # Switch control for the Visdom or Not
 Visdom_flag  = False 
 Display_fig_flag = True
@@ -32,8 +35,9 @@ if Visdom_flag == True:
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 
 
-pth_save_dir = "../out/sheathCGAN/"
 pth_save_dir = "../out/deep_layers/"
+pth_save_dir = "../out/sheathCGAN_one_hot/"
+
 
 if not os.path.exists(pth_save_dir):
     os.makedirs(pth_save_dir)
@@ -123,10 +127,10 @@ GANmodel= gancreator.creat_cgan()  #  G and D are created here
 #netD.apply(weights_init)
 GANmodel.netD.apply(weights_init)
 GANmodel.netG.apply(weights_init)
-if opt.netD != '':
+if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
-    GANmodel.netG.load_state_dict(torch.load('../out/deep_layers/cGANG_epoch_5.pth'))
-    GANmodel.netD.load_state_dict(torch.load('../out/deep_layers/cGAND_epoch_5.pth'))
+    GANmodel.netG.load_state_dict(torch.load('../out/sheathCGAN_one_hot/cGANG_epoch_1.pth'))
+    GANmodel.netD.load_state_dict(torch.load('../out/sheathCGAN_one_hot/cGAND_epoch_1.pth'))
 
 print(GANmodel.netD)
 print(GANmodel.netG)
@@ -172,6 +176,7 @@ epoch=0
 #transform = BaseTransform(  Resample_size,[104])  #gray scale data
 iteration_num =0
 mydata_loader = myDataloader (Batch_size,Resample_size,Path_length)
+test_data_loader =  myDataloader (Batch_size,Resample_size,Path_length,validation=True)
 def draw_coordinates_color(img1,vy,color):
         
         if color ==0:
@@ -204,7 +209,10 @@ while(1):
             read_id =0
             mydata_loader.read_all_flag =0
             break
-
+        if (test_data_loader.read_all_flag ==1):
+            read_id =0
+            test_data_loader.read_all_flag =0
+            break
 
         mydata_loader .read_a_batch()
         #change to 3 chanels
@@ -246,7 +254,7 @@ while(1):
         #realA = rendering.layers_visualized(labelv,Resample_size)
         #realB = real
         realA =  real
-        realB =  rendering.layers_visualized_integer_encodeing(labelv,Resample_size)
+        realB =  rendering.layers_visualized_OneHot_encodeing (labelv,Resample_size) # realB 3 channnel
 
         GANmodel.update_learning_rate()    # update learning rates in the beginning of every epoch.
         GANmodel.set_input(realA,realB)         # unpack data from dataset and apply preprocessing
@@ -329,11 +337,14 @@ while(1):
                  
             saveout  = GANmodel.fake_B
             
-            show2 =  saveout[0,0,:,:].cpu().detach().numpy()*255 
+            show2 =  saveout[0,:,:,:].cpu().detach().numpy()*255 
 
             
-            color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
-            color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
+            color  = numpy.zeros((show2.shape[1],show2.shape[2],3))
+            color[:,:,0]  =  show2 [0,:,:]
+            color[:,:,1]  =  show2 [1,:,:]
+            color[:,:,2]  =  show2 [2,:,:]
+
          
            
 
@@ -350,8 +361,12 @@ while(1):
             cv2.imshow('Deeplearning one',show4.astype(numpy.uint8)) 
 
             real_label = GANmodel.real_B
-            show5 =  real_label[0,0,:,:].cpu().detach().numpy()*255 
-            cv2.imshow('real',show5.astype(numpy.uint8)) 
+            show5 =  real_label[0,:,:,:].cpu().detach().numpy()*255 
+            color  = numpy.zeros((show2.shape[1],show2.shape[2],3))
+            color[:,:,0]  =  show5 [0,:,:]
+            color[:,:,1]  =  show5 [1,:,:]
+            color[:,:,2]  =  show5 [2,:,:]
+            cv2.imshow('real',color.astype(numpy.uint8)) 
 
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -366,5 +381,6 @@ while(1):
     #cv2.imwrite(pth_save_dir  + str(epoch) +".jpg", show2)
     if epoch >=5:
         epoch =0
+
 
 

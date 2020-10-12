@@ -2,28 +2,23 @@
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
-import torchvision.datasets as dset
-import torchvision.transforms as transforms
-import torchvision.utils as vutils
 from torch.autograd import Variable
-import gan_body
 import layer_body_sheath
 import arg_parse
-import imagenet
-from analy import MY_ANALYSIS
-from analy import Save_signal_enum
 import cv2
 import numpy
-from image_trans import BaseTransform  
 from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers,Generator_Contour_sheath
 
 
+validation_flag =True
 import os
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
-Visdom_flag  = True 
+Visdom_flag  = False 
 Display_fig_flag = True
+Continue_flag = True
+
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
@@ -33,7 +28,6 @@ pth_save_dir = "../out/deep_sheath/"
  
 if not os.path.exists(pth_save_dir):
     os.makedirs(pth_save_dir)
-from scipy import signal 
 Matrix_dir =  "../dataset/CostMatrix/1/"
 Save_pic_dir = '../DeepPathFinding/out/'
 opt = arg_parse.opt
@@ -115,8 +109,8 @@ netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
 
 
 netD.apply(weights_init)
-if opt.netD != '':
-    netD.load_state_dict(torch.load(opt.netD))
+if Continue_flag == True:
+    netD.load_state_dict(torch.load('../out/deep_sheath/netD_epoch_5.pth'))
 print(netD)
  
 
@@ -159,6 +153,8 @@ epoch=0
 #transform = BaseTransform(  Resample_size,[104])  #gray scale data
 iteration_num =0
 mydata_loader = myDataloader (Batch_size,Resample_size,Path_length)
+test_data_loader =  myDataloader (Batch_size,Resample_size,Path_length,validation=True)
+
 def draw_coordinates_color(img1,vy,color):
         
         if color ==0:
@@ -181,6 +177,75 @@ def draw_coordinates_color(img1,vy,color):
 
 
         return img1
+def read_transform(data_loader):
+    #change to 3 chanels
+    ini_input = data_loader.input_image
+    np_input = numpy.append(ini_input,ini_input,axis=1)
+    np_input = numpy.append(np_input,ini_input,axis=1)
+
+    input = torch.from_numpy(numpy.float32(np_input)) 
+    #input = input.to(device) 
+    #input = torch.from_numpy(numpy.float32(mydata_loader.input_image[0,:,:,:])) 
+    input = input.to(device)                
+   
+    patht= torch.from_numpy(numpy.float32(data_loader.input_path)/Resample_size )
+    #patht=patht.to(device)
+                
+    #patht= torch.from_numpy(numpy.float32(mydata_loader.input_path[0,:])/71.0 )
+    patht=patht.to(device)
+    #inputv = Variable(input)
+    # using unsqueeze is import  for with out bactch situation
+    #inputv = Variable(input.unsqueeze(0))
+
+    #labelv = Variable(patht)
+    #inputv = input
+
+    #labelv = patht
+    inputv = Variable(input )
+    #inputv = Variable(input.unsqueeze(0))
+    #patht =patht.view(-1, 1).squeeze(1)
+
+    labelv = Variable(patht)
+    return inputv,labelv
+def display_prediction(mydata_loader,save_out):
+    gray2  =   (mydata_loader.input_image[0,0,:,:] *104)+104
+    show1 = gray2.astype(float)
+    path2 = mydata_loader.input_path[0,:] 
+    #path2  = signal.resample(path2, Resample_size)
+    path2 = numpy.clip(path2,0,Resample_size-1)
+    color1  = numpy.zeros((show1.shape[0],show1.shape[1],3))
+    color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 
+         
+           
+
+    for i in range ( len(path2)):
+        color1 = draw_coordinates_color(color1,path2[i],i)
+                 
+            
+            
+    show2 =  gray2.astype(float)
+    save_out = save_out.cpu().detach().numpy()
+
+    save_out  = save_out[0,:] *(Resample_size)
+    #save_out  = signal.resample(save_out, Resample_size)
+    save_out = numpy.clip(save_out,0,Resample_size-1)
+    color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
+    color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
+         
+           
+
+    for i in range ( len(save_out)):
+        color = draw_coordinates_color(color,save_out[i],i)
+                
+          
+
+
+            
+    #show3 = numpy.append(show1,show2,axis=1) # cascade
+    show4 = numpy.append(color1,color,axis=1) # cascade
+
+    cv2.imshow('Deeplearning one',show4.astype(numpy.uint8)) 
+
 while(1):
     epoch+= 1
     #almost 900 pictures
@@ -191,39 +256,18 @@ while(1):
             read_id =0
             mydata_loader.read_all_flag =0
             break
-
+        if (test_data_loader.read_all_flag ==1):
+           
+            test_data_loader.read_all_flag =0
+            
 
         mydata_loader .read_a_batch()
-        #change to 3 chanels
-        ini_input = mydata_loader.input_image
-        np_input = numpy.append(ini_input,ini_input,axis=1)
-        np_input = numpy.append(np_input,ini_input,axis=1)
-
-        input = torch.from_numpy(numpy.float32(np_input)) 
-        #input = input.to(device) 
-        #input = torch.from_numpy(numpy.float32(mydata_loader.input_image[0,:,:,:])) 
-        input = input.to(device)                
-   
-        patht= torch.from_numpy(numpy.float32(mydata_loader.input_path)/Resample_size )
-        #patht=patht.to(device)
-                
-        #patht= torch.from_numpy(numpy.float32(mydata_loader.input_path[0,:])/71.0 )
-        patht=patht.to(device)
-        #inputv = Variable(input)
-        # using unsqueeze is import  for with out bactch situation
-        #inputv = Variable(input.unsqueeze(0))
-
-        #labelv = Variable(patht)
-        #inputv = input
-
-        #labelv = patht
-        inputv = Variable(input )
-        #inputv = Variable(input.unsqueeze(0))
-        #patht =patht.view(-1, 1).squeeze(1)
-
-        labelv = Variable(patht)
+        test_data_loader.read_a_batch()
+        
         # just test the first boundary effect 
         #labelv  = labelv[:,0,:]
+
+        inputv,labelv = read_transform(mydata_loader)
 
         outputall = netD(inputv)
         #outputall =  outputall[:,:,0,:]
@@ -262,6 +306,16 @@ while(1):
         optimizerD.step()
 
         save_out  = output
+        if validation_flag==True:
+            inputvt,labelvt = read_transform(test_data_loader)
+
+            outputallt = netD(inputvt)
+            #outputall =  outputall[:,:,0,:]
+            outputt = outputallt[0].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
+            err_validation= criterion(outputt, labelvt)
+            save_test  = outputt
+
+
         # train with fake
         # if cv2.waitKey(12) & 0xFF == ord('q'):
         #       break 
@@ -270,10 +324,11 @@ while(1):
               % (epoch, 0, read_id, 0,
                  errD_real.data, D_x, 0, 0, 0))
         if read_id % 2 == 0 and Visdom_flag == True:
-                plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, D_x.cpu().detach().numpy())
-                plotter.plot( 'cLOSS1', 'cLOSS1', 'cLOSS1', iteration_num, D_x1.cpu().detach().numpy())
-                plotter.plot( 'cLOSS12', 'cLOSS2', 'cLOSS2', iteration_num, D_x2.cpu().detach().numpy())
-                plotter.plot( 'cLOSS_f', 'cLOSSf', 'cLOSSf', iteration_num, D_xf.cpu().detach().numpy())
+
+            plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, D_x.cpu().detach().numpy())
+            plotter.plot( 'cLOSS1', 'cLOSS1', 'cLOSS1', iteration_num, D_x1.cpu().detach().numpy())
+            plotter.plot( 'cLOSS12', 'cLOSS2', 'cLOSS2', iteration_num, D_x2.cpu().detach().numpy())
+            plotter.plot( 'cLOSS_f', 'cLOSSf', 'cLOSSf', iteration_num, D_xf.cpu().detach().numpy())
         if read_id % 1 == 0 and Display_fig_flag== True:
             #vutils.save_image(real_cpu,
             #        '%s/real_samples.png' % opt.outf,
@@ -284,43 +339,9 @@ while(1):
             #show the result
 
 
-            gray2  =   (mydata_loader.input_image[0,0,:,:] *104)+104
-            show1 = gray2.astype(float)
-            path2 = mydata_loader.input_path[0,:] 
-            #path2  = signal.resample(path2, Resample_size)
-            path2 = numpy.clip(path2,0,Resample_size-1)
-            color1  = numpy.zeros((show1.shape[0],show1.shape[1],3))
-            color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 
-         
-           
-
-            for i in range ( len(path2)):
-                color1 = draw_coordinates_color(color1,path2[i],i)
-                 
             
-            
-            show2 =  gray2.astype(float)
-            save_out = save_out.cpu().detach().numpy()
-
-            save_out  = save_out[0,:] *(Resample_size)
-            #save_out  = signal.resample(save_out, Resample_size)
-            save_out = numpy.clip(save_out,0,Resample_size-1)
-            color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
-            color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
-         
-           
-
-            for i in range ( len(save_out)):
-                color = draw_coordinates_color(color,save_out[i],i)
-                
-          
-
-
-            
-            #show3 = numpy.append(show1,show2,axis=1) # cascade
-            show4 = numpy.append(color1,color,axis=1) # cascade
-
-            cv2.imshow('Deeplearning one',show4.astype(numpy.uint8)) 
+            #display_prediction(mydata_loader,save_out)
+            display_prediction(test_data_loader,save_test)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
               break

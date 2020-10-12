@@ -22,9 +22,13 @@ random_clip_flag = False
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
 
 class myDataloader(object):
-    def __init__(self, batch_size,image_size,path_size):
+    def __init__(self, batch_size,image_size,path_size,validation= False):
         self.dataroot = "../dataset/For_contour_sheath_train/pic/"
         self.signalroot ="../dataset/For_contour_sheath_train/label/" 
+        if validation  == True :
+            self.dataroot = "../dataset/For_contour_sheath_train/test/pic/"
+            self.signalroot ="../dataset/For_contour_sheath_train/test/label/" 
+
         self.noisyflag = False
         self.read_all_flag=0
         self.read_record =0
@@ -136,7 +140,18 @@ class myDataloader(object):
                 matrix[i,lines-i+3] =value
 
 
-        return matrix  
+        return matrix 
+    def rolls(self,image,pathes):
+ 
+        H,W = image.shape
+        roller = np.random.random_sample() * W
+        roller = int (roller)
+        image = np.roll(image, roller, axis = 1)
+        pathes = np.roll(pathes, roller, axis = 1)
+
+
+
+        return image,pathes 
     def downSamp_path(self,py,px,H,W,H2,W2):
         # this function input the original coordinates of contour x and y, orginal image size and out put size
 
@@ -271,7 +286,7 @@ class myDataloader(object):
                     self.input_path [this_pointer ,iter, :] = path_piece
 
                 #path_piece   = np.clip(path_piece,0,self.img_size)
-                
+                img_piece, self.input_path [this_pointer ,:, :] = self.rolls(img_piece,self.input_path [this_pointer ,:, :])
                 self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]/104.0
                 
                 this_pointer +=1

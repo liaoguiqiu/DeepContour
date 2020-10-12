@@ -406,11 +406,13 @@ class _netD_8_multiscal_fusion300_layer(nn.Module):
         #local_bz,_,_,local_l = fuse.size() 
 
         side_out = side_out.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
+        side_out = nn.functional.tanh (side_out)  #  nn.Tanh (side_out)  nn.Tanh()(input)
         side_out2 = side_out2.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
+        side_out2 = nn.functional.tanh (side_out2)
 
-        out  = fuse.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
-        
-
+        #out  = fuse.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
+        out = 0.5 * side_out + 0.5* side_out2
+        #out
         return out,side_out,side_out2
 
         #return out,side_out,side_out2
