@@ -26,7 +26,7 @@ import rendering
 import os
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-Continue_flag = False
+Continue_flag = True
 # Switch control for the Visdom or Not
 Visdom_flag  = False 
 Display_fig_flag = True
@@ -129,8 +129,8 @@ GANmodel.netD.apply(weights_init)
 GANmodel.netG.apply(weights_init)
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
-    GANmodel.netG.load_state_dict(torch.load('../out/sheathCGAN_one_hot/cGANG_epoch_1.pth'))
-    GANmodel.netD.load_state_dict(torch.load('../out/sheathCGAN_one_hot/cGAND_epoch_1.pth'))
+    GANmodel.netG.load_state_dict(torch.load('../out/sheathCGAN_one_hot/cGANG_epoch_3.pth'))
+    GANmodel.netD.load_state_dict(torch.load('../out/sheathCGAN_one_hot/cGAND_epoch_3.pth'))
 
 print(GANmodel.netD)
 print(GANmodel.netG)

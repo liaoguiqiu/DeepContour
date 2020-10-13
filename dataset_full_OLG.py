@@ -25,6 +25,7 @@ class myDataloader(object):
     def __init__(self, batch_size,image_size,path_size):
         # the variable for comunicating with generator
         self.com_dir = "../dataset/telecom/"
+        # initial lizt the 
         self.talker = Communicate()
         self.talker=self.talker.read_data(self.com_dir)
         if self.talker.writing==2:

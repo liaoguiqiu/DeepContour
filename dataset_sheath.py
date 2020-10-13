@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import os
 from analy import MY_ANALYSIS
-from generator_contour import  Generator_Contour,Save_Contour_pkl,Generator_Contour_layers
+from generator_contour import  Generator_Contour,Save_Contour_pkl,Generator_Contour_layers,Communicate
 from analy import Save_signal_enum
 from scipy import signal 
 from image_trans import BaseTransform  
@@ -23,13 +23,38 @@ transform = BaseTransform(  Resample_size,[104])  #gray scale data
 
 class myDataloader(object):
     def __init__(self, batch_size,image_size,path_size,validation= False):
-        self.dataroot = "../dataset/For_contour_sheath_train/pic/"
-        self.signalroot ="../dataset/For_contour_sheath_train/label/" 
+        self.OLG_flag = True
+        self.com_dir = "../dataset/telecom/" # this dir is for the OLG
+         # initial lizt the 
+        self.talker = Communicate()
+        self.talker=self.talker.read_data(self.com_dir)
+        if self.talker.writing==2:
+            self.talker.training =1
+        else:
+            self.talker.training =2
+
+        self.talker.pending =0 # no pending so all folder can be writed
+        #self.talker.writing =2 
+        self.talker.save_data(self.com_dir) # save
+
+
+        self.dataroot = "../dataset/For_contour_sheath_train/train/pic/"
+        self.signalroot ="../dataset/For_contour_sheath_train/train/label/" 
+        if self.OLG_flag == True:
+           self.dataroot = "../dataset/For_contour_sheath_train/train_OLG/pic/"
+           self.signalroot ="../dataset/For_contour_sheath_train/train_OLG/label/" 
+
+
         if validation  == True :
+            self.OLG_flag = False
             self.dataroot = "../dataset/For_contour_sheath_train/test/pic/"
             self.signalroot ="../dataset/For_contour_sheath_train/test/label/" 
+        
+        
 
-        self.noisyflag = False
+
+
+        self.noisyflag = True
         self.read_all_flag=0
         self.read_record =0
         self.folder_pointer = 0
@@ -182,19 +207,46 @@ class myDataloader(object):
 
     def read_a_batch(self):
         read_start = self.read_record
+        this_folder_list  = self.folder_list[self.folder_pointer]
         #read_end  = self.read_record+ self.batch_size
-        thisfolder_len =  len (self.folder_list[self.folder_pointer])
+        this_signal = self.signal[self.folder_pointer]
         #return self.input_image,self.input_path# if out this folder boundary, just returen
         this_pointer=0
         i=read_start
+
+        if self.OLG_flag ==True:
+            # check
+            self.talker=self.talker.read_data(self.com_dir)
+
+            if self.talker.training ==1:
+               this_folder_dir = self.dataroot+"1/"
+               this_folder_list =  os.listdir(self.dataroot+"1/")
+               # convert subfolder list to full folder listr
+               this_folder_list2 = [ self.dataroot +"1/" + "/" + pointer for pointer in this_folder_list]
+               this_folder_list = this_folder_list2
+               this_contour_dir =  self.signalroot+ "1/"+ 'contours.pkl' # for both linux and window
+               this_signal  =  self.read_data(this_contour_dir)
+               pass
+            elif self.talker.training ==2:
+               this_folder_dir = self.dataroot+"2/"
+               this_folder_list =  os.listdir(self.dataroot+"2/")
+               # convert subfolder list to full folder listr
+               this_folder_list2 = [ self.dataroot +"2/" + "/" + pointer for pointer in this_folder_list]
+               this_folder_list = this_folder_list2
+               this_contour_dir =  self.signalroot+ "2/"+ 'contours.pkl' # for both linux and window
+               this_signal  =  self.read_data(this_contour_dir)
+               pass
+
+        thisfolder_len =  len (this_folder_list)
+
         while (1):
         #for i in range(read_start, read_end):
             #this_pointer = i -read_start
             # get the all the pointers 
             #Image_ID , b = os.path.splitext(os.path.dirname(self.folder_list[self.folder_pointer][i]))
-            Path_dir,Image_ID =os.path.split(self.folder_list[self.folder_pointer][i])
+            Path_dir,Image_ID =os.path.split(this_folder_list[i])
             Image_ID_str,jpg = os.path.splitext(Image_ID)
-            Path_Index_list = self.signal[self.folder_pointer].img_num[:]
+            Path_Index_list = this_signal.img_num[:]
 
             #Image_ID = int(Image_ID_str)
             if type(Path_Index_list[0]) is str: 
@@ -203,7 +255,7 @@ class myDataloader(object):
                 Image_ID = int(Image_ID_str)
 
             #start to read image and paths to fill in the input bach
-            this_image_path = self.folder_list[self.folder_pointer][i] # read saved path
+            this_image_path = this_folder_list[i] # read saved path
             this_img = cv2.imread(this_image_path)
 
             #resample 
@@ -221,8 +273,8 @@ class myDataloader(object):
             else:             
                 Path_Index = Path_Index_list.index(Image_ID)  
                 #for layers train alll  the x and y are list
-                this_pathx = self.signal[self.folder_pointer].contoursx[Path_Index]
-                this_pathy = self.signal[self.folder_pointer].contoursy[Path_Index]
+                this_pathx = this_signal.contoursx[Path_Index]
+                this_pathy = this_signal.contoursy[Path_Index]
 
                 #path2 =  signal.resample(this_path, self.path_size)#resample the path
                 # concreate the image batch and path
@@ -236,8 +288,8 @@ class myDataloader(object):
                     else:
                         clip_limitation = np.random.random_sample()*20
                         this_gray  = np . clip( this_gray , clip_limitation,255) # change the clip value depend on the ID
-                #if Augment_add_lines== True:
-                #    this_gray  = self.add_lines_to_matrix( this_gray  )
+                if Augment_add_lines== True:
+                    this_gray  = self.add_lines_to_matrix( this_gray  )
                 #this_gray = self.gray_scale_augmentation(this_gray)
                 H,W = this_gray.shape
                 c_num = len(this_pathx)
@@ -298,10 +350,27 @@ class myDataloader(object):
             if (i>=thisfolder_len):
                 i=0
                 self.read_record =0
-                self.folder_pointer+=1
-                if (self.folder_pointer>= self.folder_num):
-                    self.read_all_flag =1
-                    self.folder_pointer =0
+                self.read_all_flag =1
+                if self.OLG_flag == True :
+                    #check
+                    self.talker=self.talker.read_data(self.com_dir)
+                    if self.talker.pending ==1:# pending , finish writing, so switch!
+                        self.talker.pending =0 # reset pending
+                        if self.talker.training==1:
+                            self.talker.training=2
+                        else:
+                            self.talker.training=1
+                        # change writing target
+                    
+                        self.talker.save_data(self.com_dir)
+                    pass
+
+                else:
+                    self.folder_pointer+=1
+                    if (self.folder_pointer>= self.folder_num):
+                        self.folder_pointer =0
+                    pass
+                
             if(this_pointer>=self.batch_size): # this batch has been filled
                 break
             pass

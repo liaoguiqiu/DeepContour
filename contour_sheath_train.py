@@ -10,7 +10,7 @@ import numpy
 from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers,Generator_Contour_sheath
 
 
-validation_flag =True
+validation_flag =False
 import os
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -110,7 +110,7 @@ netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
 
 netD.apply(weights_init)
 if Continue_flag == True:
-    netD.load_state_dict(torch.load('../out/deep_sheath/netD_epoch_5.pth'))
+    netD.load_state_dict(torch.load('../out/deep_sheath/netD_epoch_3.pth'))
 print(netD)
  
 
@@ -340,8 +340,8 @@ while(1):
 
 
             
-            #display_prediction(mydata_loader,save_out)
-            display_prediction(test_data_loader,save_test)
+            display_prediction(mydata_loader,save_out)
+            #display_prediction(test_data_loader,save_test)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
               break
@@ -350,7 +350,7 @@ while(1):
     #torch.save(netD.state_dict(), '%s/netD_epoch_%d.pth' % (opt.outf, epoch
     torch.save(netD.state_dict(), pth_save_dir+ "netD_epoch_"+str(epoch)+".pth")
     #cv2.imwrite(Save_pic_dir  + str(epoch) +".jpg", show2)
-    cv2.imwrite(pth_save_dir  + str(epoch) +".jpg", show2)
+    #cv2.imwrite(pth_save_dir  + str(epoch) +".jpg", show2)
     if epoch >=5:
         epoch =0
 
