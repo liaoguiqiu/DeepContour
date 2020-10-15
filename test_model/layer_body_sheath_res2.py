@@ -9,7 +9,7 @@ nz = int( arg_parse.opt.nz)
 ngf = int( arg_parse.opt.ngf)
 ndf = int( arg_parse.opt.ndf)
 nc = 1
-basic_feature=8
+basic_feature=32
 
 class conv_keep_W(nn.Module):
     def __init__ (self, indepth,outdepth,k=(4,5),s=(2,1),p=(1,2)):
@@ -97,8 +97,8 @@ class _netD_8_multiscal_fusion300_layer(nn.Module):
     def __init__(self):
         super(_netD_8_multiscal_fusion300_layer, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
-        mind= -0.2
-        maxd= 1.2
+        mind= -1
+        maxd= 2
         feature = basic_feature
 
         self.scaler = lambda d : (1+d)/2*maxd + (1-d)/2*mind
@@ -119,8 +119,8 @@ class _netD_8_multiscal_fusion300_layer(nn.Module):
         #self.side_branch1.append(  conv_keep_all(feature, feature))
         self.side_branch1.append(  conv_keep_all(feature, feature))
 
-        self.side_branch1.append(  conv_keep_W(feature,2*feature))
-        feature = feature *2
+        self.side_branch1.append(  conv_keep_W(feature,feature))
+        #feature = feature *2
         # 37*300  - 18*300
 
         self.side_branch1.append(  conv_keep_W(feature,2*feature))
@@ -130,15 +130,15 @@ class _netD_8_multiscal_fusion300_layer(nn.Module):
         #self.side_branch1.append(  conv_keep_all(feature, feature))
         self.side_branch1.append(  conv_keep_all(feature, feature))
 
-        self.side_branch1.append(  conv_keep_W(feature,2*feature))
-        feature = feature *2
+        self.side_branch1.append(  conv_keep_W(feature,feature))
+        #feature = feature *2
         # 9*300  - 4*300
 
         self.side_branch1.append(  conv_keep_W(feature,2*feature))
         feature = feature *2
-        self.side_branch1.append(  conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0)))
+        self.side_branch1.append(  conv_keep_W(feature,feature,k=(4,1),s=(1,1),p=(0,0)))
          
-        feature = feature *2
+        #feature = feature *2
         self.side_branch1.append( nn.Sequential(
               
              nn.Conv2d(feature, self.layer_num,(1,1), (1,1), (0,0), bias=False)         
@@ -163,9 +163,9 @@ class _netD_8_multiscal_fusion300_layer(nn.Module):
 
         self.side_branch2.append(  conv_keep_all(feature, feature))
 
-        self.side_branch2.append(  conv_keep_W(feature,2*feature))
+        self.side_branch2.append(  conv_keep_W(feature,feature))
         # 37*150  - 18*75
-        feature = feature *2
+        #feature = feature *2
         #self.side_branch2.append(  conv_keep_all(feature, feature))
         #self.side_branch2.append(  conv_keep_all(feature, feature))
 
@@ -174,9 +174,9 @@ class _netD_8_multiscal_fusion300_layer(nn.Module):
         # 18*75  - 9*75
         feature = feature *2
         self.side_branch2.append(  conv_keep_all(feature, feature))
-        self.side_branch2.append(  conv_keep_W(feature,2*feature))
+        self.side_branch2.append(  conv_keep_W(feature,feature))
         # 9*75  - 4*75
-        feature = feature *2
+        #feature = feature *2
         #self.side_branch2.append(  conv_keep_all(feature, feature))
         #self.side_branch2.append(  conv_keep_all(feature, feature))
 
@@ -185,10 +185,10 @@ class _netD_8_multiscal_fusion300_layer(nn.Module):
 
         # 4*75  - 1*75
         feature = feature *2
-        self.side_branch2.append(  conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0)))
+        self.side_branch2.append(  conv_keep_W(feature,feature,k=(4,1),s=(1,1),p=(0,0)))
         # 1*75  - 1*300
          
-        feature = feature *2
+        #feature = feature *2
         # use a transpose instead of interpolation to restore 
         #self.side_branch2.append( nn.Sequential(
               

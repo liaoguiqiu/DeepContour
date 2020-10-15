@@ -22,7 +22,7 @@ parser.add_argument('--ngf', type=int, default=32)
 parser.add_argument('--ndf', type=int, default=16)
 parser.add_argument('--niter', type=int, default=5000, help='number of epochs to train for')
 #parser.add_argument('--lr', type=float, default=0.00003, help='learning rate, default=0.0002')
-parser.add_argument('--lr', type=float, default=0.000005, help='learning rate, default=0.0002')
+parser.add_argument('--lr', type=float, default=0.00001, help='learning rate, default=0.0002')
 
 parser.add_argument('--beta1', type=float, default=0.5, help='beta1 for adam. default=0.5')
 #parser.add_argument('--netG', default='../DCGANproject/out/netG_epoch_50.pth', help="path to netG (to continue training)")

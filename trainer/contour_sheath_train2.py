@@ -7,6 +7,7 @@ import layer_body_sheath
 from model import layer_body_sheath_res
 from test_model import layer_body_sheath_res2
 from test_model.loss_MTL import MTL_loss
+from scipy import signal 
 
 import arg_parse
 import cv2
@@ -15,13 +16,15 @@ from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Gen
 
 from time import time
 validation_flag = False
+OLG_flag = True
+
 import os
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = True 
 Display_fig_flag = True
-Continue_flag = False
+Continue_flag = True
 
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
@@ -46,7 +49,7 @@ print(torch.cuda.get_device_name(0))
 print(torch.cuda.is_available())
 dataroot = "../dataset/CostMatrix/"
 
-torch.set_num_threads(2)
+torch.set_num_threads(4)
 ######################################################################
 # Data
 # ----
@@ -166,7 +169,8 @@ def display_prediction(mydata_loader,save_out):
            
 
     for i in range ( len(save_out)):
-        color = draw_coordinates_color(color,save_out[i],i)
+        this_coordinate = signal.resample(save_out[i], Resample_size)
+        color = draw_coordinates_color(color,this_coordinate,i)
                 
           
 
@@ -251,7 +255,7 @@ epoch=0
 #transform = BaseTransform(  Resample_size,(104/256.0, 117/256.0, 123/256.0))
 #transform = BaseTransform(  Resample_size,[104])  #gray scale data
 iteration_num =0
-mydata_loader = myDataloader (Batch_size,Resample_size,Path_length)
+mydata_loader = myDataloader (Batch_size,Resample_size,Path_length,OLG = OLG_flag)
 test_data_loader =  myDataloader (Batch_size,Resample_size,Path_length,validation=True)
 multi_criterator = MTL_loss()
 while(1):
@@ -281,7 +285,7 @@ while(1):
         #outputall =  outputall[:,:,0,:]
         output = outputall[0].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
         output1 = outputall[1].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
-        output2 = outputall[2].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
+        output3 = outputall[3].view(Batch_size,netD.layer_num,75).squeeze(1)
         #output = outputall[0]  
         #output1 = outputall[1] 
         #output2 = outputall[2]  
@@ -293,7 +297,8 @@ while(1):
         errD_real2 = loss[2]
         errD_real3 = loss[3]
 
-        errD_real_fuse = 1.0*errD_real+  0.3*errD_real1 +  0.3*errD_real2 + 0.3*errD_real3
+        errD_real_fuse = 0.3*errD_real+  0.3*errD_real1 +  0.3*errD_real2 + 0.3*errD_real3
+        #errD_real_fuse = errD_real2 + errD_real3
         #errD_real_fuse = 1.0*(errD_real )
 
 

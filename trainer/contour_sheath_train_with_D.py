@@ -2,17 +2,26 @@
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
+import torchvision.datasets as dset
+import torchvision.transforms as transforms
+import torchvision.utils as vutils
 from torch.autograd import Variable
-import layer_body_sheath
-from model import layer_body_sheath_res
-from test_model import layer_body_sheath_res2
+import gan_body 
+from model import cGAN_build2 # the mmodel
+
+ 
+import layer_body_sheath # the model
 import arg_parse
+import imagenet
+from analy import MY_ANALYSIS
+from analy import Save_signal_enum
 import cv2
 import numpy
+from image_trans import BaseTransform  
 from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers,Generator_Contour_sheath
+import rendering
 
-from time import time
-validation_flag = False
+
 import os
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -20,18 +29,17 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 Visdom_flag  = False 
 Display_fig_flag = True
 Continue_flag = True
-OLG_flag = False
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 
 
-pth_save_dir = "../out/deep_sheath_res/"
-#pth_save_dir = "../out/deep_sheath/"
+pth_save_dir = "../out/sheathCGAN_coordinates/"
+#pth_save_dir = "../out/deep_layers/"
 
- 
 if not os.path.exists(pth_save_dir):
     os.makedirs(pth_save_dir)
+from scipy import signal 
 Matrix_dir =  "../dataset/CostMatrix/1/"
 Save_pic_dir = '../DeepPathFinding/out/'
 opt = arg_parse.opt
@@ -106,19 +114,26 @@ def weights_init(m):
 #netD = gan_body._netD_8()
 
 #Guiqiu Resnet version
-netD = layer_body_sheath_res._netD_8_multiscal_fusion300_layer()
 #netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
-
+gancreator = cGAN_build2.CGAN_creator() # the Cgan for the segmentation 
+GANmodel= gancreator.creat_cgan()  #  G and D are created here 
 #netD = gan_body._netD_Resnet()
 
 
 
 
-netD.apply(weights_init)
+#netD.apply(weights_init)
+GANmodel.netD.apply(weights_init)
+GANmodel.netG.apply(weights_init)
 if Continue_flag == True:
-    netD.load_state_dict(torch.load(pth_save_dir +'netD_epoch_1.pth'))
-print(netD)
- 
+    #netD.load_state_dict(torch.load(opt.netD))
+    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
+    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_5.pth'))
+
+print(GANmodel.netD)
+print(GANmodel.netG)
+ # no longer use the mine nets 
+
 
 criterion = nn.L1Loss()
 criterion2  = nn.CrossEntropyLoss()
@@ -133,7 +148,10 @@ fake_label = 0
 
 if opt.cuda:
     print("CUDA TRUE")
-    netD.cuda()
+    GANmodel.netD.cuda()
+    GANmodel.netG.cuda()
+
+    #netD.cuda()
     #netG.cuda()
     criterion.cuda()
     input, label = input.cuda(), label.cuda()
@@ -144,7 +162,7 @@ fixed_noise = Variable(fixed_noise)
 
 # setup optimizer
 #optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
+#optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
 #optimizerD = optim.SGD(netD.parameters(), lr=opt.lr,momentum= 0.9, weight_decay =2e-4 )
 
 
@@ -158,9 +176,7 @@ epoch=0
 #transform = BaseTransform(  Resample_size,(104/256.0, 117/256.0, 123/256.0))
 #transform = BaseTransform(  Resample_size,[104])  #gray scale data
 iteration_num =0
-mydata_loader = myDataloader (Batch_size,Resample_size,Path_length,OLG = OLG_flag)
-test_data_loader =  myDataloader (Batch_size,Resample_size,Path_length,validation=True)
-
+mydata_loader = myDataloader (Batch_size,Resample_size,Path_length)
 def draw_coordinates_color(img1,vy,color):
         
         if color ==0:
@@ -183,75 +199,6 @@ def draw_coordinates_color(img1,vy,color):
 
 
         return img1
-def read_transform(data_loader):
-    #change to 3 chanels
-    ini_input = data_loader.input_image
-    np_input = numpy.append(ini_input,ini_input,axis=1)
-    np_input = numpy.append(np_input,ini_input,axis=1)
-
-    input = torch.from_numpy(numpy.float32(np_input)) 
-    #input = input.to(device) 
-    #input = torch.from_numpy(numpy.float32(mydata_loader.input_image[0,:,:,:])) 
-    input = input.to(device)                
-   
-    patht= torch.from_numpy(numpy.float32(data_loader.input_path)/Resample_size )
-    #patht=patht.to(device)
-                
-    #patht= torch.from_numpy(numpy.float32(mydata_loader.input_path[0,:])/71.0 )
-    patht=patht.to(device)
-    #inputv = Variable(input)
-    # using unsqueeze is import  for with out bactch situation
-    #inputv = Variable(input.unsqueeze(0))
-
-    #labelv = Variable(patht)
-    #inputv = input
-
-    #labelv = patht
-    inputv = Variable(input )
-    #inputv = Variable(input.unsqueeze(0))
-    #patht =patht.view(-1, 1).squeeze(1)
-
-    labelv = Variable(patht)
-    return inputv,labelv
-def display_prediction(mydata_loader,save_out):
-    gray2  =   (mydata_loader.input_image[0,0,:,:] *104)+104
-    show1 = gray2.astype(float)
-    path2 = mydata_loader.input_path[0,:] 
-    #path2  = signal.resample(path2, Resample_size)
-    path2 = numpy.clip(path2,0,Resample_size-1)
-    color1  = numpy.zeros((show1.shape[0],show1.shape[1],3))
-    color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 
-         
-           
-
-    for i in range ( len(path2)):
-        color1 = draw_coordinates_color(color1,path2[i],i)
-                 
-            
-            
-    show2 =  gray2.astype(float)
-    save_out = save_out.cpu().detach().numpy()
-
-    save_out  = save_out[0,:] *(Resample_size)
-    #save_out  = signal.resample(save_out, Resample_size)
-    save_out = numpy.clip(save_out,0,Resample_size-1)
-    color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
-    color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
-         
-           
-
-    for i in range ( len(save_out)):
-        color = draw_coordinates_color(color,save_out[i],i)
-                
-          
-
-
-            
-    #show3 = numpy.append(show1,show2,axis=1) # cascade
-    show4 = numpy.append(color1,color,axis=1) # cascade
-
-    cv2.imshow('Deeplearning one',show4.astype(numpy.uint8)) 
-
 while(1):
     epoch+= 1
     #almost 900 pictures
@@ -262,83 +209,107 @@ while(1):
             read_id =0
             mydata_loader.read_all_flag =0
             break
-        if (test_data_loader.read_all_flag ==1):
-           
-            test_data_loader.read_all_flag =0
-            
+
 
         mydata_loader .read_a_batch()
-        
+        #change to 3 chanels
+        ini_input = mydata_loader.input_image
+        real =  torch.from_numpy(numpy.float32(ini_input)) 
+        real = real.to(device)                
+
+        np_input = numpy.append(ini_input,ini_input,axis=1)
+        np_input = numpy.append(np_input,ini_input,axis=1)
+
+        input = torch.from_numpy(numpy.float32(np_input)) 
+        #input = input.to(device) 
+        #input = torch.from_numpy(numpy.float32(mydata_loader.input_image[0,:,:,:])) 
+        input = input.to(device)                
+   
+        patht= torch.from_numpy(numpy.float32(mydata_loader.input_path)/Resample_size )
+        #patht=patht.to(device)
+                
+        #patht= torch.from_numpy(numpy.float32(mydata_loader.input_path[0,:])/71.0 )
+        patht=patht.to(device)
+        #inputv = Variable(input)
+        # using unsqueeze is import  for with out bactch situation
+        #inputv = Variable(input.unsqueeze(0))
+
+        #labelv = Variable(patht)
+        #inputv = input
+
+        #labelv = patht
+        inputv = Variable(input )
+        #inputv = Variable(input.unsqueeze(0))
+        #patht =patht.view(-1, 1).squeeze(1)
+
+        labelv = Variable(patht)
         # just test the first boundary effect 
         #labelv  = labelv[:,0,:]
 
-        inputv,labelv = read_transform(mydata_loader)
-        start_time = time()
-        outputall = netD(inputv)
-        test_time_point = time()
+        ###
+        ###chnage the imout domain can use the same label to ralize generating or line segementation 
+        #realA = rendering.layers_visualized(labelv,Resample_size)
+        #realB = real
+        realA =  real
+        realB =  rendering.layers_visualized_integer_encodeing(labelv,Resample_size)
+        real_pathes = labelv
+          
+        GANmodel.update_learning_rate()    # update learning rates in the beginning of every epoch.
+        GANmodel.set_input(realA,realB,real_pathes,inputv)         # unpack data from dataset and apply preprocessing
+        GANmodel.optimize_parameters()   # calculate loss functions, get gradients, update network weights
+
+         
+        #outputall = netD(inputv)
         #outputall =  outputall[:,:,0,:]
-        output = outputall[0].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
-        output1 = outputall[1].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
-        output2 = outputall[2].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
-        #output = outputall[0]  
-        #output1 = outputall[1] 
-        #output2 = outputall[2]  
-        #output
+        #output = outputall[0].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
+        #output1 = outputall[1].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
+        #output2 = outputall[2].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
+        ##output = outputall[0]  
+        ##output1 = outputall[1] 
+        ##output2 = outputall[2]  
+        ##output
 
 
-        netD.zero_grad()
-        errD_real = criterion(output, labelv)
-        errD_real1 = criterion(output1, labelv)
-        errD_real2 = criterion(output2, labelv)
-        errD_real_fuse = 1.0*(errD_real+  0.1*errD_real1 +  0.5*errD_real2)
-        #errD_real_fuse = 1.0*(errD_real )
+        #netG.zero_grad()
+        #errD_real = criterion(Fake, real)
+        ##errD_real1 = criterion(output1, labelv)
+        ##errD_real2 = criterion(output2, labelv)
+        ##errD_real_fuse = 1.0*(errD_real+  0.1*errD_real1 +  0.1*errD_real2)
 
+        ##errD_real1.backward()errD_real = criterion(output, labelv)
+        ##errD_real1 = criterion(output1, labelv)
+        ##errD_real2 = criterion(output22, labelv)
+        ##errD_real_fuse =   0.1*errD_real1 +  0.1*errD_real2
 
-        #errD_real1.backward()errD_real = criterion(output, labelv)
-        #errD_real1 = criterion(output1, labelv)
-        #errD_real2 = criterion(output22, labelv)
-        #errD_real_fuse =   0.1*errD_real1 +  0.1*errD_real2
-        torch.autograd.set_detect_anomaly(True)
-        errD_real_fuse.backward()
+        #errD_real.backward()
 
         
         #errD_real.backward()
-        D_x = errD_real.data.mean()
-        D_x1 = errD_real1.data.mean()
-        D_x2 = errD_real2.data.mean()
-        D_xf = errD_real_fuse.data.mean()
+        D_x = GANmodel.loss_D.data.mean()
+        G_x = GANmodel.loss_G.data.mean()
+
+        #D_x1 = errD_real1.data.mean()
+        #D_x2 = errD_real2.data.mean()
+        #D_xf = errD_real_fuse.data.mean()
 
 
-        optimizerD.step()
+        #optimizerG.step()
 
-        save_out  = output
-        if validation_flag==True:
-            test_data_loader.read_a_batch()
-
-            inputvt,labelvt = read_transform(test_data_loader)
-
-            outputallt = netD(inputvt)
-            #outputall =  outputall[:,:,0,:]
-            outputt = outputallt[0].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
-            err_validation= criterion(outputt, labelvt)
-            save_test  = outputt
-
-
+        #save_out  = Fake
         # train with fake
         # if cv2.waitKey(12) & 0xFF == ord('q'):
         #       break 
          
         print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
               % (epoch, 0, read_id, 0,
-                 errD_real.data, D_x, 0, 0, 0))
-        print (" all test point time is [%f] " % ( test_time_point - start_time))
-
+                 G_x, D_x, 0, 0, 0))
         if read_id % 2 == 0 and Visdom_flag == True:
+                plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, D_x.cpu().detach().numpy())
+                plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, G_x.cpu().detach().numpy())
 
-            plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, D_x.cpu().detach().numpy())
-            plotter.plot( 'cLOSS1', 'cLOSS1', 'cLOSS1', iteration_num, D_x1.cpu().detach().numpy())
-            plotter.plot( 'cLOSS12', 'cLOSS2', 'cLOSS2', iteration_num, D_x2.cpu().detach().numpy())
-            plotter.plot( 'cLOSS_f', 'cLOSSf', 'cLOSSf', iteration_num, D_xf.cpu().detach().numpy())
+                #plotter.plot( 'cLOSS1', 'cLOSS1', 'cLOSS1', iteration_num, D_x1.cpu().detach().numpy())
+                #plotter.plot( 'cLOSS12', 'cLOSS2', 'cLOSS2', iteration_num, D_x2.cpu().detach().numpy())
+                #plotter.plot( 'cLOSS_f', 'cLOSSf', 'cLOSSf', iteration_num, D_xf.cpu().detach().numpy())
         if read_id % 1 == 0 and Display_fig_flag== True:
             #vutils.save_image(real_cpu,
             #        '%s/real_samples.png' % opt.outf,
@@ -349,19 +320,57 @@ while(1):
             #show the result
 
 
-            if validation_flag == False:
-                display_prediction(mydata_loader,save_out)
-            else:
-                display_prediction(test_data_loader,save_test)
+            gray2  =   realA[0,0,:,:].cpu().detach().numpy()*104+104
+            show1 = gray2.astype(float)
+            #path2 = mydata_loader.input_path[0,:] 
+            ##path2  = signal.resample(path2, Resample_size)
+            #path2 = numpy.clip(path2,0,Resample_size-1)
+            color1  = numpy.zeros((show1.shape[0],show1.shape[1],3))
+            color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 [:,:]
+         
+           
+
+            #for i in range ( len(path2)):
+            #    color1 = draw_coordinates_color(color1,path2[i],i)
+                 
+            saveout  = GANmodel.fake_B
+            
+            show2 =  saveout[0,0,:,:].cpu().detach().numpy()*255 
+
+            
+            color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
+            color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
+         
+           
+
+            #for i in range ( len(path2)):
+            #    color = draw_coordinates_color(color,path2[i],i)
+                
+          
+
+
+            
+            #show3 = numpy.append(show1,show2,axis=1) # cascade
+            show4 = numpy.append(color1,color,axis=1) # cascade
+
+            cv2.imshow('Deeplearning one',show4.astype(numpy.uint8)) 
+
+            real_label = GANmodel.real_B
+            show5 =  real_label[0,0,:,:].cpu().detach().numpy()*255 
+            cv2.imshow('real',show5.astype(numpy.uint8)) 
+
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
               break
     # do checkpointing
     #torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch))
     #torch.save(netD.state_dict(), '%s/netD_epoch_%d.pth' % (opt.outf, epoch
-    torch.save(netD.state_dict(), pth_save_dir+ "netD_epoch_"+str(epoch)+".pth")
+    torch.save(GANmodel.netG.state_dict(), pth_save_dir+ "cGANG_epoch_"+str(epoch)+".pth")
+    torch.save(GANmodel.netD.state_dict(), pth_save_dir+ "cGAND_epoch_"+str(epoch)+".pth")
+
     #cv2.imwrite(Save_pic_dir  + str(epoch) +".jpg", show2)
     #cv2.imwrite(pth_save_dir  + str(epoch) +".jpg", show2)
     if epoch >=5:
         epoch =0
+
 
