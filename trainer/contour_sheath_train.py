@@ -4,13 +4,15 @@ import torch.optim as optim
 import torch.utils.data
 from torch.autograd import Variable
 import layer_body_sheath
+from model import layer_body_sheath_res
+from test_model import layer_body_sheath_res2
 import arg_parse
 import cv2
 import numpy
 from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers,Generator_Contour_sheath
 
-
-validation_flag =False
+from time import time
+validation_flag = False
 import os
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -18,13 +20,15 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 Visdom_flag  = False 
 Display_fig_flag = True
 Continue_flag = True
-
+OLG_flag = True
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 
 
-pth_save_dir = "../out/deep_sheath/"
+pth_save_dir = "../out/deep_sheath_res/"
+#pth_save_dir = "../out/deep_sheath/"
+
  
 if not os.path.exists(pth_save_dir):
     os.makedirs(pth_save_dir)
@@ -102,7 +106,9 @@ def weights_init(m):
 #netD = gan_body._netD_8()
 
 #Guiqiu Resnet version
-netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
+netD = layer_body_sheath_res._netD_8_multiscal_fusion300_layer()
+#netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
+
 #netD = gan_body._netD_Resnet()
 
 
@@ -110,7 +116,7 @@ netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
 
 netD.apply(weights_init)
 if Continue_flag == True:
-    netD.load_state_dict(torch.load('../out/deep_sheath/netD_epoch_3.pth'))
+    netD.load_state_dict(torch.load(pth_save_dir +'netD_epoch_1.pth'))
 print(netD)
  
 
@@ -152,7 +158,7 @@ epoch=0
 #transform = BaseTransform(  Resample_size,(104/256.0, 117/256.0, 123/256.0))
 #transform = BaseTransform(  Resample_size,[104])  #gray scale data
 iteration_num =0
-mydata_loader = myDataloader (Batch_size,Resample_size,Path_length)
+mydata_loader = myDataloader (Batch_size,Resample_size,Path_length,OLG = OLG_flag)
 test_data_loader =  myDataloader (Batch_size,Resample_size,Path_length,validation=True)
 
 def draw_coordinates_color(img1,vy,color):
@@ -262,14 +268,14 @@ while(1):
             
 
         mydata_loader .read_a_batch()
-        test_data_loader.read_a_batch()
         
         # just test the first boundary effect 
         #labelv  = labelv[:,0,:]
 
         inputv,labelv = read_transform(mydata_loader)
-
+        start_time = time()
         outputall = netD(inputv)
+        test_time_point = time()
         #outputall =  outputall[:,:,0,:]
         output = outputall[0].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
         output1 = outputall[1].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
@@ -284,15 +290,15 @@ while(1):
         errD_real = criterion(output, labelv)
         errD_real1 = criterion(output1, labelv)
         errD_real2 = criterion(output2, labelv)
-        #errD_real_fuse = 1.0*(errD_real+  0.1*errD_real1 +  0.1*errD_real2)
-        errD_real_fuse = 1.0*(errD_real )
+        errD_real_fuse = 1.0*(errD_real+  0.1*errD_real1 +  0.5*errD_real2)
+        #errD_real_fuse = 1.0*(errD_real )
 
 
         #errD_real1.backward()errD_real = criterion(output, labelv)
         #errD_real1 = criterion(output1, labelv)
         #errD_real2 = criterion(output22, labelv)
         #errD_real_fuse =   0.1*errD_real1 +  0.1*errD_real2
-
+        torch.autograd.set_detect_anomaly(True)
         errD_real_fuse.backward()
 
         
@@ -307,6 +313,8 @@ while(1):
 
         save_out  = output
         if validation_flag==True:
+            test_data_loader.read_a_batch()
+
             inputvt,labelvt = read_transform(test_data_loader)
 
             outputallt = netD(inputvt)
@@ -323,6 +331,8 @@ while(1):
         print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
               % (epoch, 0, read_id, 0,
                  errD_real.data, D_x, 0, 0, 0))
+        print (" all test point time is [%f] " % ( test_time_point - start_time))
+
         if read_id % 2 == 0 and Visdom_flag == True:
 
             plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, D_x.cpu().detach().numpy())
@@ -339,9 +349,10 @@ while(1):
             #show the result
 
 
-            
-            display_prediction(mydata_loader,save_out)
-            #display_prediction(test_data_loader,save_test)
+            if validation_flag == False:
+                display_prediction(mydata_loader,save_out)
+            else:
+                display_prediction(test_data_loader,save_test)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
               break

@@ -5,8 +5,8 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{bf6a4053-8842-49f4-bc13-3aa8116b1788}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>contour_sheath_train.py</StartupFile>
-    <SearchPath>model</SearchPath>
+    <StartupFile>trainer\contour_sheath_train.py</StartupFile>
+    <SearchPath>model;test_model</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
@@ -34,7 +34,7 @@
     <Compile Include="contour_sheath_CGAN_train.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="contour_sheath_train.py">
+    <Compile Include="trainer\contour_sheath_train.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="dataset.py">
@@ -102,6 +102,9 @@
     <Compile Include="model\cGAN_build.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="model\layer_body_sheath_res.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="model\networks.py">
       <SubType>Code</SubType>
     </Compile>
@@ -138,6 +141,18 @@
     <Compile Include="test_Deep_finding.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="test_model\layer_body_sheath_res2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test_model\loss_MTL.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test_model\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="trainer\contour_sheath_train2.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Content Include="images\A_B.png" />
@@ -148,6 +163,8 @@
     <Folder Include="deploy\" />
     <Folder Include="model\" />
     <Folder Include="model\options\" />
+    <Folder Include="trainer\" />
+    <Folder Include="test_model\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>

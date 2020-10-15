@@ -12,7 +12,7 @@ from random import random
 import pickle
 
 seed(1)
-Batch_size = 1
+Batch_size = 3
 Resample_size =300
 Path_length = 300
 Augment_limitation_flag = False
@@ -22,8 +22,8 @@ random_clip_flag = False
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
 
 class myDataloader(object):
-    def __init__(self, batch_size,image_size,path_size,validation= False):
-        self.OLG_flag = True
+    def __init__(self, batch_size,image_size,path_size,validation= False,OLG=False):
+        self.OLG_flag = OLG
         self.com_dir = "../dataset/telecom/" # this dir is for the OLG
          # initial lizt the 
         self.talker = Communicate()
@@ -177,6 +177,19 @@ class myDataloader(object):
 
 
         return image,pathes 
+    def flips(self,image,pathes):
+ 
+        H,W = image.shape
+        fliper = np.random.random_sample() * 10
+        dice = int (fliper)%2
+        if dice ==0:
+            image=cv2.flip(image, 0) # flip upside down
+            #image = np.roll(image, roller, axis = 1)
+            pathes =H/2+(H/2-pathes)
+
+
+
+        return image,pathes 
     def downSamp_path(self,py,px,H,W,H2,W2):
         # this function input the original coordinates of contour x and y, orginal image size and out put size
 
@@ -207,13 +220,13 @@ class myDataloader(object):
 
     def read_a_batch(self):
         read_start = self.read_record
-        this_folder_list  = self.folder_list[self.folder_pointer]
-        #read_end  = self.read_record+ self.batch_size
-        this_signal = self.signal[self.folder_pointer]
+        
         #return self.input_image,self.input_path# if out this folder boundary, just returen
         this_pointer=0
         i=read_start
-
+        this_folder_list  = self.folder_list[self.folder_pointer]
+        #read_end  = self.read_record+ self.batch_size
+        this_signal = self.signal[self.folder_pointer]
         if self.OLG_flag ==True:
             # check
             self.talker=self.talker.read_data(self.com_dir)
@@ -237,9 +250,17 @@ class myDataloader(object):
                this_signal  =  self.read_data(this_contour_dir)
                pass
 
+        #thisfolder_len =  len (this_signal.img_num)
         thisfolder_len =  len (this_folder_list)
 
+
         while (1):
+            if self.OLG_flag ==False:
+                this_folder_list  = self.folder_list[self.folder_pointer]
+        #read_end  = self.read_record+ self.batch_size
+                this_signal = self.signal[self.folder_pointer]
+                thisfolder_len =  len (this_signal.img_num)
+
         #for i in range(read_start, read_end):
             #this_pointer = i -read_start
             # get the all the pointers 
@@ -339,6 +360,8 @@ class myDataloader(object):
 
                 #path_piece   = np.clip(path_piece,0,self.img_size)
                 img_piece, self.input_path [this_pointer ,:, :] = self.rolls(img_piece,self.input_path [this_pointer ,:, :])
+                img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
+
                 self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]/104.0
                 
                 this_pointer +=1
@@ -370,11 +393,13 @@ class myDataloader(object):
                     if (self.folder_pointer>= self.folder_num):
                         self.folder_pointer =0
                     pass
-                
+            #self.read_record=i # after reading , remember to  increase it 
+            
             if(this_pointer>=self.batch_size): # this batch has been filled
                 break
             pass
         self.read_record=i # after reading , remember to  increase it 
+
         return self.input_image,self.input_path
 
 
