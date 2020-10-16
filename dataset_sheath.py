@@ -181,7 +181,7 @@ class myDataloader(object):
  
         H,W = image.shape
         fliper = np.random.random_sample() * 10
-        dice = int (fliper)%2
+        dice = int (fliper)%5 #reduce the possibility of the flips 
         if dice ==0:
             image=cv2.flip(image, 0) # flip upside down
             #image = np.roll(image, roller, axis = 1)
@@ -360,7 +360,7 @@ class myDataloader(object):
 
                 #path_piece   = np.clip(path_piece,0,self.img_size)
                 img_piece, self.input_path [this_pointer ,:, :] = self.rolls(img_piece,self.input_path [this_pointer ,:, :])
-                img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
+                #img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
 
                 self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]/104.0
                 

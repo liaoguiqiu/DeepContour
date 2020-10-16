@@ -134,14 +134,14 @@ class Pix2LineModel(BaseModel):
 
         #LGQ special fusion loss
         loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
-        self.loss_G_L1 =( 0.5*loss[0]  + 0.1*loss[1] + 0.2*loss[2] + 0.2*loss[3])*self.opt.lambda_L1
+        self.loss_G_L1 =( 1.0*loss[0]  + 0.1*loss[1] + 0.1*loss[2] + 0.2*loss[3])*self.opt.lambda_L1
 
         # combine loss and calculate gradients
         self.loss_G = self.loss_G_GAN + self.loss_G_L1
         self.loss_G.backward()
 
     def optimize_parameters(self):
-        self.forward()                   # compute fake images: G(A)
+        self.forward()                   # compute fake images: G(A) # seperatee the for
         # update D
         self.set_requires_grad(self.netD, True)  # enable backprop for D
         self.optimizer_D.zero_grad()     # set D's gradients to zero

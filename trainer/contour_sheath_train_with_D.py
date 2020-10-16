@@ -26,7 +26,10 @@ import os
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
-Visdom_flag  = False 
+Visdom_flag  = True 
+OLG_flag = True
+validation_flag = False
+
 Display_fig_flag = True
 Continue_flag = True
 if Visdom_flag == True:
@@ -127,8 +130,8 @@ GANmodel.netD.apply(weights_init)
 GANmodel.netG.apply(weights_init)
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
-    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
-    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_5.pth'))
+    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_3.pth'))
+    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_3.pth'))
 
 print(GANmodel.netD)
 print(GANmodel.netG)
@@ -176,7 +179,7 @@ epoch=0
 #transform = BaseTransform(  Resample_size,(104/256.0, 117/256.0, 123/256.0))
 #transform = BaseTransform(  Resample_size,[104])  #gray scale data
 iteration_num =0
-mydata_loader = myDataloader (Batch_size,Resample_size,Path_length)
+mydata_loader = myDataloader (Batch_size,Resample_size,Path_length,validation = validation_flag,OLG=OLG_flag)
 def draw_coordinates_color(img1,vy,color):
         
         if color ==0:
@@ -199,6 +202,45 @@ def draw_coordinates_color(img1,vy,color):
 
 
         return img1
+def display_prediction(mydata_loader,save_out): # display in coordinates form 
+    gray2  =   (mydata_loader.input_image[0,0,:,:] *104)+104
+    show1 = gray2.astype(float)
+    path2 = mydata_loader.input_path[0,:] 
+    #path2  = signal.resample(path2, Resample_size)
+    path2 = numpy.clip(path2,0,Resample_size-1)
+    color1  = numpy.zeros((show1.shape[0],show1.shape[1],3))
+    color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 
+         
+           
+
+    for i in range ( len(path2)):
+        color1 = draw_coordinates_color(color1,path2[i],i)
+                 
+            
+            
+    show2 =  gray2.astype(float)
+    save_out = save_out.cpu().detach().numpy()
+
+    save_out  = save_out[0,:] *(Resample_size)
+    #save_out  = signal.resample(save_out, Resample_size)
+    save_out = numpy.clip(save_out,0,Resample_size-1)
+    color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
+    color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
+         
+           
+
+    for i in range ( len(save_out)):
+        this_coordinate = signal.resample(save_out[i], Resample_size)
+        color = draw_coordinates_color(color,this_coordinate,i)
+                
+          
+
+
+            
+    #show3 = numpy.append(show1,show2,axis=1) # cascade
+    show4 = numpy.append(color1,color,axis=1) # cascade
+
+    cv2.imshow('Deeplearning one 2',show4.astype(numpy.uint8)) 
 while(1):
     epoch+= 1
     #almost 900 pictures
@@ -256,7 +298,10 @@ while(1):
           
         GANmodel.update_learning_rate()    # update learning rates in the beginning of every epoch.
         GANmodel.set_input(realA,realB,real_pathes,inputv)         # unpack data from dataset and apply preprocessing
-        GANmodel.optimize_parameters()   # calculate loss functions, get gradients, update network weights
+        if validation_flag ==True:
+            GANmodel.forward()
+        else:
+            GANmodel.optimize_parameters()   # calculate loss functions, get gradients, update network weights
 
          
         #outputall = netD(inputv)
@@ -285,8 +330,11 @@ while(1):
 
         
         #errD_real.backward()
-        D_x = GANmodel.loss_D.data.mean()
-        G_x = GANmodel.loss_G.data.mean()
+        D_x = 0
+        G_x = 0
+        if validation_flag ==False:
+            D_x = GANmodel.loss_D.data.mean()
+            G_x = GANmodel.loss_G.data.mean()
 
         #D_x1 = errD_real1.data.mean()
         #D_x2 = errD_real2.data.mean()
@@ -359,6 +407,7 @@ while(1):
             show5 =  real_label[0,0,:,:].cpu().detach().numpy()*255 
             cv2.imshow('real',show5.astype(numpy.uint8)) 
 
+            display_prediction(mydata_loader,  GANmodel.out_pathes[0])
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
               break

@@ -269,7 +269,7 @@ class _netD_8_multiscal_fusion300_layer(nn.Module):
         out  = fuse.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
         out = self.tan_activation (out)
         out  = self.scaler(out)
-        out = 0.5 * out + 0.3* side_out_2_300 + 0.2 *side_out
+        #out = 0.5 * out + 0.3* side_out_2_300 + 0.2 *side_out
          
         #out
         return out,side_out,side_out_2_300,side_out_2_75

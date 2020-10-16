@@ -297,7 +297,7 @@ while(1):
         errD_real2 = loss[2]
         errD_real3 = loss[3]
 
-        errD_real_fuse = 0.3*errD_real+  0.3*errD_real1 +  0.3*errD_real2 + 0.3*errD_real3
+        errD_real_fuse = 0.5*errD_real+  0.1*errD_real1 +  0.1*errD_real2 + 0.1*errD_real3
         #errD_real_fuse = errD_real2 + errD_real3
         #errD_real_fuse = 1.0*(errD_real )
 
