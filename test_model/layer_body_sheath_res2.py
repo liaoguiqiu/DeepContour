@@ -9,7 +9,7 @@ nz = int( arg_parse.opt.nz)
 ngf = int( arg_parse.opt.ngf)
 ndf = int( arg_parse.opt.ndf)
 nc = 1
-basic_feature=32
+basic_feature=12
 
 class conv_keep_W(nn.Module):
     def __init__ (self, indepth,outdepth,k=(4,5),s=(2,1),p=(1,2)):
@@ -30,10 +30,10 @@ class conv_keep_W(nn.Module):
     def forward(self, x):
         #"""Forward function (with skip connections)"""
         out =  self.conv_block(x)  # add skip connections
-        #local_bz,channel,H,W = out.size() 
-        #downsample = nn.AdaptiveAvgPool2d((H,W))(x)
-        #_,channel2,_,_ = downsample.size() 
-        #out[:,0:channel2,:,:] = out[:,0:channel2,:,:]+  downsample
+        local_bz,channel,H,W = out.size() 
+        downsample = nn.AdaptiveAvgPool2d((H,W))(x)
+        _,channel2,_,_ = downsample.size() 
+        out[:,0:channel2,:,:] = out[:,0:channel2,:,:]+  downsample
         return out
 #output width=((W-F+2*P )/S)+1
 # Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
@@ -60,10 +60,10 @@ class conv_dv_2(nn.Module):
         #"""Forward function (with skip connections)"""
 
         out =  self.conv_block(x)  # add skip connections
-        #local_bz,channel,H,W = out.size() 
-        #downsample = nn.AdaptiveAvgPool2d((H,W))(x)
-        #_,channel2,_,_ = downsample.size() 
-        #out[:,0:channel2,:,:] = out[:,0:channel2,:,:]+  downsample
+        local_bz,channel,H,W = out.size() 
+        downsample = nn.AdaptiveAvgPool2d((H,W))(x)
+        _,channel2,_,_ = downsample.size() 
+        out[:,0:channel2,:,:] = out[:,0:channel2,:,:]+  downsample
         return out
 #output width=((W-F+2*P )/S)+1
 # Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
@@ -110,19 +110,19 @@ class _netD_8_multiscal_fusion300_layer(nn.Module):
         self.side_branch1.append(  conv_keep_W(3,feature))
         # 150*300 - 75*300
         #self.side_branch1.append(  conv_keep_all(feature, feature))
-        #self.side_branch1.append(  conv_keep_all(feature, feature))
+        self.side_branch1.append(  conv_keep_all(feature, feature))
 
         self.side_branch1.append(  conv_keep_W(feature,2*feature))
         feature = feature *2
         # 75*300  - 37*300
         #self.side_branch1.append(  conv_keep_all(feature, feature))
-        #self.side_branch1.append(  conv_keep_all(feature, feature))
+
         self.side_branch1.append(  conv_keep_all(feature, feature))
 
-        self.side_branch1.append(  conv_keep_W(feature,feature))
-        #feature = feature *2
+        self.side_branch1.append(  conv_keep_W(feature,2*feature))
+        feature = feature *2
         # 37*300  - 18*300
-
+        self.side_branch1.append(  conv_keep_all(feature, feature))
         self.side_branch1.append(  conv_keep_W(feature,2*feature))
         feature = feature *2
         # 18*300  - 9*300
@@ -130,12 +130,14 @@ class _netD_8_multiscal_fusion300_layer(nn.Module):
         #self.side_branch1.append(  conv_keep_all(feature, feature))
         self.side_branch1.append(  conv_keep_all(feature, feature))
 
-        self.side_branch1.append(  conv_keep_W(feature,feature))
-        #feature = feature *2
-        # 9*300  - 4*300
-
         self.side_branch1.append(  conv_keep_W(feature,2*feature))
         feature = feature *2
+        # 9*300  - 4*300
+        self.side_branch1.append(  conv_keep_all(feature, feature))
+        self.side_branch1.append(  conv_keep_W(feature,2*feature))
+        feature = feature *2
+        self.side_branch1.append(  conv_keep_all(feature, feature))
+
         self.side_branch1.append(  conv_keep_W(feature,feature,k=(4,1),s=(1,1),p=(0,0)))
          
         #feature = feature *2
@@ -163,28 +165,32 @@ class _netD_8_multiscal_fusion300_layer(nn.Module):
 
         self.side_branch2.append(  conv_keep_all(feature, feature))
 
-        self.side_branch2.append(  conv_keep_W(feature,feature))
+        self.side_branch2.append(  conv_keep_W(feature,2*feature))
         # 37*150  - 18*75
-        #feature = feature *2
+        feature = feature *2
         #self.side_branch2.append(  conv_keep_all(feature, feature))
         #self.side_branch2.append(  conv_keep_all(feature, feature))
 
+        self.side_branch2.append(  conv_keep_all(feature, feature))
 
         self.side_branch2.append(  conv_dv_2(feature,2*feature))
         # 18*75  - 9*75
         feature = feature *2
         self.side_branch2.append(  conv_keep_all(feature, feature))
-        self.side_branch2.append(  conv_keep_W(feature,feature))
+        self.side_branch2.append(  conv_keep_W(feature,2*feature))
         # 9*75  - 4*75
-        #feature = feature *2
+        feature = feature *2
         #self.side_branch2.append(  conv_keep_all(feature, feature))
         #self.side_branch2.append(  conv_keep_all(feature, feature))
 
+        self.side_branch2.append(  conv_keep_all(feature, feature))
 
         self.side_branch2.append(  conv_keep_W(feature,2*feature))
 
         # 4*75  - 1*75
         feature = feature *2
+        self.side_branch2.append(  conv_keep_all(feature, feature))
+
         self.side_branch2.append(  conv_keep_W(feature,feature,k=(4,1),s=(1,1),p=(0,0)))
         # 1*75  - 1*300
          
@@ -254,25 +260,26 @@ class _netD_8_multiscal_fusion300_layer(nn.Module):
         #local_bz,_,_,local_l = fuse.size() 
 
         side_out = side_out.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
-        side_out = self.tan_activation(side_out)  #  nn.Tanh (side_out)  nn.Tanh()(input)
-        side_out  = self.scaler(side_out)
+        #side_out = self.tan_activation(side_out)  #  nn.Tanh (side_out)  nn.Tanh()(input)
+        #side_out  = self.scaler(side_out)
         side_out_2_300 = side_out_2_300.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
-        side_out_2_300 = self.tan_activation (side_out_2_300)
-        side_out_2_300  = self.scaler(side_out_2_300)
+        #side_out_2_300 = self.tan_activation (side_out_2_300)
+        #side_out_2_300  = self.scaler(side_out_2_300)
         local_bz,num,_,local_l = side_out_2_75.size() 
         side_out_2_75 = side_out_2_75.view(-1,num,local_l).squeeze(1)# squess before fully connected
-        side_out_2_75 = self.tan_activation (side_out_2_75)
-        side_out_2_75  = self.scaler(side_out_2_75)
+        #side_out_2_75 = self.tan_activation (side_out_2_75)
+        #side_out_2_75  = self.scaler(side_out_2_75)
 
 
 
         out  = fuse.view(-1,self.layer_num,Path_length).squeeze(1)# squess before fully connected
-        out = self.tan_activation (out)
-        out  = self.scaler(out)
-        #out = 0.5 * out + 0.3* side_out_2_300 + 0.2 *side_out
+        #out = self.tan_activation (out)
+        #out  = self.scaler(out)
+        out = 0.5 * out + 0.1* side_out_2_300 + 0.4 *side_out
          
         #out
-        return out,side_out,side_out_2_300,side_out_2_75
-
+        #return out,side_out,side_out_2_300,side_out_2_75
+        return out,side_out_2_75
+        
         #return out,side_out,side_out2
 # mainly based on the resnet  

@@ -80,7 +80,7 @@ class Pix2LineModel(BaseModel):
             self.optimizers.append(self.optimizer_G)
             self.optimizers.append(self.optimizer_D)
 
-    def set_input(self, realA,realB,pathes,inputG):
+    def set_input(self, realA,pathes,inputG):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
         Parameters:
@@ -97,7 +97,9 @@ class Pix2LineModel(BaseModel):
         #self.image_paths = input['A_paths' if AtoB else 'B_paths']
         # LGQ modify it as one way 
         self.real_A = realA.to(self.device)
-        self.real_B = realB.to(self.device)
+
+        #self.real_B = realB.to(self.device)
+        self.real_B=rendering.layers_visualized_integer_encodeing(pathes,Resample_size)
         # LGQ add real path as creterioa for G
         self.real_pathes = pathes
         self.input_G  = inputG
@@ -107,6 +109,7 @@ class Pix2LineModel(BaseModel):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         self.out_pathes = self.netG(self.input_G) # coordinates encoding
         self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes[0],Resample_size) 
+        self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing  (self.out_pathes[0],Resample_size) 
         #self.fake_B = self.netG(self.real_A)  # G(A)
 
     def backward_D(self):
@@ -134,8 +137,9 @@ class Pix2LineModel(BaseModel):
 
         #LGQ special fusion loss
         loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
-        self.loss_G_L1 =( 1.0*loss[0]  + 0.1*loss[1] + 0.1*loss[2] + 0.2*loss[3])*self.opt.lambda_L1
-
+        #self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] + 0.1*loss[2] + 0.2*loss[3])*self.opt.lambda_L1
+        self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] )*self.opt.lambda_L1
+        self.loss_G_L1_2 = 0.5*loss[1] 
         # combine loss and calculate gradients
         self.loss_G = self.loss_G_GAN + self.loss_G_L1
         self.loss_G.backward()

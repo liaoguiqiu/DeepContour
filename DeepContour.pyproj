@@ -6,7 +6,7 @@
     <ProjectGuid>{bf6a4053-8842-49f4-bc13-3aa8116b1788}</ProjectGuid>
     <ProjectHome />
     <StartupFile>trainer\contour_sheath_train_with_D.py</StartupFile>
-    <SearchPath>model;test_model</SearchPath>
+    <SearchPath>model;test_model;deploy</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>

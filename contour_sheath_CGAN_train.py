@@ -332,7 +332,7 @@ while(1):
             show2 =  saveout[0,0,:,:].cpu().detach().numpy()*255 
 
             
-            color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
+            color  = numpy.zeros((show2.shape[1],show2.shape[2],3))
             color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
          
            
