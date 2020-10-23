@@ -123,8 +123,8 @@ GANmodel.netD.apply(weights_init)
 GANmodel.netG.apply(weights_init)
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
-    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_1.pth'))
-    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_1.pth'))
+    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_2.pth'))
+    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_2.pth'))
 
 print(GANmodel.netD)
 print(GANmodel.netG)
@@ -266,6 +266,8 @@ def display_prediction(mydata_loader,save_out,hot): # display in coordinates for
     cv2.imshow('Deeplearning one 2',show4.astype(numpy.uint8)) 
     cv2.imshow('Deeplearning circ',circular1.astype(numpy.uint8)) 
     cv2.imshow('Deeplearning circ2',circular2.astype(numpy.uint8)) 
+    cv2.imshow('Deeplearning color',color2.astype(numpy.uint8)) 
+
 
 
 

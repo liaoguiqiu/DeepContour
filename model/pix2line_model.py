@@ -103,6 +103,9 @@ class Pix2LineModel(BaseModel):
         # LGQ add real path as creterioa for G
         self.real_pathes = pathes
         self.input_G  = inputG
+    def set_G_input(self,input_G):
+        self.input_G  = input_G 
+ 
 
 
     def forward(self):
