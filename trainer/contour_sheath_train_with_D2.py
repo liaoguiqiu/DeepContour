@@ -21,7 +21,7 @@ from deploy.basic_trans import Basic_oper
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = True 
-OLG_flag = False
+OLG_flag = True
 validation_flag = False
 
 Display_fig_flag = True
@@ -31,7 +31,7 @@ if Visdom_flag == True:
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 
 
-pth_save_dir = "../out/sheathCGAN_coordinates/"
+pth_save_dir = "../out/sheathCGAN_coordinates2/"
 #pth_save_dir = "../out/deep_layers/"
 
 if not os.path.exists(pth_save_dir):
@@ -124,9 +124,9 @@ GANmodel.netD.apply(weights_init)
 GANmodel.netG.apply(weights_init)
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
-    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_1.pth'))
-    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_1.pth'))
-    GANmodel.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
+    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_4.pth'))
+    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_4.pth'))
+    #GANmodel.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
 
     #torch.save(GANmodel.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
 

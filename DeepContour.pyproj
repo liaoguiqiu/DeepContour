@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{bf6a4053-8842-49f4-bc13-3aa8116b1788}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>deploy\DeepAutoJson.py</StartupFile>
+    <StartupFile>trainer\contour_sheath_train_with_D2.py</StartupFile>
     <SearchPath>model;test_model;deploy</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -41,6 +41,12 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="model\cGAN_build2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test_model\fusion_nets.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test_model\multiscale_layers_nets.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="model\pix2line_model.py">
@@ -169,6 +175,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="trainer\contour_sheath_train_with_D.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="trainer\contour_sheath_train_with_D2.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>

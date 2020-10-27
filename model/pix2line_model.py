@@ -2,6 +2,7 @@ import torch
 from model.base_model import BaseModel
 import model.networks as  networks
 from test_model import layer_body_sheath_res2
+from test_model import fusion_nets
 from test_model.loss_MTL import MTL_loss
 import rendering
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
@@ -63,7 +64,7 @@ class Pix2LineModel(BaseModel):
         # LGQ here I change the generator to my line encoding
         #self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG, opt.norm,
         #                              not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
-        self.netG  = layer_body_sheath_res2._netD_8_multiscal_fusion300_layer()
+        self.netG  = fusion_nets._2layerFusionNets_()
         if self.isTrain:  # define a discriminator; conditional GANs need to take both input and output images; Therefore, #channels for D is input_nc + output_nc
             self.netD = networks.define_D(opt.input_nc + opt.output_nc, opt.ndf, opt.netD,
                                           opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids)
@@ -141,10 +142,12 @@ class Pix2LineModel(BaseModel):
         #LGQ special fusion loss
         loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
         #self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] + 0.1*loss[2] + 0.2*loss[3])*self.opt.lambda_L1
-        self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] )*self.opt.lambda_L1
-        self.loss_G_L1_2 = 0.5*loss[1] 
+        self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] ++ 0.5*loss[2]+ 0.5*loss[3]+ 0.5*loss[4]+ 0.5*loss[5])*self.opt.lambda_L1
+        self.loss_G_L1_2 = 0.5*loss[5] 
         # combine loss and calculate gradients
         self.loss_G = self.loss_G_GAN + self.loss_G_L1
+        #self.loss_G =   self.loss_G_L1
+
         self.loss_G.backward()
 
     def optimize_parameters(self):

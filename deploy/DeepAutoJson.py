@@ -89,7 +89,7 @@ class  Auto_json_label(object):
         self.co_len = len (self.coordinates0) 
 
         #self.database_root = "D:/Deep learning/dataset/original/phantom/1/"
-        self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
+        self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
 
         self.image_dir   = self.database_root + "pic/"
         self.json_dir =  self.database_root + "label/" # for this class sthis dir ist save the modified json 
