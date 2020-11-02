@@ -243,15 +243,7 @@ class _2layerFusionNets_(nn.Module):
         self.fusion_layer = nn.Conv2d(3,1,(1,3), (1,1), (0,1), bias=False)    # from 3 dpth branch to one   
         self.tan_activation = nn.Tanh()
     def forward(self, x):
-        #output = self.main(input)
-        #layer_len = len(kernels)
-        #for layer_point in range(layer_len):
-        #    if(layer_len==0):
-        #        output = self.layers[layer_point](input)
-        #    else:
-        #        output = self.layers[layer_point](output)
-        #for i, name in enumerate(self.layers):
-        #    x = self.layers[i](x)
+      
         side_out1 = self.side_branch1 (x)
         side_out2, side_out2l= self.side_branch2(x)
         side_out3, side_out3l= self.side_branch3(x)
@@ -259,9 +251,7 @@ class _2layerFusionNets_(nn.Module):
 
         fuse=torch.cat((side_out1,side_out2,side_out3),1)
         fuse=self.fusion_layer(fuse)
-        #local_bz,_,_,local_l = fuse.size() 
-
- 
+    
 
         local_bz,_,num,local_l = fuse.size() 
 
@@ -281,8 +271,9 @@ class _2layerFusionNets_(nn.Module):
 
         local_bz,_,num,local_l = side_out3l.size() 
         side_out3l = side_out3l.view(-1,num,local_l).squeeze(1)# squess before fully connected
-        #out
-        #return out,side_out,side_out_2_300,side_out_2_75
+     
+        #return  side_out2 ,side_out2
+
         return out,side_out1,side_out2,side_out3,side_out2l,side_out3l
         
         #return out,side_out,side_out2

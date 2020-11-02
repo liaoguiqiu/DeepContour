@@ -12,7 +12,6 @@ import cv2
 import numpy
 import rendering
 from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers,Generator_Contour_sheath
-from time import time
 
 import os
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
@@ -22,7 +21,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = True 
 OLG_flag = True
-validation_flag = False
+validation_flag = True
 
 Display_fig_flag = True
 Continue_flag = True
@@ -258,8 +257,11 @@ def display_prediction(mydata_loader,save_out,hot): # display in coordinates for
         color = draw_coordinates_color(color,this_coordinate,i)
     colorhot = color *hot
              
-    color = draw_coordinates_color_s(color,save_out[0],save_out[1])
-    color2 = draw_coordinates_color_s(colorhot,save_out[0],save_out[1])
+    sheath = signal.resample(save_out[0], Resample_size)
+    tissue = signal.resample(save_out[1], Resample_size)
+
+    color = draw_coordinates_color_s(color,sheath,tissue)
+    color2 = draw_coordinates_color_s(colorhot,sheath,tissue)
 
             
     #show3 = numpy.append(show1,show2,axis=1) # cascade
@@ -343,13 +345,11 @@ while(1):
           
         GANmodel.update_learning_rate()    # update learning rates in the beginning of every epoch.
         GANmodel.set_input(realA,real_pathes,inputv)         # unpack data from dataset and apply preprocessing
-        start_time = time()
 
         if validation_flag ==True:
             GANmodel.forward()
         else:
             GANmodel.optimize_parameters()   # calculate loss functions, get gradients, update network weights
-        test_time_point = time()
 
          
         #outputall = netD(inputv)
@@ -396,7 +396,6 @@ while(1):
         # train with fake
         # if cv2.waitKey(12) & 0xFF == ord('q'):
         #       break 
-        print (" all test point time is [%f] " % ( test_time_point - start_time))
 
         if validation_flag==False:
             print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'

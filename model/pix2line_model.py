@@ -6,6 +6,7 @@ from test_model import fusion_nets
 from test_model.loss_MTL import MTL_loss
 import rendering
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
+from time import time
 
 
 class Pix2LineModel(BaseModel):
@@ -111,7 +112,12 @@ class Pix2LineModel(BaseModel):
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
+        start_time = time()
+
         self.out_pathes = self.netG(self.input_G) # coordinates encoding
+        test_time_point = time()
+        print (" all test point time is [%f] " % ( test_time_point - start_time))
+
         self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes[0],Resample_size) 
         self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing  (self.out_pathes[0],Resample_size) 
         #self.fake_B = self.netG(self.real_A)  # G(A)
@@ -142,10 +148,12 @@ class Pix2LineModel(BaseModel):
         #LGQ special fusion loss
         loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
         #self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] + 0.1*loss[2] + 0.2*loss[3])*self.opt.lambda_L1
-        self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] ++ 0.5*loss[2]+ 0.5*loss[3]+ 0.5*loss[4]+ 0.5*loss[5])*self.opt.lambda_L1
+        #self.loss_G_L1 =( 1.0*loss[0]  + 0.02*loss[1] + 0.02*loss[2]+ 0.02*loss[3]+ 0.02*loss[4]+ 0.02*loss[5])*self.opt.lambda_L1
+        #self.loss_G_L1_2 = 0.5*loss[0] 
+        self.loss_G_L1 =( 1.0*loss[0]     )*self.opt.lambda_L1
         self.loss_G_L1_2 = 0.5*loss[5] 
         # combine loss and calculate gradients
-        self.loss_G = self.loss_G_GAN + self.loss_G_L1
+        self.loss_G = 0*self.loss_G_GAN + self.loss_G_L1
         #self.loss_G =   self.loss_G_L1
 
         self.loss_G.backward()
