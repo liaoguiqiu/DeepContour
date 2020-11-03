@@ -30,8 +30,8 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 class Basic_oper(object):
     def transfer_img_to_tensor(color,outH,outW,depth=3):
         # this function trasfer a image to a tensro (normaly )
-        this_gray  =   cv2.cvtColor(color, cv2.COLOR_BGR2GRAY)
-
+        #this_gray  =   cv2.cvtColor(color, cv2.COLOR_BGR2GRAY)
+        this_gray= color
         img_piece = cv2.resize(this_gray, (outW,outH), interpolation=cv2.INTER_AREA)
             
         #img_piece = cv2.medianBlur(img_piece,5)

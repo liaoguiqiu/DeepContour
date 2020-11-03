@@ -66,7 +66,32 @@ def encode_path_as_coordinates(path,h,w,H,W):
     array[:,1] = y.astype(int)
     coordinates = array.tolist()
     return coordinates
+def encode_as_coordinates_padding(path,h,w,H,W,rate):
+    points = 150
+    r = rate/(2*rate+1) # the rate is calculated from original padding rate
+    y = path*H
+    #add_3   = np.append(y[::-1],y,axis=0) # cascade
+    #add_3   = np.append(add_3,y[::-1],axis=0) # cascade
+    left = int(points * r)
+    right = int(points*(1 - r))
 
+    d3 = signal.resample(y,  points)
+    d3 = signal.medfilt(d3,5)
+
+    y = d3[left:right]
+    l= len(y)
+
+    x = np.arange(0, W)
+    add_3   = np.append(x[::-1],x,axis=0) # cascade
+    add_3   = np.append(add_3,x[::-1],axis=0) # cascade
+    d3 = signal.resample(add_3, 3*l)
+
+    x=d3[l:2*l]
+    array = np.zeros((l,2))
+    array[:,0] = x.astype(int)
+    array[:,1] = y.astype(int)
+    coordinates = array.tolist()
+    return coordinates
 
 
 class  Auto_json_label(object):
@@ -77,8 +102,9 @@ class  Auto_json_label(object):
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE-center/"
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
         # check the cuda device 
-        pth_save_dir = "../out/sheathCGAN_coordinates/"
-        
+        pth_save_dir = "../out/sheathCGAN_coordinates2/"
+        # the portion of attated image to 2 sides
+        self.attatch_rate  = 0.2 
 
         jason_tmp_dir  =  "D:/Deep learning/dataset/original/phantom/1/label/0.json"
         # read th jso fie in hte start :
@@ -89,7 +115,10 @@ class  Auto_json_label(object):
         self.co_len = len (self.coordinates0) 
 
         #self.database_root = "D:/Deep learning/dataset/original/phantom/1/"
-        self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
+        self.database_root = "D:/Deep learning/dataset/original/animal_tissue/2/"
+        #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
+
+
 
         self.image_dir   = self.database_root + "pic/"
         self.json_dir =  self.database_root + "label/" # for this class sthis dir ist save the modified json 
@@ -137,6 +166,27 @@ class  Auto_json_label(object):
 
 
         return img1
+    def cut_path_edge(self,pathes):
+        num,l = pathes.shape
+        #transfer from the attatch portion of initial image 
+        rate = self.attatch_rate/(2*self.attatch_rate+1)
+        # resize first 
+        L = int((2*self.attatch_rate+1)*l)
+        new_p = np.zeros((num,L))
+
+        for i in range(num):
+            new_p[i]= signal.resample(pathes[i], L)
+        # cut
+            
+
+
+
+
+
+        new_p = pathes[:,int(rate*l):int((1-rate)*l)]
+       
+
+
     def check_one_folder (self):
         #for i in os.listdir(self.image_dir): # star from the image folder
         for i in os.listdir(self.image_dir): # star from the image folder
@@ -155,16 +205,21 @@ class  Auto_json_label(object):
                 else:
                     gray  =   cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
                     H,W   = gray.shape
+                    extend = np.append(gray[:,int((1-self.attatch_rate)*W):W],gray,axis=1) # cascade
+                    extend = np.append(extend,gray[:,0:int(self.attatch_rate*W)],axis=1) # cascade
 
-                    inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(img1,Resample_size,Resample_size)
+                    #inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(img1,Resample_size,Resample_size)
+                    inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(extend,Resample_size,Resample_size)
+
                     self.GANmodel.set_G_input(inputV) 
                     self.GANmodel.forward() # predict the path 
                     pathes  =  self.GANmodel.out_pathes[0][0].cpu().detach().numpy()
                     #pathes = numpy.clip(pathes,0,1)
                     #pathes = pathes*H/Resample_size
-                    coordinates1 = encode_path_as_coordinates(pathes[0],Resample_size,Resample_size,H,W)
-                    coordinates2 = encode_path_as_coordinates(pathes[1],Resample_size,Resample_size,H,W)
-
+                    #coordinates1 = encode_path_as_coordinates(pathes[0],Resample_size,Resample_size,H,W)
+                    #coordinates2 = encode_path_as_coordinates(pathes[1],Resample_size,Resample_size,H,W)
+                    coordinates1 = encode_as_coordinates_padding (pathes[0],Resample_size,Resample_size,H,W,self.attatch_rate)
+                    coordinates2 = encode_as_coordinates_padding(pathes[1],Resample_size,Resample_size,H,W,self.attatch_rate)
                     # thsi json dir will be used to save  the generated json
                     save_json_dir = self.json_save_dir + a + ".json"
                     #copy the temp json
