@@ -54,7 +54,7 @@ class myDataloader(object):
 
 
 
-        self.noisyflag = True
+        self.noisyflag = False
         self.read_all_flag=0
         self.read_record =0
         self.folder_pointer = 0
@@ -321,13 +321,13 @@ class myDataloader(object):
                 factor=self.img_size/W
                 img_piece = this_gray 
                 img_piece = cv2.resize(img_piece, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
-                #img_piece = self.gray_scale_augmentation(img_piece)
                 if self.noisyflag == True:
+                    img_piece = self.gray_scale_augmentation(img_piece)
 
                     img_piece  = self . noisy( "gauss_noise" ,  img_piece )
                     img_piece  = self . noisy( "s&p" ,  img_piece )
 
-                    img_piece  = self . noisy( "poisson" ,  img_piece )
+                    #img_piece  = self . noisy( "speckle" ,  img_piece )
                  
 
 

@@ -15,7 +15,7 @@ import numpy
 from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers,Generator_Contour_sheath
 
 from time import time
-validation_flag = False
+validation_flag = True
 OLG_flag = True
 
 import os
@@ -213,7 +213,7 @@ netD = layer_body_sheath_res2._netD_8_multiscal_fusion300_layer()
 
 netD.apply(weights_init)
 if Continue_flag == True:
-    netD.load_state_dict(torch.load(pth_save_dir +'netD_epoch_1.pth'))
+    netD.load_state_dict(torch.load(pth_save_dir +'netD_epoch_4.pth'))
 print(netD)
  
 

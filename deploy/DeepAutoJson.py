@@ -103,7 +103,7 @@ class  Auto_json_label(object):
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
         # check the cuda device 
         pth_save_dir = "../out/sheathCGAN_coordinates2/"
-        # the portion of attated image to 2 sides
+        # the portion of attated image to 2     sides
         self.attatch_rate  = 0.2 
 
         jason_tmp_dir  =  "D:/Deep learning/dataset/original/phantom/1/label/0.json"
@@ -114,8 +114,8 @@ class  Auto_json_label(object):
         self.coordinates0 = self.jason_tmp["shapes"] [1]["points"] # remember add finding corred label 1!!!
         self.co_len = len (self.coordinates0) 
 
-        #self.database_root = "D:/Deep learning/dataset/original/phantom/1/"
-        self.database_root = "D:/Deep learning/dataset/original/animal_tissue/2/"
+        self.database_root = "D:/Deep learning/dataset/original/phantom/2/"
+        #self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
         #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
 
 
