@@ -21,7 +21,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = True 
 OLG_flag = True
-validation_flag = False
+validation_flag = True
 
 Display_fig_flag = True
 Continue_flag = True
@@ -289,19 +289,20 @@ while(1):
             mydata_loader1.read_all_flag =0
             break
 
-        mydata_loader1 .read_a_batch()
+        #mydata_loader1 .read_a_batch()
+        #mydata_loader =mydata_loader1 
 
-        mydata_loader =mydata_loader1 
-        # switch btween fake and real
-        #if switcher==0:
-        #   mydata_loader1 .read_a_batch()
-        #   mydata_loader =mydata_loader1 
-        #   switcher=1
-        #else:
-        #   switcher =0
-        #   mydata_loader =mydata_loader2 .read_a_batch()
+         ##switch btween fake and real
+        if switcher==0:
+           mydata_loader1 .read_a_batch()
+           mydata_loader =mydata_loader1 
+           if validation_flag == False :
+                switcher=1
+        else:
+           switcher =0
+           mydata_loader =mydata_loader2 .read_a_batch()
 
-        #   mydata_loader =mydata_loader2  
+           mydata_loader =mydata_loader2  
 
         #change to 3 chanels
         ini_input = mydata_loader.input_image
@@ -352,6 +353,7 @@ while(1):
 
         if validation_flag ==True:
             GANmodel.forward()
+            GANmodel.error_calculation()
         else:
             GANmodel.optimize_parameters()   # calculate loss functions, get gradients, update network weights
 

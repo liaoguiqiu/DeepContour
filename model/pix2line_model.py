@@ -82,6 +82,17 @@ class Pix2LineModel(BaseModel):
             self.optimizers.append(self.optimizer_G)
             self.optimizers.append(self.optimizer_D)
 
+        self.validation_init()
+    def validation_init(self):
+        self.J1 = 0
+        self.J2 = 0
+        self.J3 = 0
+
+        self.D1 = 0
+        self.D2 = 0
+        self.D3 = 0
+        self.validation_cnt =0
+
     def set_input(self, realA,pathes,inputG):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
 
@@ -121,6 +132,48 @@ class Pix2LineModel(BaseModel):
         self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes[0],Resample_size) 
         self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing  (self.out_pathes[0],Resample_size) 
         #self.fake_B = self.netG(self.real_A)  # G(A)
+    def error_calculation(self): 
+        #average Jaccard index J
+        def cal_J(true,predict):
+            AnB = true*predict # assume that the lable are all binary
+            AuB = true+predict
+            AuB=torch.clamp(AuB, 0, 1)
+            s  = 0.0001
+            this_j = (torch.sum(AnB)+s)/(torch.sum(AuB)+s)
+            return this_j
+        # dice cofefficient
+        def cal_D(true,predict): 
+            AB = true*predict # assume that the lable are all binary
+            #AuB = true+predict
+            #AuB=torch.clamp(AuB, 0, 1)
+            s  = 0.0001
+
+            this_d = (2 * torch.sum(AB)+s)/(torch.sum(true) + torch.sum(predict)+s)
+            return this_d
+        # calculate error
+        loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
+        self.error = 1.0*loss[0] 
+        # calculate J (IOU insetion portion)
+        real_b_hot = rendering.layers_visualized_OneHot_encodeing  (self.real_pathes,Resample_size) 
+        fake_b_hot = self.fake_B_1_hot 
+        # this is the format of hot map
+        #out  = torch.zeros([bz,3, H,W], dtype=torch.float)
+        self.validation_cnt += 1
+        self.J1 += cal_J(real_b_hot[0,0,:,:],fake_b_hot[0,0,:,:])
+        self.J2 += cal_J(real_b_hot[0,1,:,:],fake_b_hot[0,1,:,:])
+        self.J3 += cal_J(real_b_hot[0,2,:,:],fake_b_hot[0,2,:,:])
+        print (" J1 =  "  + str(self.J1/self.validation_cnt))
+        print (" J2 =  "  + str(self.J2/self.validation_cnt))
+        print (" J3 =  "  + str(self.J3/self.validation_cnt))
+
+
+
+        self.D1 += cal_D(real_b_hot[0,0,:,:],fake_b_hot[0,0,:,:])
+        self.D2 += cal_D(real_b_hot[0,1,:,:],fake_b_hot[0,1,:,:])
+        self.D3 += cal_D(real_b_hot[0,2,:,:],fake_b_hot[0,2,:,:])
+        print (" D1 =  "  + str(self.D1/self.validation_cnt))
+        print (" D2 =  "  + str(self.D2/self.validation_cnt))
+        print (" D3 =  "  + str(self.D3/self.validation_cnt))
 
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
@@ -153,7 +206,7 @@ class Pix2LineModel(BaseModel):
         self.loss_G_L1 =( 1.0*loss[0]     )*self.opt.lambda_L1
         self.loss_G_L1_2 = 0.5*loss[5] 
         # combine loss and calculate gradients
-        self.loss_G = 0*self.loss_G_GAN + self.loss_G_L1
+        self.loss_G = self.loss_G_GAN + self.loss_G_L1
         #self.loss_G =   self.loss_G_L1
 
         self.loss_G.backward()

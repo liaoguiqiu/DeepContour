@@ -213,7 +213,7 @@ netD = layer_body_sheath_res2._netD_8_multiscal_fusion300_layer()
 
 netD.apply(weights_init)
 if Continue_flag == True:
-    netD.load_state_dict(torch.load(pth_save_dir +'netD_epoch_4.pth'))
+    netD.load_state_dict(torch.load(pth_save_dir +'netD_epoch_5.pth'))
 print(netD)
  
 
