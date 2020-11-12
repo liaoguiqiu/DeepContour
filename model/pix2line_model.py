@@ -84,6 +84,8 @@ class Pix2LineModel(BaseModel):
 
         self.validation_init()
     def validation_init(self):
+        self.L1 = 0
+        self.L2 = 0
         self.J1 = 0
         self.J2 = 0
         self.J3 = 0
@@ -150,15 +152,34 @@ class Pix2LineModel(BaseModel):
 
             this_d = (2 * torch.sum(AB)+s)/(torch.sum(true) + torch.sum(predict)+s)
             return this_d
+        def cal_L (true,predct):  # the L1 distance of one contour
         # calculate error
-        loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
-        self.error = 1.0*loss[0] 
+            true=torch.clamp(true, 0, 1)
+            predct=torch.clamp(predct, 0, 1)
+
+
+            error = torch.abs(true-predct)
+            l = error.size()
+            x= torch.sum(error)/l[0]
+            return x
+        self.set_requires_grad(self.netG, False)  # D requires no gradients when optimizing G
+
+        self.validation_cnt += 1
+
+        #loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
+        #self.error = 1.0*loss[0] 
+        #out_pathes[fusion_predcition][batch 0, contour index,:]
+        self.L1 += cal_L(self.out_pathes[0][0,0,:],self.real_pathes[0,0,:])
+        self.L2 += cal_L(self.out_pathes[0][0,1,:],self.real_pathes[0,1,:])
+
+        print (" L1 =  "  + str(self.L1/self.validation_cnt*Resample_size))
+        print (" L2 =  "  + str(self.L2/self.validation_cnt*Resample_size))
+
         # calculate J (IOU insetion portion)
         real_b_hot = rendering.layers_visualized_OneHot_encodeing  (self.real_pathes,Resample_size) 
         fake_b_hot = self.fake_B_1_hot 
         # this is the format of hot map
         #out  = torch.zeros([bz,3, H,W], dtype=torch.float)
-        self.validation_cnt += 1
         self.J1 += cal_J(real_b_hot[0,0,:,:],fake_b_hot[0,0,:,:])
         self.J2 += cal_J(real_b_hot[0,1,:,:],fake_b_hot[0,1,:,:])
         self.J3 += cal_J(real_b_hot[0,2,:,:],fake_b_hot[0,2,:,:])
