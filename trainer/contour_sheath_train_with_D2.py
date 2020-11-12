@@ -20,7 +20,7 @@ from deploy.basic_trans import Basic_oper
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = True 
-OLG_flag = True
+OLG_flag = False
 validation_flag = True
 
 Display_fig_flag = True
@@ -123,8 +123,8 @@ GANmodel.netD.apply(weights_init)
 GANmodel.netG.apply(weights_init)
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
-    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_3.pth'))
-    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_3.pth'))
+    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_1.pth'))
+    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_1.pth'))
     #GANmodel.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
 
     #torch.save(GANmodel.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
@@ -296,7 +296,7 @@ while(1):
         if switcher==0:
            mydata_loader1 .read_a_batch()
            mydata_loader =mydata_loader1 
-           if validation_flag == False :
+           if validation_flag == False    :
                 switcher=1
         else:
            switcher =0
@@ -479,7 +479,7 @@ while(1):
             show5 =  real_label[0,0,:,:].cpu().detach().numpy()*255 
             cv2.imshow('real',show5.astype(numpy.uint8)) 
 
-            display_prediction(mydata_loader,  GANmodel.out_pathes[0],hot)
+            display_prediction(mydata_loader,  GANmodel.out_pathes[2],hot)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
               break

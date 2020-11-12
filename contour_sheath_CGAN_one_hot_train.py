@@ -21,6 +21,7 @@ import numpy
 from image_trans import BaseTransform  
 from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers,Generator_Contour_sheath
 import rendering
+validation_flag = True
 
 
 import os
@@ -28,7 +29,7 @@ from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 Continue_flag = True
 # Switch control for the Visdom or Not
-Visdom_flag  = False 
+Visdom_flag  = True 
 Display_fig_flag = True
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
@@ -175,8 +176,8 @@ epoch=0
 #transform = BaseTransform(  Resample_size,(104/256.0, 117/256.0, 123/256.0))
 #transform = BaseTransform(  Resample_size,[104])  #gray scale data
 iteration_num =0
-mydata_loader = myDataloader (Batch_size,Resample_size,Path_length)
-test_data_loader =  myDataloader (Batch_size,Resample_size,Path_length,validation=True)
+#mydata_loader = myDataloader (Batch_size,Resample_size,Path_length)
+mydata_loader =  myDataloader (Batch_size,Resample_size,Path_length,validation=validation_flag)
 def draw_coordinates_color(img1,vy,color):
         
         if color ==0:
@@ -209,12 +210,13 @@ while(1):
             read_id =0
             mydata_loader.read_all_flag =0
             break
-        if (test_data_loader.read_all_flag ==1):
-            read_id =0
-            test_data_loader.read_all_flag =0
-            break
+        #if (test_data_loader.read_all_flag ==1):
+        #    read_id =0
+        #    test_data_loader.read_all_flag =0
+        #    break
 
         mydata_loader .read_a_batch()
+        #test_data_loader.read_a_batch()
         #change to 3 chanels
         ini_input = mydata_loader.input_image
         real =  torch.from_numpy(numpy.float32(ini_input)) 
@@ -258,7 +260,10 @@ while(1):
 
         GANmodel.update_learning_rate()    # update learning rates in the beginning of every epoch.
         GANmodel.set_input(realA,realB)         # unpack data from dataset and apply preprocessing
-        GANmodel.optimize_parameters()   # calculate loss functions, get gradients, update network weights
+        if validation_flag ==True:
+            GANmodel.forward()
+        else:
+            GANmodel.optimize_parameters()   # calculate loss functions, get gradients, update network weights
 
          
         #outputall = netD(inputv)
@@ -287,8 +292,7 @@ while(1):
 
         
         #errD_real.backward()
-        D_x = GANmodel.loss_D.data.mean()
-        G_x = GANmodel.loss_G.data.mean()
+        
 
         #D_x1 = errD_real1.data.mean()
         #D_x2 = errD_real2.data.mean()
@@ -301,17 +305,20 @@ while(1):
         # train with fake
         # if cv2.waitKey(12) & 0xFF == ord('q'):
         #       break 
-         
-        print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
-              % (epoch, 0, read_id, 0,
-                 G_x, D_x, 0, 0, 0))
-        if read_id % 2 == 0 and Visdom_flag == True:
-                plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, D_x.cpu().detach().numpy())
-                plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, G_x.cpu().detach().numpy())
+        if validation_flag == False:
+            D_x = GANmodel.loss_D.data.mean()
+            G_x = GANmodel.loss_G.data.mean()
+            print('[%d/%d][%d/%d] Loss_D: %.4f Loss_G: %.4f D(x): %.4f D(G(z)): %.4f / %.4f'
+                  % (epoch, 0, read_id, 0,
+                     G_x, D_x, 0, 0, 0))
+            if read_id % 2 == 0 and Visdom_flag == True:
+                
+                    plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, D_x.cpu().detach().numpy())
+                    plotter.plot( 'cLOSS', 'cLOSS', 'cLOSS', iteration_num, G_x.cpu().detach().numpy())
 
-                #plotter.plot( 'cLOSS1', 'cLOSS1', 'cLOSS1', iteration_num, D_x1.cpu().detach().numpy())
-                #plotter.plot( 'cLOSS12', 'cLOSS2', 'cLOSS2', iteration_num, D_x2.cpu().detach().numpy())
-                #plotter.plot( 'cLOSS_f', 'cLOSSf', 'cLOSSf', iteration_num, D_xf.cpu().detach().numpy())
+                    #plotter.plot( 'cLOSS1', 'cLOSS1', 'cLOSS1', iteration_num, D_x1.cpu().detach().numpy())
+                    #plotter.plot( 'cLOSS12', 'cLOSS2', 'cLOSS2', iteration_num, D_x2.cpu().detach().numpy())
+                    #plotter.plot( 'cLOSS_f', 'cLOSSf', 'cLOSSf', iteration_num, D_xf.cpu().detach().numpy())
         if read_id % 1 == 0 and Display_fig_flag== True:
             #vutils.save_image(real_cpu,
             #        '%s/real_samples.png' % opt.outf,
@@ -336,6 +343,7 @@ while(1):
             #    color1 = draw_coordinates_color(color1,path2[i],i)
                  
             saveout  = GANmodel.fake_B
+            pth1, pth2= rendering.onehot2layers( GANmodel.fake_B[0,:,:,:])
             
             show2 =  saveout[0,:,:,:].cpu().detach().numpy()*255 
 
@@ -347,6 +355,8 @@ while(1):
 
          
            
+            color1 = draw_coordinates_color(color1,pth1,0)
+            color1 = draw_coordinates_color(color1,pth2,1)
 
             #for i in range ( len(path2)):
             #    color = draw_coordinates_color(color,path2[i],i)

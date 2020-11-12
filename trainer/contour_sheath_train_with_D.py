@@ -474,7 +474,7 @@ while(1):
             show5 =  real_label[0,0,:,:].cpu().detach().numpy()*255 
             cv2.imshow('real',show5.astype(numpy.uint8)) 
 
-            display_prediction(mydata_loader,  GANmodel.out_pathes[0],hot)
+            display_prediction(mydata_loader,  GANmodel.out_pathes[4],hot)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
               break

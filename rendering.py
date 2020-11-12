@@ -161,14 +161,32 @@ def layers_visualized_OneHot_encodeing(layers,H): # this is for sheath contour s
 
             out[j,1,0:layers[j,0,k] ,k]=1 # second channel is the sheath, albels is 1
 
-            out[j,2,layers[j,1,k]:H,k]=1 # third  channel is the sheath, albels is 1
+            out[j,2,layers[j,1,k]:H,k]=1 # third  channel is the tisue, albels is 1
 
 
 
     #out   =( out  -0.5)/0.5
     out  = out.cuda()
     return out
- 
+def onehot2layers(onehot):
+    _,H,W = onehot.size()
+    layer1  = np.zeros(W)
+    layer2  = np.ones(W) * (H-1)
+
+    for i in range(W): # search the sheath contour  # second channel is the sheath
+        for j in range(H-5):
+            if(onehot[1,j,i]>0.5 and onehot[1,j+2,i ]<0.5 and (onehot[0,j+2,i ]>0.5 or onehot[2,j+2,i ]>0.5 )):
+                layer1[i]=j
+                break
+    for i in range(W): # search the tissue contour 
+        for j in range(H-5):
+            if(onehot[2,j,i ]<0.5 and onehot[2,j+2,i ]>0.5 and (onehot[0, j ,i ]>0.5 or onehot[1,j,i ]>0.5 )):
+                layer2[i]=j
+                break
+
+
+
+    return layer1,layer2
 
 def pytorch_test():
     H  = 300 

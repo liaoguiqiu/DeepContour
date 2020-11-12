@@ -224,7 +224,7 @@ class Pix2LineModel(BaseModel):
         #self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] + 0.1*loss[2] + 0.2*loss[3])*self.opt.lambda_L1
         #self.loss_G_L1 =( 1.0*loss[0]  + 0.02*loss[1] + 0.02*loss[2]+ 0.02*loss[3]+ 0.02*loss[4]+ 0.02*loss[5])*self.opt.lambda_L1
         #self.loss_G_L1_2 = 0.5*loss[0] 
-        self.loss_G_L1 =( 1.0*loss[0]     )*self.opt.lambda_L1
+        self.loss_G_L1 =( 1.0*loss[0]  +   1.0*loss[1] + 1.0*loss[4] +1.0*loss[5]  )*self.opt.lambda_L1
         self.loss_G_L1_2 = 0.5*loss[5] 
         # combine loss and calculate gradients
         self.loss_G = self.loss_G_GAN + self.loss_G_L1
