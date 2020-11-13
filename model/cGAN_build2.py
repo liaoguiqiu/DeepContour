@@ -8,6 +8,8 @@ from model.base_model import BaseModel
 import importlib
 import model.pix2pix_model as pix2pix_model
 import model.pix2line_model as pix2line_model
+#import model.pix2line_model2 as pix2line_model
+
 
 
 class CGAN_creator(object):

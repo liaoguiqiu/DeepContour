@@ -30,10 +30,13 @@ class conv_keep_W(nn.Module):
     def forward(self, x):
         #"""Forward function (with skip connections)"""
         out =  self.conv_block(x)  # add skip connections
-        local_bz,channel,H,W = out.size() 
-        downsample = nn.AdaptiveAvgPool2d((H,W))(x)
-        _,channel2,_,_ = downsample.size() 
-        out[:,0:channel2,:,:] = out[:,0:channel2,:,:]+  downsample
+
+        # this is a self desined residual block for Deeper nets
+
+        #local_bz,channel,H,W = out.size() 
+        #downsample = nn.AdaptiveAvgPool2d((H,W))(x)
+        #_,channel2,_,_ = downsample.size() 
+        #out[:,0:channel2,:,:] = out[:,0:channel2,:,:]+  downsample
         return out
 #output width=((W-F+2*P )/S)+1
 # Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
@@ -60,10 +63,10 @@ class conv_dv_2(nn.Module):
         #"""Forward function (with skip connections)"""
 
         out =  self.conv_block(x)  # add skip connections
-        local_bz,channel,H,W = out.size() 
-        downsample = nn.AdaptiveAvgPool2d((H,W))(x)
-        _,channel2,_,_ = downsample.size() 
-        out[:,0:channel2,:,:] = out[:,0:channel2,:,:]+  downsample
+        #local_bz,channel,H,W = out.size() 
+        #downsample = nn.AdaptiveAvgPool2d((H,W))(x)
+        #_,channel2,_,_ = downsample.size() 
+        #out[:,0:channel2,:,:] = out[:,0:channel2,:,:]+  downsample
         return out
 #output width=((W-F+2*P )/S)+1
 # Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)

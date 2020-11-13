@@ -21,7 +21,7 @@ import numpy
 from image_trans import BaseTransform  
 from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers,Generator_Contour_sheath
 import rendering
-validation_flag = True
+validation_flag = False
 
 
 import os

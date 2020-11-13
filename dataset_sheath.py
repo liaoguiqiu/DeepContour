@@ -133,7 +133,7 @@ class myDataloader(object):
               return np.clip(noisy,0,254)
            elif noise_typ =='speckle':
               row,col  = image.shape
-              gauss = np.random.randn(row,col )
+              gauss = 0.5*np.random.randn(row,col )
               gauss = gauss.reshape(row,col )        
               noisy = image + image * gauss
               return np.clip(noisy,0,254)
@@ -324,10 +324,10 @@ class myDataloader(object):
                 if self.noisyflag == True:
                     img_piece = self.gray_scale_augmentation(img_piece)
 
-                    img_piece  = self . noisy( "gauss_noise" ,  img_piece )
+                    img_piece  = self . noisy( "blur" ,  img_piece )
                     img_piece  = self . noisy( "s&p" ,  img_piece )
 
-                    #img_piece  = self . noisy( "speckle" ,  img_piece )
+                    img_piece  = self . noisy( "speckle" ,  img_piece )
                  
 
 

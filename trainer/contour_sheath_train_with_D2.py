@@ -21,7 +21,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = True 
 OLG_flag = False
-validation_flag = True
+validation_flag = False
 
 Display_fig_flag = True
 Continue_flag = True
@@ -30,7 +30,7 @@ if Visdom_flag == True:
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 
 
-pth_save_dir = "../out/sheathCGAN_coordinates2/"
+pth_save_dir = "../out/sheathCGAN_coordinates3/"
 #pth_save_dir = "../out/deep_layers/"
 
 if not os.path.exists(pth_save_dir):
@@ -387,9 +387,10 @@ while(1):
  
         if validation_flag ==False:
             D_x = GANmodel.loss_D.data.mean()
-            G_x = GANmodel.loss_G.data.mean()
-            G_x_L12= GANmodel.loss_G_L1_2.data.mean()
-
+            G_x = GANmodel.displayloss1 
+            G_x_L12= GANmodel.displayloss2
+            #G_x = GANmodel.loss_G . data.mean() 
+            #G_x_L12= GANmodel.loss_G_L1_2 . data.mean()  
 
         #D_x1 = errD_real1.data.mean()
         #D_x2 = errD_real2.data.mean()
@@ -409,9 +410,11 @@ while(1):
                      G_x, D_x, 0, 0, 0))
 
         if read_id % 2 == 0 and Visdom_flag == True and validation_flag==False:
-                plotter.plot( 'DLOSS', 'DLOSS', 'DLOSS', iteration_num, D_x.cpu().detach().numpy())
-                plotter.plot( 'GLOSS', 'GLOSS', 'GLOSS', iteration_num, G_x.cpu().detach().numpy())
-                plotter.plot( 'GlLOSS', 'GlLOSS', 'GlLOSS', iteration_num, G_x_L12.cpu().detach().numpy())
+                plotter.plot( 'l0', 'l0', 'l0', iteration_num, GANmodel.displayloss0.cpu().detach().numpy())
+
+                plotter.plot( 'l1', 'l1', 'l1', iteration_num, GANmodel.displayloss1.cpu().detach().numpy())
+                plotter.plot( 'l2', 'l2', 'l2', iteration_num, GANmodel.displayloss2.cpu().detach().numpy())
+                plotter.plot( 'l3', 'l3', 'l3', iteration_num, GANmodel.displayloss3.cpu().detach().numpy())
 
                 #plotter.plot( 'cLOSS1', 'cLOSS1', 'cLOSS1', iteration_num, D_x1.cpu().detach().numpy())
                 #plotter.plot( 'cLOSS12', 'cLOSS2', 'cLOSS2', iteration_num, D_x2.cpu().detach().numpy())
@@ -479,7 +482,8 @@ while(1):
             show5 =  real_label[0,0,:,:].cpu().detach().numpy()*255 
             cv2.imshow('real',show5.astype(numpy.uint8)) 
 
-            display_prediction(mydata_loader,  GANmodel.out_pathes[2],hot)
+            #display_prediction(mydata_loader,  GANmodel.out_pathes[0],hot)
+            display_prediction(mydata_loader,  GANmodel.out_pathes0,hot)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
               break

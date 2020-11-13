@@ -1,6 +1,7 @@
 import torch
 from model.base_model import BaseModel
 import model.networks as  networks
+from time import time
 
 
 class Pix2PixModel(BaseModel):
@@ -95,8 +96,11 @@ class Pix2PixModel(BaseModel):
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        self.fake_B = self.netG(self.real_A)  # G(A)
+        start_time = time()
 
+        self.fake_B = self.netG(self.real_A)  # G(A)
+        test_time_point = time()
+        print (" all test point time is [%f] " % ( test_time_point - start_time))
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
         # Fake; stop backprop to the generator by detaching fake_B
