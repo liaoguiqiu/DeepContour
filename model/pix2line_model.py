@@ -205,18 +205,19 @@ class Pix2LineModel(BaseModel):
         start_time = time()
         #self.out_pathes = self.netG(self.input_G) # coordinates encoding
         f1,self.out_pathes1,self.path_long1 = self.netG.side_branch1 (self.input_G) # coordinates encoding
-        test_time_point = time()
-        print (" all test point time is [%f] " % ( test_time_point - start_time))
+        
         f2,self.out_pathes2,self.path_long2 = self.netG.side_branch2 (self.input_G) # coordinates encoding
         f3,self.out_pathes3,self.path_long3 = self.netG.side_branch3 (self.input_G) # coordinates encoding
         self.out_pathes0 =self.netG. fuse_forward( f1,f2,f3)
+        test_time_point = time()
+        print (" all test point time is [%f] " % ( test_time_point - start_time))
         self.out_pathes = [self.out_pathes0,self.out_pathes1,self.out_pathes2,self.out_pathes3]
 
 
 
 
-        self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes0,Resample_size) 
-        self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing  (self.out_pathes0,Resample_size) 
+        self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes3,Resample_size) 
+        self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing  (self.out_pathes3,Resample_size) 
         #self.fake_B = self.netG(self.real_A)  # G(A)
 
     def backward_D(self):
@@ -236,8 +237,10 @@ class Pix2LineModel(BaseModel):
     def backward_G(self):
         """Calculate GAN and L1 loss for the generator"""
         # First, G(A) should fake the discriminator
+        self.optimizer_G.zero_grad()        # set G's gradients to zero
+
         self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
-        #self.set_requires_grad(self.netG, True)  # D requires no gradients when optimizing G
+        self.set_requires_grad(self.netG, False)  # D requires no gradients when optimizing G
         # just remain the upsample fusion parameter to optimization 
         #self.set_requires_grad(self.netG.side_branch1, False)  # D requires no gradients when optimizing G
         #self.set_requires_grad(self.netG.side_branch2, False)  # D requires no gradients when optimizing G
@@ -245,9 +248,9 @@ class Pix2LineModel(BaseModel):
         #self.set_requires_grad(self.netG.side_branch1.fullout, True)  # D requires no gradients when optimizing G
         #self.set_requires_grad(self.netG.side_branch2.fullout, True)  # D requires no gradients when optimizing G
         #self.set_requires_grad(self.netG.side_branch3.fullout, True)  # D requires no gradients when optimizing G
+        self.set_requires_grad(self.netG.fusion_layer , True)  # D requires no gradients when optimizing G
 
 
-        self.optimizer_G_f.zero_grad()        # set G's gradients to zero
 
         fake_AB = torch.cat((self.real_A, self.fake_B), 1)
         pred_fake = self.netD(fake_AB)
@@ -269,16 +272,19 @@ class Pix2LineModel(BaseModel):
 
         self.loss_G.backward(retain_graph=True)
         #self.optimizer_G.step()             # udpate G's weights
-        self.optimizer_G_f.step()             # udpate G's weights
+        self.optimizer_G.step()             # udpate G's weights
 
     def backward_G_1(self):
-        """Calculate GAN and L1 loss for the generator"""
+        self.optimizer_G.zero_grad()        # set G's gradients to zero
+ 
         # First, G(A) should fake the discriminator
         self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
+        self.set_requires_grad(self.netG, True)  # D requires no gradients when optimizing G
+
         #self.set_requires_grad(self.netG.side_branch1, True)  # D requires no gradients when optimizing G
         #self.set_requires_grad(self.netG.side_branch2, False)  # D requires no gradients when optimizing G
         #self.set_requires_grad(self.netG.side_branch3, False)  # D requires no gradients when optimizing G
-        self.optimizer_G_1.zero_grad()        # set G's gradients to zero
+        
         loss1 = self.criterionMTL.multi_loss([self.out_pathes1],self.real_pathes) 
         #self.loss_G_L1 = Variable( loss1[0],requires_grad=True)
         self.loss_G_L1 =   loss1[0] 
@@ -287,13 +293,16 @@ class Pix2LineModel(BaseModel):
         self.loss_G_L1.backward(retain_graph=True)
         self.optimizer_G_1.step()             # udpate G's weights
     def backward_G_2(self):
-        """Calculate GAN and L1 loss for the generator"""
+        self.optimizer_G.zero_grad()        # set G's gradients to zero
+ 
         # First, G(A) should fake the discriminator
         self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
+        self.set_requires_grad(self.netG, True)  # D requires no gradients when optimizing G
+
         #self.set_requires_grad(self.netG.side_branch1, False)  # D requires no gradients when optimizing G
         #self.set_requires_grad(self.netG.side_branch2, True)  # D requires no gradients when optimizing G
         #self.set_requires_grad(self.netG.side_branch3, False)  # D requires no gradients when optimizing G
-        self.optimizer_G_2.zero_grad()        # set G's gradients to zero
+         
         loss2 = self.criterionMTL.multi_loss([self.out_pathes2],self.real_pathes) 
         
         self.loss_G_L2 =   loss2[0] 
@@ -302,19 +311,26 @@ class Pix2LineModel(BaseModel):
         self.loss_G_L2.backward(retain_graph=True)
         self.optimizer_G_2.step()             # udpate G's weights
     def backward_G_3(self):
+
         """Calculate GAN and L1 loss for the generator"""
         # First, G(A) should fake the discriminator
+        self.optimizer_G.zero_grad()        # set G's gradients to zero
+
         self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
+        self.set_requires_grad(self.netG, True)  # D requires no gradients when optimizing G
+
         #self.set_requires_grad(self.netG.side_branch1, False)  # D requires no gradients when optimizing G
         #self.set_requires_grad(self.netG.side_branch2, False)  # D requires no gradients when optimizing G
         #self.set_requires_grad(self.netG.side_branch3, True)  # D requires no gradients when optimizing G
 
-        self.optimizer_G_3.zero_grad()        # set G's gradients to zero
+       
          
         loss3 = self.criterionMTL.multi_loss([self.out_pathes3],self.real_pathes) 
         
         self.loss_G_L3 =  loss3[0] 
-        self.loss_G_L3.backward(retain_graph=True)
+        #self.loss_G_L3.backward(retain_graph=True)
+        self.loss_G_L3.backward( )
+
         self.optimizer_G_3.step()             # udpate G's weights
 
     def optimize_parameters(self):
@@ -325,10 +341,13 @@ class Pix2LineModel(BaseModel):
         self.backward_D()                # calculate gradients for D
         self.optimizer_D.step()          # update D's weights
         # update G
+
         self.backward_G()                   # calculate graidents for G
 
         self.backward_G_1()                   # calculate graidents for G
+
         self.backward_G_2()                   # calculate graidents for G
+
         self.backward_G_3()                   # calculate graidents for G
         self.displayloss0 = self.loss_G_L0. data.mean()
 

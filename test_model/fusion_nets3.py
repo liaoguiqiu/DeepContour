@@ -6,6 +6,10 @@ import  arg_parse
 from arg_parse import kernels, strides, pads
 from  dataset_sheath import Path_length,Batch_size,Resample_size
 import torchvision.models
+import numpy as np
+import cv2
+
+
 
 class _2LayerScale1(nn.Module):
 #output width=((W-F+2*P )/S)+1
@@ -14,7 +18,7 @@ class _2LayerScale1(nn.Module):
         super(_2LayerScale1, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
    
-        feature = 18
+        feature = 8
 
          
         self.layer_num =2
@@ -48,7 +52,7 @@ class _2LayerScale1(nn.Module):
         feature = feature *2
       
 
-        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature,k=(3,1),s=(1,1),p=(0,0)))  # 2*256
+        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0)))  # 2*256
          
         feature = feature *2
         #self.fullout = nn.Sequential(
@@ -59,7 +63,7 @@ class _2LayerScale1(nn.Module):
         #                                            )
         self. low_scale_out = nn.Sequential(
               
-             nn.Conv2d(feature, 1 ,(1,1), (1,1), (0,0), bias=False) #2*64           
+             nn.Conv2d(feature, 2 ,(1,1), (1,1), (0,0), bias=False) #2*64           
              #nn.BatchNorm2d(1),
              #nn.LeakyReLU(0.1,inplace=True)
                
@@ -75,11 +79,11 @@ class _2LayerScale1(nn.Module):
         # remove one dimention
         side_out_long = nn.functional.interpolate(side_out_low, size=(2, Path_length), mode='bilinear') 
 
-        local_bz,_,num,local_l = side_out_low.size() 
+        local_bz,num,_,local_l  = side_out_low.size() 
         side_out_low = side_out_low.view(-1,num,local_l).squeeze(1)# squess before fully connected 
         #local_bz,_,num,local_l = side_out_low.size() 
         #side_out_low = side_out_low.view(-1,num,local_l).squeeze(1)# squess before fully connected
-        local_bz,_,num,local_l = side_out_long.size() 
+        local_bz,num,_,local_l  = side_out_long.size() 
         side_out_long = side_out_long.view(-1,num,local_l).squeeze(1)# squess before fully connected 
         #local_bz,_,num,local_l = side_out_full.size() 
         #side_out_full = side_out_full.view(-1,num,local_l).squeeze(1)# squess before fully connected
@@ -94,7 +98,7 @@ class _2LayerScale2(nn.Module):
         super(_2LayerScale2, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
    
-        feature = 18
+        feature = 8
 
          
         self.layer_num =2
@@ -129,7 +133,7 @@ class _2LayerScale2(nn.Module):
         feature = feature *2
       
 
-        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature,k=(3,1),s=(1,1),p=(0,0))) #2*64
+        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0))) #2*64
         feature = feature *2
 
         #self.fullout = nn.Sequential(
@@ -140,7 +144,7 @@ class _2LayerScale2(nn.Module):
         #                                            )
         self. low_scale_out = nn.Sequential(
               
-             nn.Conv2d(feature, 1 ,(1,1), (1,1), (0,0), bias=False) #2*64           
+             nn.Conv2d(feature, 2 ,(1,1), (1,1), (0,0), bias=False) #2*64           
              #nn.BatchNorm2d(1),
              #nn.LeakyReLU(0.1,inplace=True)
                
@@ -157,11 +161,11 @@ class _2LayerScale2(nn.Module):
         # remove one dimention
         side_out_long = nn.functional.interpolate(side_out_low, size=(2, Path_length), mode='bilinear') 
 
-        local_bz,_,num,local_l = side_out_low.size() 
+        local_bz,num,_,local_l  = side_out_low.size() 
         side_out_low = side_out_low.view(-1,num,local_l).squeeze(1)# squess before fully connected 
         #local_bz,_,num,local_l = side_out_low.size() 
         #side_out_low = side_out_low.view(-1,num,local_l).squeeze(1)# squess before fully connected
-        local_bz,_,num,local_l = side_out_long.size() 
+        local_bz,num,_,local_l = side_out_long.size() 
         side_out_long = side_out_long.view(-1,num,local_l).squeeze(1)# squess before fully connected 
         #local_bz,_,num,local_l = side_out_full.size() 
         #side_out_full = side_out_full.view(-1,num,local_l).squeeze(1)# squess before fully connected
@@ -179,62 +183,75 @@ class _2LayerScale3(nn.Module):
         super(_2LayerScale3, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
    
-        feature = 18
+        feature = 32
 
          
         self.layer_num =2
         #a side branch predict with original iamge with rectangular kernel
+        # 256*256 - 128*256
         #limit=1024
         self.side_branch1  =  nn.ModuleList()    
         
-        self.side_branch1.append(  baseM.conv_dv_2(3,feature))# 256*256 - 128*128
-
-        
+        self.side_branch1.append(  baseM.conv_keep_W(3,feature))# 64*256 - 32*256
+        self.side_branch1.append(  baseM.conv_keep_all(feature,feature))
       
 
-        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))# 128*128 - 64*128
-        feature = feature *2
+         
         
-        #self.side_branch1.append(  conv_keep_all(feature, feature))
-        self.side_branch1.append(  baseM.conv_dv_2(feature,2*feature))# 64*128  - 32*64
+      
+        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))# 32*256  - 16*256
         feature = feature *2
+        self.side_branch1.append(  baseM.conv_keep_all(feature,feature))
+
         
          
-        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))# 32*64  - 16*64
+        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))# 16*256  - 8*256
         feature = feature *2
-        
-        #self.side_branch1.append(  conv_keep_all(feature, feature))
-        #self.side_branch1.append(  conv_keep_all(feature, feature))
+        self.side_branch1.append(  baseM.conv_keep_all(feature,feature))
+         
 
-        self.side_branch1.append(  baseM.conv_dv_2(feature,2*feature))# 16*64  - 8*32
+        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))# 8*256  -4*256
         feature = feature *2
-        
+        self.side_branch1.append(  baseM.conv_keep_all(feature,feature))
+
+         
        
-        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))# 8*32  - 4*32
+        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature)) # 4*256 -3
         feature = feature *2
-      
+        #self.side_branch1.append(  baseM.conv_keep_all(feature,feature))
+        
 
-        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature,k=(3,1),s=(1,1),p=(0,0))) #2*32
+        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature,k=(2,1),s=(1,1),p=(0,0)))  # 2*256
+         
         feature = feature *2
-
-
         #self.fullout = nn.Sequential(
               
-        #     nn.ConvTranspose2d(feature, 256,(1,8), (1,8), (0,0), bias=False)   #2*256
-        #     #nn.ConvTranspose2d(feature, self.layer_num,(1,4), (1,4), (0,0), bias=False)    
+        #     nn.Conv2d(feature, 256,(1,1), (1,1), (0,0), bias=False)   #2*256       
         #     #nn.BatchNorm2d(1),
         #     #nn.LeakyReLU(0.1,inplace=True)
         #                                            )
         self. low_scale_out = nn.Sequential(
               
-             nn.Conv2d(feature, 1,(1,1), (1,1), (0,0), bias=False)  #2*32      
+             nn.Conv2d(feature, 2 ,(1,1), (1,1), (0,0), bias=False) #2*64           
              #nn.BatchNorm2d(1),
              #nn.LeakyReLU(0.1,inplace=True)
                
-                                 )   
+                                 )
+    def display_one_channel(self,img):
+        gray2  =   img[0,0,:,:].cpu().detach().numpy()*104+104
+        cv2.imshow('down on one',gray2.astype(np.uint8)) 
+
     def forward(self, x):
 
-        side_out =x
+        #m = nn.AdaptiveAvgPool2d((64,Path_length))
+        m = nn.AdaptiveMaxPool2d((64,Path_length))
+
+        #AdaptiveMaxPool2d
+        x_s = m(x)
+        self.display_one_channel(x_s)
+        #one chaneel:
+        
+        side_out =x_s
         for j, name in enumerate(self.side_branch1):
             side_out = self.side_branch1[j](side_out)
 
@@ -242,13 +259,13 @@ class _2LayerScale3(nn.Module):
         side_out_low = self.low_scale_out (side_out)
 
         # remove one dimention
-        side_out_long = nn.functional.interpolate(side_out_low, size=(2, Path_length), mode='bilinear') 
+        side_out_long = nn.functional.interpolate(side_out_low, size=(1, Path_length), mode='bilinear') 
 
-        local_bz,_,num,local_l = side_out_low.size() 
+        local_bz,num,_,local_l = side_out_low.size() 
         side_out_low = side_out_low.view(-1,num,local_l).squeeze(1)# squess before fully connected 
         #local_bz,_,num,local_l = side_out_low.size() 
         #side_out_low = side_out_low.view(-1,num,local_l).squeeze(1)# squess before fully connected
-        local_bz,_,num,local_l = side_out_long.size() 
+        local_bz,num,_,local_l = side_out_long.size() 
         side_out_long = side_out_long.view(-1,num,local_l).squeeze(1)# squess before fully connected 
         #local_bz,_,num,local_l = side_out_full.size() 
         #side_out_full = side_out_full.view(-1,num,local_l).squeeze(1)# squess before fully connected
@@ -260,21 +277,28 @@ class Fusion(nn.Module):
     def __init__(self):
         super(Fusion, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
-        self. up2 = nn.ConvTranspose2d(1152, 576,(1,4), (1,4), (0,0), bias=False)   
-        self. up3 =   nn.ConvTranspose2d(1152, 576,(1,8), (1,8), (0,0), bias=False)  
-        self. fusion = nn.Conv2d(1152*2,1,(1,3), (1,1), (0,1), bias=False)    # from 3 dpth branch to one   
+        self. up2 = nn.ConvTranspose2d(512, 512,(1,4), (1,4), (0,0), bias=False)   
+        self. up3 =   nn.ConvTranspose2d(1024, 512,(1,8), (1,8), (0,0), bias=False)  
+        self. fusion = nn.Conv2d(2048,512,(1,3), (1,1), (0,1), bias=False)    # from 3 dpth branch to one   
+        self. fusion2 = nn.Conv2d(512,512 ,(1,3), (1,1), (0,1), bias=False)    # from 3 dpth branch to one   
+        self. fusion3 = nn.Conv2d(512 ,2,(1,3), (1,1), (0,1), bias=False)    # from 3 dpth branch to one   
+        
         self.tan_activation = nn.Tanh()
         
     def forward(self,side_out1,side_out2,side_out3):
         side_out2 = self. up2(side_out2)
-        side_out3 = self. up3(side_out3)
+        side_out3 =  side_out3 
 
 
         fuse=torch.cat((side_out1,side_out2,side_out3),1)
         fuse=self.fusion(fuse)
+        fuse=self.fusion2(fuse)
+        fuse=self.fusion3(fuse)
+
+
     
 
-        local_bz,_,num,local_l = fuse.size() 
+        local_bz,num,_,local_l = fuse.size() 
 
         out  = fuse.view(-1,num,local_l).squeeze(1)# squess before fully connected
         return out

@@ -12,7 +12,7 @@ from random import random
 import pickle
 
 seed(1)
-Batch_size = 1
+Batch_size = 3
 Resample_size =256
 Path_length = 256
 Augment_limitation_flag = False

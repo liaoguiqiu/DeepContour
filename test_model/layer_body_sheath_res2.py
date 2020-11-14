@@ -18,8 +18,10 @@ class conv_keep_W(nn.Module):
     def build_conv_block(self, indepth,outdepth,k,s,p):
         module = nn.Sequential(
     # relection padding padding_left , \text{padding\_right}padding_right , \text{padding\_top}padding_top , \text{padding\_bottom}padding_bottom 
-            nn.ReflectionPad2d((p[1],p[1],p[0],p[0])), 
-            nn.Conv2d(indepth, outdepth,k, s, (0,0), bias=False),          
+            #nn.ReflectionPad2d((p[1],p[1],p[0],p[0])), 
+            #nn.Conv2d(indepth, outdepth,k, s, (0,0), bias=False),  
+            nn.Conv2d(indepth, outdepth,k, s, p, bias=False),          
+            
             nn.BatchNorm2d(outdepth),
             #nn.GroupNorm(8*int(outdepth/basic_feature),outdepth),
 
@@ -33,10 +35,10 @@ class conv_keep_W(nn.Module):
 
         # this is a self desined residual block for Deeper nets
 
-        #local_bz,channel,H,W = out.size() 
-        #downsample = nn.AdaptiveAvgPool2d((H,W))(x)
-        #_,channel2,_,_ = downsample.size() 
-        #out[:,0:channel2,:,:] = out[:,0:channel2,:,:]+  downsample
+        local_bz,channel,H,W = out.size() 
+        downsample = nn.AdaptiveAvgPool2d((H,W))(x)
+        _,channel2,_,_ = downsample.size() 
+        out[:,0:channel2,:,:] = out[:,0:channel2,:,:]+  downsample
         return out
 #output width=((W-F+2*P )/S)+1
 # Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
@@ -49,8 +51,10 @@ class conv_dv_2(nn.Module):
 
     def build_conv_block(self, indepth,outdepth,k,s,p):
         module = nn.Sequential(
-             nn.ReflectionPad2d((p[1],p[1],p[0],p[0])),             
-             nn.Conv2d(indepth, outdepth,k, s,(0,0), bias=False),          
+             #nn.ReflectionPad2d((p[1],p[1],p[0],p[0])),             
+             #nn.Conv2d(indepth, outdepth,k, s,(0,0), bias=False), 
+             nn.Conv2d(indepth, outdepth,k, s,p, bias=False),          
+             
              nn.BatchNorm2d(outdepth),
              #nn.GroupNorm(8*int(outdepth/basic_feature),outdepth),
 
@@ -63,10 +67,10 @@ class conv_dv_2(nn.Module):
         #"""Forward function (with skip connections)"""
 
         out =  self.conv_block(x)  # add skip connections
-        #local_bz,channel,H,W = out.size() 
-        #downsample = nn.AdaptiveAvgPool2d((H,W))(x)
-        #_,channel2,_,_ = downsample.size() 
-        #out[:,0:channel2,:,:] = out[:,0:channel2,:,:]+  downsample
+        local_bz,channel,H,W = out.size() 
+        downsample = nn.AdaptiveAvgPool2d((H,W))(x)
+        _,channel2,_,_ = downsample.size() 
+        out[:,0:channel2,:,:] = out[:,0:channel2,:,:]+  downsample
         return out
 #output width=((W-F+2*P )/S)+1
 # Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
@@ -78,8 +82,10 @@ class conv_keep_all(nn.Module):
 
     def build_conv_block(self, indepth,outdepth,k,s,p):
         module = nn.Sequential(
-             nn.ReflectionPad2d((p[1],p[1],p[0],p[0])), 
-             nn.Conv2d(indepth, outdepth,k, s, (0,0), bias=False),          
+             #nn.ReflectionPad2d((p[1],p[1],p[0],p[0])), 
+             #nn.Conv2d(indepth, outdepth,k, s, (0,0), bias=False),          
+             nn.Conv2d(indepth, outdepth,k, s,p, bias=False),          
+
              nn.BatchNorm2d(outdepth),
              #nn.GroupNorm(4*int(outdepth/basic_feature),outdepth),
 
@@ -90,6 +96,8 @@ class conv_keep_all(nn.Module):
     def forward(self, x):
         #"""Forward function (with skip connections)"""
         out = x+ self.conv_block(x)  # add skip connections
+        #out =  self.conv_block(x)  # add skip connections
+
         return out
 
  
