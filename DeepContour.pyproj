@@ -24,6 +24,9 @@
     <Compile Include="analy_visdom.py" />
     <Compile Include="arg_parse.py" />
     <Compile Include="arithmetic.py" />
+    <Compile Include="basic_operator.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="classifier_svm.py" />
     <Compile Include="contour_layers_train.py">
       <SubType>Code</SubType>

@@ -10,6 +10,8 @@ from image_trans import BaseTransform
 from random import seed
 from random import random
 import pickle
+from basic_operator import Basic_Operator
+
 
 seed(1)
 Batch_size = 3
@@ -54,7 +56,7 @@ class myDataloader(object):
 
 
 
-        self.noisyflag = False
+        self.noisyflag = True
         self.read_all_flag=0
         self.read_record =0
         self.folder_pointer = 0
@@ -323,11 +325,13 @@ class myDataloader(object):
                 img_piece = cv2.resize(img_piece, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
                 if self.noisyflag == True:
                     img_piece = self.gray_scale_augmentation(img_piece)
+                    img_piece= Basic_Operator.add_speckle_or_not(img_piece)
+                    img_piece= Basic_Operator.add_noise_or_not(img_piece)
+                    img_piece = Basic_Operator.add_gap_or_not(img_piece)
+                    #img_piece  = self . noisy( "blur" ,  img_piece )
+                    #img_piece  = self . noisy( "s&p" ,  img_piece )
 
-                    img_piece  = self . noisy( "blur" ,  img_piece )
-                    img_piece  = self . noisy( "s&p" ,  img_piece )
-
-                    img_piece  = self . noisy( "speckle" ,  img_piece )
+                    #img_piece  = self . noisy( "speckle" ,  img_piece )
                  
 
 

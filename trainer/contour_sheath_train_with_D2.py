@@ -24,7 +24,7 @@ OLG_flag = True
 validation_flag = False
 
 Display_fig_flag = True
-Continue_flag = False
+Continue_flag = True
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
@@ -123,8 +123,8 @@ GANmodel.netD.apply(weights_init)
 GANmodel.netG.apply(weights_init)
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
-    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_4.pth'))
-    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_4.pth'))
+    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
+    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_5.pth'))
     #GANmodel.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
 
     #torch.save(GANmodel.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")

@@ -77,7 +77,7 @@ class _2LayerScale1(nn.Module):
         #side_out_full = self.fullout(side_out)
         side_out_low = self.low_scale_out (side_out)
         # remove one dimention
-        side_out_long = nn.functional.interpolate(side_out_low, size=(2, Path_length), mode='bilinear') 
+        side_out_long = nn.functional.interpolate(side_out_low, size=(1, Path_length), mode='bilinear') 
 
         local_bz,num,_,local_l  = side_out_low.size() 
         side_out_low = side_out_low.view(-1,num,local_l).squeeze(1)# squess before fully connected 
@@ -159,7 +159,7 @@ class _2LayerScale2(nn.Module):
         side_out_low = self.low_scale_out (side_out)
         # remove one dimention
         # remove one dimention
-        side_out_long = nn.functional.interpolate(side_out_low, size=(2, Path_length), mode='bilinear') 
+        side_out_long = nn.functional.interpolate(side_out_low, size=(1, Path_length), mode='bilinear') 
 
         local_bz,num,_,local_l  = side_out_low.size() 
         side_out_low = side_out_low.view(-1,num,local_l).squeeze(1)# squess before fully connected 
