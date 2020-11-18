@@ -7,6 +7,10 @@ from zipfile import ZipFile
 import scipy.signal as signal
 import pandas as pd
 from DeepAutoJson import Auto_json_label
+import matplotlib
+matplotlib.use('TkAgg')
+
+import matplotlib.pyplot as plt
 
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 def draw_coordinates_color(img1,vy,color):
@@ -52,28 +56,64 @@ class Find_shadow(object):
         y1  = np.array(c2)
         y = y1[:,1]
         y=signal.resample(y,  Resample_size)
-        #y = y.astype(int)
 
         max_idex =np.argmin(y)
-        i=0
-        find_flag=10
-        while (i):
-            i+=1
-            if (i>=Resample_size):
-                i=0
+        y = y.astype(int)
 
-            if(find_flag==10 and y[i]>(Resample_size-10)):
-                find_flag=0
-                continue
-            if(find_flag==0 and y[i]<(Resample_size-10)):
-                find_flag==1
+        high = Resample_size-y[max_idex] # calculate the max height 
+        source_line = gray [int(y[max_idex]+3) : int(y[max_idex]+0.2*high+3) , max_idex]
+        L  = len (source_line)
+        dots = np.sum(source_line)/L
+
+        longPic = np.append(gray,gray,axis=1)
+        longPic = np.append(longPic,gray,axis=1)
+        add_3   = np.append(y,y,axis=0) # cascade
+        add_3   = np.append(add_3,y,axis=0) # cascade
+        max_idex = max_idex + Resample_size
+
+        # acculate to the left 
+        for i in range(Resample_size):
+            ind= max_idex -i-1
+            if (add_3[ind] > (Resample_size -20) ):
+                break
+            high= Resample_size-add_3[ind] # calculate the max height 
+            source_line = longPic [int(add_3[ind]+3) : int(add_3[ind]+0.2*high+3) , ind]
+            L  = len (source_line)
+            this_dots = np.sum(source_line)/L
+            dots=  np.append(this_dots,dots)
+         # acculate to the right 
+        for i in range(Resample_size):
+            ind= max_idex +i+1
+            if (add_3[ind] > (Resample_size -20) ):
+                break
+            high= Resample_size-add_3[ind] # calculate the max height 
+            source_line = longPic [int(add_3[ind]+3) : int(add_3[ind]+0.2*high+3) , ind]
+            L  = len (source_line)
+            this_dots = np.sum(source_line)/L
+            dots=  np.append(dots,this_dots )
+
+
+        plt.plot(dots)
+        plt.show()
+        return dots,y
+        #find_flag=10
+        #while (i):
+        #    i+=1
+        #    if (i>=Resample_size):
+        #        i=0
+
+        #    if(find_flag==10 and y[i]>(Resample_size-10)):
+        #        find_flag=0
+        #        continue
+        #    if(find_flag==0 and y[i]<(Resample_size-10)):
+        #        find_flag==1
 
                 
 
 
 
 
-        draw_coordinates_color(img,y,1)
+        #draw_coordinates_color(img,y,1)
 
 
         pass
@@ -88,7 +128,7 @@ class Find_shadow(object):
         cv2.waitKey(10)  
 
         gray  =   cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        ret,thresh1 = cv2.threshold(gray,60,255,cv2.THRESH_BINARY)
+        ret,thresh1 = cv2.threshold(gray,70,255,cv2.THRESH_BINARY)
         kernel = np.ones((3,3),np.uint8)
         opening = cv2.morphologyEx(thresh1, cv2.MORPH_OPEN, kernel)
         #closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
@@ -108,8 +148,9 @@ class Find_shadow(object):
 
         H,W   = gray.shape
         coordinates1,coordinates2  = self.auto_label.predict_contour(gray,Resample_size, Resample_size,points=Resample_size )
-        self.crop_patch (coordinates2,gray)
+        dots,y=self.crop_patch (coordinates2,gray)
         #cv2.drawContours(img, coordinates1, -1, (0, 255, 0), 3) 
+        draw_coordinates_color(img,y,1)
         cv2.imshow('real',img ) 
   
         cv2.waitKey(10)  
@@ -141,7 +182,7 @@ class Find_shadow(object):
 
 if __name__ == '__main__':
         cheker  = Find_shadow()
-        img_path = cheker.all_dir + "777" + ".jpg"
+        img_path = cheker.all_dir + "1275" + ".jpg"
         img1 = cv2.imread(img_path)
 
                 #jason_path  = self.json_dir + a + ".json"
