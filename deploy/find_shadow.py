@@ -61,7 +61,7 @@ class Find_shadow(object):
         y = y.astype(int)
 
         high = Resample_size-y[max_idex] # calculate the max height 
-        source_line = gray [int(y[max_idex]+3) : int(y[max_idex]+0.2*high+3) , max_idex]
+        source_line = gray [int(y[max_idex]+7) : int(y[max_idex]+0.2*high+7) , max_idex]
         L  = len (source_line)
         dots = np.sum(source_line)/L
 
@@ -77,7 +77,7 @@ class Find_shadow(object):
             if (add_3[ind] > (Resample_size -20) ):
                 break
             high= Resample_size-add_3[ind] # calculate the max height 
-            source_line = longPic [int(add_3[ind]+3) : int(add_3[ind]+0.2*high+3) , ind]
+            source_line = longPic [int(add_3[ind]+7) : int(add_3[ind]+0.2*high+7) , ind]
             L  = len (source_line)
             this_dots = np.sum(source_line)/L
             dots=  np.append(this_dots,dots)
@@ -87,7 +87,7 @@ class Find_shadow(object):
             if (add_3[ind] > (Resample_size -20) ):
                 break
             high= Resample_size-add_3[ind] # calculate the max height 
-            source_line = longPic [int(add_3[ind]+3) : int(add_3[ind]+0.2*high+3) , ind]
+            source_line = longPic [int(add_3[ind]+7) : int(add_3[ind]+0.2*high+7) , ind]
             L  = len (source_line)
             this_dots = np.sum(source_line)/L
             dots=  np.append(dots,this_dots )
@@ -147,7 +147,7 @@ class Find_shadow(object):
 
 
         H,W   = gray.shape
-        coordinates1,coordinates2  = self.auto_label.predict_contour(gray,Resample_size, Resample_size,points=Resample_size )
+        coordinates1,coordinates2  = self.auto_label.predict_contour(gray,Resample_size, Resample_size,points=300 )
         dots,y=self.crop_patch (coordinates2,gray)
         #cv2.drawContours(img, coordinates1, -1, (0, 255, 0), 3) 
         draw_coordinates_color(img,y,1)
@@ -182,7 +182,7 @@ class Find_shadow(object):
 
 if __name__ == '__main__':
         cheker  = Find_shadow()
-        img_path = cheker.all_dir + "1275" + ".jpg"
+        img_path = cheker.all_dir + "166" + ".jpg"
         img1 = cv2.imread(img_path)
 
                 #jason_path  = self.json_dir + a + ".json"

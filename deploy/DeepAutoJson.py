@@ -211,7 +211,7 @@ class  Auto_json_label(object):
 
         new_p = pathes[:,int(rate*l):int((1-rate)*l)]
        
-    def predict_contour(self,gray,H_s, W_s , attatch_rate=0.1,points = 100):
+    def predict_contour(self,gray,H_s, W_s , attatch_rate=0.5,points = 100):
         #gray  =   cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         H,W   = gray.shape
         extend = np.append(gray[:,int((1-attatch_rate)*W):W],gray,axis=1) # cascade
@@ -227,7 +227,7 @@ class  Auto_json_label(object):
         #pathes = pathes*H/Resample_size
         #coordinates1 = encode_path_as_coordinates(pathes[0],Resample_size,Resample_size,H,W)
         #coordinates2 = encode_path_as_coordinates(pathes[1],Resample_size,Resample_size,H,W)
-        coordinates1 = encode_as_coordinates_padding (pathes[0],H_s,W_s,H,W,
+        coordinates1 = encode_as_coordinates_padding(pathes[0],H_s,W_s,H,W,
                                                         attatch_rate,points )
         coordinates2 = encode_as_coordinates_padding(pathes[1],H_s,W_s,H,W,
                                                         attatch_rate,points )
