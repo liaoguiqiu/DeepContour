@@ -123,8 +123,8 @@ GANmodel.netD.apply(weights_init)
 GANmodel.netG.apply(weights_init)
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
-    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
-    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_5.pth'))
+    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_1.pth'))
+    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_1.pth'))
     #GANmodel.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
 
     #torch.save(GANmodel.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
@@ -483,8 +483,10 @@ while(1):
             cv2.imshow('real',show5.astype(numpy.uint8)) 
 
             #display_prediction(mydata_loader,  GANmodel.out_pathes[0],hot)
-            #display_prediction(mydata_loader,  GANmodel.out_pathes0,hot)
-            display_prediction(mydata_loader,  GANmodel.path_long3,hot)
+            #display_prediction(mydata_loader,  GANmodel.path_long3,hot)
+            #display_prediction(mydata_loader,  GANmodel.out_pathes3,hot)
+            display_prediction(mydata_loader,  GANmodel.out_pathes0,hot)
+
             if cv2.waitKey(1) & 0xFF == ord('q'):
               break
     # do checkpointing

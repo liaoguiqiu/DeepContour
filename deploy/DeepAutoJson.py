@@ -66,9 +66,10 @@ def encode_path_as_coordinates(path,h,w,H,W):
     array[:,1] = y.astype(int)
     coordinates = array.tolist()
     return coordinates
-def encode_as_coordinates_padding(path,h,w,H,W,rate):
-    points = 150
+def encode_as_coordinates_padding(path,h,w,H,W,rate,points = 150):
+    
     r = rate/(2*rate+1) # the rate is calculated from original padding rate
+
     y = path*H
     #add_3   = np.append(y[::-1],y,axis=0) # cascade
     #add_3   = np.append(add_3,y[::-1],axis=0) # cascade
@@ -94,6 +95,7 @@ def encode_as_coordinates_padding(path,h,w,H,W,rate):
     return coordinates
 
 
+
 class  Auto_json_label(object):
     def __init__(self ):
         #self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
@@ -102,7 +104,7 @@ class  Auto_json_label(object):
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE-center/"
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
         # check the cuda device 
-        pth_save_dir = "../out/sheathCGAN_coordinates2/"
+        pth_save_dir = "../out/sheathCGAN_coordinates3/"
         # the portion of attated image to 2     sides
         self.attatch_rate  = 0.2 
 
@@ -114,12 +116,15 @@ class  Auto_json_label(object):
         self.coordinates0 = self.jason_tmp["shapes"] [1]["points"] # remember add finding corred label 1!!!
         self.co_len = len (self.coordinates0) 
 
-        self.database_root = "D:/Deep learning/dataset/original/phantom/2/"
+        #self.database_root = "D:/Deep learning/dataset/original/phantom/2/"
+        self.database_root = "D:/Deep learning/dataset/original/dots/2/"
+
         #self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
         #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
 
 
-
+        self.f_downsample_factor = 93
+        self.all_dir = self.database_root + "pic_all/"
         self.image_dir   = self.database_root + "pic/"
         self.json_dir =  self.database_root + "label/" # for this class sthis dir ist save the modified json 
         self.json_save_dir  = self.database_root + "label_generate/"
@@ -143,6 +148,27 @@ class  Auto_json_label(object):
         # for the detection just use the Gnets
         self.GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_2.pth'))
         self.GANmodel.netG.cuda()
+    def downsample_folder(self):#this is to down sample the image in one folder
+        read_sequence = os.listdir(self.all_dir) # read all file name
+        seqence_Len = len(read_sequence)    # get all file number 
+          
+        for sequence_num in range(0,seqence_Len):
+        #for i in os.listdir("E:/estimagine/vs_project/PythonApplication_data_au/pic/"):
+            if (sequence_num%self.f_downsample_factor == 0):
+                img_path = self.all_dir + str(sequence_num) + ".jpg"
+                #jason_path  = self.json_dir + a + ".json"
+                img1 = cv2.imread(img_path)
+                
+                if img1 is None:
+                    print ("no_img")
+                else:
+                    # write this one into foler
+                    cv2.imwrite(self.image_dir  + str(sequence_num) +".jpg",img1 )
+                    print("write  " + str(sequence_num))
+                    pass
+
+            sequence_num+=1
+            pass
 
     def draw_coordinates_color(self,img1,vx,vy,color):
         
@@ -185,7 +211,30 @@ class  Auto_json_label(object):
 
         new_p = pathes[:,int(rate*l):int((1-rate)*l)]
        
+    def predict_contour(self,gray,H_s, W_s , attatch_rate=0.1,points = 100):
+        #gray  =   cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        H,W   = gray.shape
+        extend = np.append(gray[:,int((1-attatch_rate)*W):W],gray,axis=1) # cascade
+        extend = np.append(extend,gray[:,0:int(attatch_rate*W)],axis=1) # cascade
 
+        #inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(img1,Resample_size,Resample_size)
+        inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(extend,H_s,W_s)
+
+        self.GANmodel.set_G_input(inputV) 
+        self.GANmodel.forward() # predict the path 
+        pathes  =  self.GANmodel.out_pathes0 [0].cpu().detach().numpy()
+        #pathes = numpy.clip(pathes,0,1)
+        #pathes = pathes*H/Resample_size
+        #coordinates1 = encode_path_as_coordinates(pathes[0],Resample_size,Resample_size,H,W)
+        #coordinates2 = encode_path_as_coordinates(pathes[1],Resample_size,Resample_size,H,W)
+        coordinates1 = encode_as_coordinates_padding (pathes[0],H_s,W_s,H,W,
+                                                        attatch_rate,points )
+        coordinates2 = encode_as_coordinates_padding(pathes[1],H_s,W_s,H,W,
+                                                        attatch_rate,points )
+
+     
+
+        return coordinates1,coordinates2
 
     def check_one_folder (self):
         #for i in os.listdir(self.image_dir): # star from the image folder
@@ -205,21 +254,25 @@ class  Auto_json_label(object):
                 else:
                     gray  =   cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
                     H,W   = gray.shape
-                    extend = np.append(gray[:,int((1-self.attatch_rate)*W):W],gray,axis=1) # cascade
-                    extend = np.append(extend,gray[:,0:int(self.attatch_rate*W)],axis=1) # cascade
+                    coordinates1,coordinates2  = self.predict_contour(gray,Resample_size, Resample_size,points=256 )
+                    
+                    #extend = np.append(gray[:,int((1-self.attatch_rate)*W):W],gray,axis=1) # cascade
+                    #extend = np.append(extend,gray[:,0:int(self.attatch_rate*W)],axis=1) # cascade
 
-                    #inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(img1,Resample_size,Resample_size)
-                    inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(extend,Resample_size,Resample_size)
+                    ##inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(img1,Resample_size,Resample_size)
+                    #inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(extend,Resample_size,Resample_size)
 
-                    self.GANmodel.set_G_input(inputV) 
-                    self.GANmodel.forward() # predict the path 
-                    pathes  =  self.GANmodel.out_pathes[0][0].cpu().detach().numpy()
-                    #pathes = numpy.clip(pathes,0,1)
-                    #pathes = pathes*H/Resample_size
-                    #coordinates1 = encode_path_as_coordinates(pathes[0],Resample_size,Resample_size,H,W)
-                    #coordinates2 = encode_path_as_coordinates(pathes[1],Resample_size,Resample_size,H,W)
-                    coordinates1 = encode_as_coordinates_padding (pathes[0],Resample_size,Resample_size,H,W,self.attatch_rate)
-                    coordinates2 = encode_as_coordinates_padding(pathes[1],Resample_size,Resample_size,H,W,self.attatch_rate)
+                    #self.GANmodel.set_G_input(inputV) 
+                    #self.GANmodel.forward() # predict the path 
+                    #pathes  =  self.GANmodel.out_pathes0 [0].cpu().detach().numpy()
+                    ##pathes = numpy.clip(pathes,0,1)
+                    ##pathes = pathes*H/Resample_size
+                    ##coordinates1 = encode_path_as_coordinates(pathes[0],Resample_size,Resample_size,H,W)
+                    ##coordinates2 = encode_path_as_coordinates(pathes[1],Resample_size,Resample_size,H,W)
+                    #coordinates1 = encode_as_coordinates_padding (pathes[0],Resample_size,Resample_size,H,W,
+                    #                                              self.attatch_rate,points = 100)
+                    #coordinates2 = encode_as_coordinates_padding(pathes[1],Resample_size,Resample_size,H,W,
+                    #                                             self.attatch_rate,points = 100)
                     # thsi json dir will be used to save  the generated json
                     save_json_dir = self.json_save_dir + a + ".json"
                     #copy the temp json
@@ -276,3 +329,4 @@ class  Auto_json_label(object):
 if __name__ == '__main__':
         cheker  = Auto_json_label()
         cheker.check_one_folder() 
+        #cheker.downsample_folder()

@@ -14,7 +14,7 @@ from basic_operator import Basic_Operator
 
 
 seed(1)
-Batch_size = 3
+Batch_size = 1
 Resample_size =256
 Path_length = 256
 Augment_limitation_flag = False
@@ -56,7 +56,7 @@ class myDataloader(object):
 
 
 
-        self.noisyflag = True
+        self.noisyflag = False
         self.read_all_flag=0
         self.read_record =0
         self.folder_pointer = 0
@@ -148,6 +148,12 @@ class myDataloader(object):
         aug_gray = np.clip(aug_gray, a_min = 0, a_max = 254)
 
         return aug_gray
+    def nonelinear_scale_augmentation(self,orig_gray) :
+        random_scale = 0.7 + (1.5  - 0.7) * np.random.random_sample()
+        aug_gray = orig_gray.astype(float) * orig_gray.astype(float)/100.0*random_scale
+        aug_gray = np.clip(aug_gray, a_min = 0, a_max = 254)
+
+        return aug_gray
     def random_min_clip_by_row(self,min1,min2,mat):
          rand= np.random.random_sample()
          rand = rand * (min2-min1) +min1
@@ -183,11 +189,24 @@ class myDataloader(object):
  
         H,W = image.shape
         fliper = np.random.random_sample() * 10
-        dice = int (fliper)%5 #reduce the possibility of the flips 
+        dice = int (fliper)%3 #reduce the possibility of the flips 
         if dice ==0:
             image=cv2.flip(image, 0) # flip upside down
             #image = np.roll(image, roller, axis = 1)
             pathes =H/2+(H/2-pathes)
+
+
+
+        return image,pathes 
+    def flips2(self,image,pathes):
+ 
+        H,W = image.shape
+        fliper = np.random.random_sample() * 10
+        dice = int (fliper)%3 #reduce the possibility of the flips 
+        if dice ==0:
+            image=cv2.flip(image, 1) # flip upside down
+            #image = np.roll(image, roller, axis = 1)
+            pathes =np.flip(pathes, 1)
 
 
 
@@ -324,9 +343,9 @@ class myDataloader(object):
                 img_piece = this_gray 
                 img_piece = cv2.resize(img_piece, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
                 if self.noisyflag == True:
-                    img_piece = self.gray_scale_augmentation(img_piece)
+                    img_piece = self.gray_scale_augmentation (img_piece)
                     img_piece= Basic_Operator.add_speckle_or_not(img_piece)
-                    img_piece= Basic_Operator.add_noise_or_not(img_piece)
+                    #img_piece= Basic_Operator.add_noise_or_not(img_piece)
                     img_piece = Basic_Operator.add_gap_or_not(img_piece)
                     #img_piece  = self . noisy( "blur" ,  img_piece )
                     #img_piece  = self . noisy( "s&p" ,  img_piece )
@@ -364,7 +383,9 @@ class myDataloader(object):
 
                 #path_piece   = np.clip(path_piece,0,self.img_size)
                 img_piece, self.input_path [this_pointer ,:, :] = self.rolls(img_piece,self.input_path [this_pointer ,:, :])
-                #img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
+                img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
+                img_piece, self.input_path [this_pointer ,:, :] = self.flips2(img_piece,self.input_path [this_pointer ,:, :])
+
 
                 self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]/104.0
                 
