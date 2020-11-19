@@ -245,10 +245,12 @@ class _2LayerScale3(nn.Module):
 
         #m = nn.AdaptiveAvgPool2d((64,Path_length))
         m = nn.AdaptiveMaxPool2d((64,Path_length))
+        #m = nn. MaxPool2d((2,2))
+
 
         #AdaptiveMaxPool2d
         x_s = m(x)
-        self.display_one_channel(x_s)
+        #self.display_one_channel(x_s)
         #one chaneel:
         
         side_out =x_s

@@ -40,7 +40,7 @@ def draw_coordinates_color(img1,vy,color):
 class Find_shadow(object):
     def __init__(self):
         self.folder_num = 0
-        self.database_root = "D:/Deep learning/dataset/original/dots/2/"
+        self.database_root = "D:/Deep learning/dataset/original/dots/1/"
 
         #self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
         #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
@@ -52,7 +52,10 @@ class Find_shadow(object):
         self.json_dir =  self.database_root + "label/" # for this class sthis dir ist save the modified json 
         self.json_save_dir  = self.database_root + "label_generate/"
         self.img_num = 0
-    def crop_patch ( self,c2,gray): # crop the ROI based on the contour
+    def crop_patch2signal ( self,c2,gray): # crop the ROI based on the contour
+        shift=10
+        rate0=0.1
+        rate =0.3
         y1  = np.array(c2)
         y = y1[:,1]
         y=signal.resample(y,  Resample_size)
@@ -61,7 +64,7 @@ class Find_shadow(object):
         y = y.astype(int)
 
         high = Resample_size-y[max_idex] # calculate the max height 
-        source_line = gray [int(y[max_idex]+7) : int(y[max_idex]+0.2*high+7) , max_idex]
+        source_line = gray [int(y[max_idex]+rate0*high) : int(y[max_idex]+rate*high ) , max_idex]
         L  = len (source_line)
         dots = np.sum(source_line)/L
 
@@ -74,27 +77,30 @@ class Find_shadow(object):
         # acculate to the left 
         for i in range(Resample_size):
             ind= max_idex -i-1
-            if (add_3[ind] > (Resample_size -20) ):
+            if (add_3[ind] > (Resample_size -40) ):
                 break
             high= Resample_size-add_3[ind] # calculate the max height 
-            source_line = longPic [int(add_3[ind]+7) : int(add_3[ind]+0.2*high+7) , ind]
+            source_line = longPic [int(add_3[ind]+rate0*high) : int(add_3[ind]+rate*high) , ind]
             L  = len (source_line)
             this_dots = np.sum(source_line)/L
             dots=  np.append(this_dots,dots)
          # acculate to the right 
         for i in range(Resample_size):
             ind= max_idex +i+1
-            if (add_3[ind] > (Resample_size -20) ):
+            if (add_3[ind] > (Resample_size -40) ):
                 break
             high= Resample_size-add_3[ind] # calculate the max height 
-            source_line = longPic [int(add_3[ind]+7) : int(add_3[ind]+0.2*high+7) , ind]
+            source_line = longPic [int(add_3[ind]+rate0*high) : int(add_3[ind]+rate*high) , ind]
             L  = len (source_line)
             this_dots = np.sum(source_line)/L
             dots=  np.append(dots,this_dots )
 
+        #cv2.waitKey(10)  
+        
+        #plt.plot(dots)
+        #plt.show()
+        #cv2.waitKey(10)  
 
-        plt.plot(dots)
-        plt.show()
         return dots,y
         #find_flag=10
         #while (i):
@@ -128,14 +134,14 @@ class Find_shadow(object):
         cv2.waitKey(10)  
 
         gray  =   cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        ret,thresh1 = cv2.threshold(gray,70,255,cv2.THRESH_BINARY)
-        kernel = np.ones((3,3),np.uint8)
-        opening = cv2.morphologyEx(thresh1, cv2.MORPH_OPEN, kernel)
-        #closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+        #ret,thresh1 = cv2.threshold(gray,70,255,cv2.THRESH_BINARY)
+        #kernel = np.ones((3,3),np.uint8)
+        #opening = cv2.morphologyEx(thresh1, cv2.MORPH_OPEN, kernel)
+        ##closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
 
 
-        cv2.imshow('2',opening ) 
-        cv2.waitKey(10)  
+        #cv2.imshow('2',opening ) 
+        #cv2.waitKey(10)  
         
          
         #imgray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
@@ -148,16 +154,16 @@ class Find_shadow(object):
 
         H,W   = gray.shape
         coordinates1,coordinates2  = self.auto_label.predict_contour(gray,Resample_size, Resample_size,points=300 )
-        dots,y=self.crop_patch (coordinates2,gray)
+        dots,y=self.crop_patch2signal (coordinates2,gray)
         #cv2.drawContours(img, coordinates1, -1, (0, 255, 0), 3) 
         draw_coordinates_color(img,y,1)
-        cv2.imshow('real',img ) 
+        cv2.imshow('seg',img ) 
   
         cv2.waitKey(10)  
 
 
         pass
-        return 0
+        return dots,y,img
     def deal_folder(self):
         #for i in os.listdir(self.image_dir): # star from the image folder
         for i in os.listdir(self.all_dir): # star from the image folder
@@ -174,21 +180,19 @@ class Find_shadow(object):
                 if img1 is None:
                     print ("no_img")
                 else:
-                    coordinates1,coordinates2  = self.auto_label .predict_contour(img1,Resample_size, Resample_size,points=256 )
-                    gray  =   cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
-                    H,W   = gray.shape
+                    dots,y,img = self.deal_pic(img1)
         
         return 0
 
 if __name__ == '__main__':
         cheker  = Find_shadow()
-        img_path = cheker.all_dir + "166" + ".jpg"
+        img_path = cheker.all_dir + "0" + ".jpg"
         img1 = cv2.imread(img_path)
 
                 #jason_path  = self.json_dir + a + ".json"
         cheker.deal_pic(img1)
         img1 = cv2.imread(img_path)
-        #cheker.deal_folder
+        cheker.deal_folder()
 
 
 
