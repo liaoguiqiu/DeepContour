@@ -117,7 +117,9 @@ class  Auto_json_label(object):
         self.co_len = len (self.coordinates0) 
 
         #self.database_root = "D:/Deep learning/dataset/original/phantom/2/"
-        self.database_root = "D:/Deep learning/dataset/original/dots/2/"
+        #self.database_root = "D:/Deep learning/dataset/original/dots/2/"
+        self.database_root = "D:/Deep learning/dataset/original/new_catheter_ruler/1/"
+
 
         #self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
         #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
@@ -328,5 +330,5 @@ class  Auto_json_label(object):
                     #    data = JSON.load(f_dir)
 if __name__ == '__main__':
         cheker  = Auto_json_label()
-        cheker.check_one_folder() 
-        #cheker.downsample_folder()
+        #cheker.check_one_folder() 
+        cheker.downsample_folder()

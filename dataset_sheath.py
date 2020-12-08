@@ -204,7 +204,7 @@ class myDataloader(object):
         fliper = np.random.random_sample() * 10
         dice = int (fliper)%3 #reduce the possibility of the flips 
         if dice ==0:
-            image=cv2.flip(image, 1) # flip upside down
+            image=cv2.flip(image, 1) # flip  horizon
             #image = np.roll(image, roller, axis = 1)
             pathes =np.flip(pathes, 1)
 
@@ -340,7 +340,7 @@ class myDataloader(object):
                 #img_piece = this_gray[:,this_pathx[0]:this_pathx[clen-1]]
                 # no crop blank version 
                 factor=self.img_size/W
-                img_piece = this_gray 
+                img_piece = this_gray #[60:H,:] 
                 img_piece = cv2.resize(img_piece, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
                 if self.noisyflag == True:
                     img_piece = self.gray_scale_augmentation (img_piece)
@@ -383,7 +383,7 @@ class myDataloader(object):
 
                 #path_piece   = np.clip(path_piece,0,self.img_size)
                 img_piece, self.input_path [this_pointer ,:, :] = self.rolls(img_piece,self.input_path [this_pointer ,:, :])
-                img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
+                #img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
                 img_piece, self.input_path [this_pointer ,:, :] = self.flips2(img_piece,self.input_path [this_pointer ,:, :])
 
 
