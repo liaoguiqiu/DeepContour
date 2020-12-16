@@ -1,3 +1,5 @@
+# this scrip is written for the dots video
+
 import cv2
 import math
 import numpy as np
@@ -7,8 +9,10 @@ from zipfile import ZipFile
 import scipy.signal as signal
 import pandas as pd
 from DeepAutoJson import Auto_json_label
+from dataTool.matlab import Save_Signal_matlab
 import matplotlib
 matplotlib.use('TkAgg')
+from scipy.ndimage import gaussian_filter1d
 
 import matplotlib.pyplot as plt
 
@@ -41,7 +45,7 @@ class Find_shadow(object):
     def __init__(self):
         self.folder_num = 0
         self.database_root = "D:/Deep learning/dataset/original/dots/1/"
-
+        self.save_dir   =  "D:/PhD/trying/tradition_method/saved_processed_polar/"
         #self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
         #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
         self.auto_label = Auto_json_label()
@@ -52,6 +56,29 @@ class Find_shadow(object):
         self.json_dir =  self.database_root + "label/" # for this class sthis dir ist save the modified json 
         self.json_save_dir  = self.database_root + "label_generate/"
         self.img_num = 0
+
+         # from pix to distance  for the dot videos 1
+          #  dot videos 1 the sheath has 19-20 pixes, represent 0.5mm
+        self.pix2dis  = 1.00  # from pix to distance  for the dot videos 1
+         #  dot videos 1 the sheath has 19-20 pixes, represent 0.5mm
+        self.pix2dis  = 0.5/19  # from pix to distance  for the dot videos 1
+
+        self.matlab = Save_Signal_matlab()
+    def convert_coordinate ( self,c2 ): # crop the ROI based on the contour
+       
+        
+        y1  = np.array(c2) # transfer list to array
+        y = y1[:,1] 
+        y=signal.resample(y,  Resample_size)
+        y = gaussian_filter1d(y,5) # smooth the path 
+        return y
+
+    def find_closet(self, y1,y2):
+        dis = y2  - y1
+        min_dis = np.min(dis)
+         
+
+        return  min_dis
     def crop_patch2signal ( self,c2,gray): # crop the ROI based on the contour
         shift=10
         rate0=0.1
@@ -154,34 +181,44 @@ class Find_shadow(object):
 
         H,W   = gray.shape
         coordinates1,coordinates2  = self.auto_label.predict_contour(gray,Resample_size, Resample_size,points=300 )
-        dots,y=self.crop_patch2signal (coordinates2,gray)
+        y1 = self.convert_coordinate(coordinates1)
+        y2 = self.convert_coordinate(coordinates2)
+        min_dis  = self.find_closet(y1,y2)
+        #dots,y=self.crop_patch2signal (coordinates2,gray)
         #cv2.drawContours(img, coordinates1, -1, (0, 255, 0), 3) 
-        draw_coordinates_color(img,y,1)
+        draw_coordinates_color(img,y1.astype(int),0)
+        draw_coordinates_color(img,y2.astype(int),1)
+
         cv2.imshow('seg',img ) 
   
         cv2.waitKey(10)  
-
-
-        pass
-        return dots,y,img
+  
+        return min_dis,y2,img
     def deal_folder(self):
         #for i in os.listdir(self.image_dir): # star from the image folder
-        for i in os.listdir(self.all_dir): # star from the image folder
+
+        flen  = len(os.listdir(self.all_dir))
+        #for i in os.listdir(self.all_dir): # star from the image folder
 
     #for i in os.listdir("E:\\estimagine\\vs_project\\PythonApplication_data_au\\pic\\"):
         # separath  the name of json 
-            a, b = os.path.splitext(i)
-            # if it is a img it will have corresponding image 
-            if b == ".jpg" :
-                img_path = self.all_dir + a + ".jpg"
-                #jason_path  = self.json_dir + a + ".json"
-                img1 = cv2.imread(img_path)
+        for a in range(0,flen):
+        # if it is a img it will have corresponding image 
+            
+            img_path = self.all_dir + str( a) + ".jpg"
+            #jason_path  = self.json_dir + a + ".json"
+            img1 = cv2.imread(img_path)
                 
-                if img1 is None:
-                    print ("no_img")
-                else:
-                    dots,y,img = self.deal_pic(img1)
-        
+            if img1 is None:
+                print ("no_img")
+            else:
+                print ("img" + str( a))
+
+                dis,y,img = self.deal_pic(img1)
+                cv2.imwrite(self.save_dir  + str(a) +".jpg",img )
+                dis  = self.pix2dis * dis
+                self. matlab . buffer1(dis)
+                self. matlab .save_mat()
         return 0
 
 if __name__ == '__main__':

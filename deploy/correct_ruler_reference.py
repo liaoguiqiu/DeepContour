@@ -41,14 +41,16 @@ def draw_coordinates_color(img1,vy,color):
 class Find_shadow(object):
     def __init__(self):
         self.folder_num = 0
-        self.database_root = "D:/Deep learning/dataset/original/new_catheter_ruler/1/"
-        self.save_root  = "D:/PhD/trying/tradition_method/OCT/sheath registration/pairB/with ruler/correct2/"
+        self.database_root = " "
+        #self.save_root  = "D:/PhD/trying/tradition_method/OCT/sheath registration/pairB/with ruler/correct2/"
+        self.save_root  = "D:/PhD/trying/tradition_method/OCT/sheath registration/pairC/ruler/2_correct/"
+
         #self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
         #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
         self.auto_label = Auto_json_label()
 
         self.f_downsample_factor = 93
-        self.all_dir = self.database_root + "pic_all/"
+        self.all_dir = "D:/PhD/trying/tradition_method/OCT/sheath registration/pairC/ruler/2_/"
         self.image_dir   = self.database_root + "pic/"
         self.json_dir =  self.database_root + "label/" # for this class sthis dir ist save the modified json 
         self.json_save_dir  = self.database_root + "label_generate/"
@@ -73,7 +75,7 @@ class Find_shadow(object):
 
 
     def deal_pic(self,img,num):
-        ref_position= 61  # this is calculated with img 5, so all img will be shift to this posion
+        ref_position= 18  # this is calculated with img 5, so all img will be shift to this posion
         original =  cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         H_i,W_i  = original.shape
@@ -110,7 +112,7 @@ class Find_shadow(object):
     def deal_folder(self):
         #for i in os.listdir(self.image_dir): # star from the image folder
         #for i in os.listdir(self.all_dir): # star from the image folder
-        for a in range(5,884):
+        for a in range(80,894):
     #for i in os.listdir("E:\\estimagine\\vs_project\\PythonApplication_data_au\\pic\\"):
         # separath  the name of json 
             #a, b = os.path.splitext(i)
@@ -129,11 +131,11 @@ class Find_shadow(object):
 
 if __name__ == '__main__':
         cheker  = Find_shadow()
-        img_path = cheker.all_dir + "5" + ".jpg"
+        img_path = cheker.all_dir + "80" + ".jpg"
         img1 = cv2.imread(img_path)
 
                 #jason_path  = self.json_dir + a + ".json"
-        cheker.deal_pic(img1,5)
+        cheker.deal_pic(img1,80)
         #img1 = cv2.imread(img_path)
         cheker.deal_folder()
 

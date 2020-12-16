@@ -21,7 +21,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = True 
 OLG_flag = True
-validation_flag = True
+validation_flag = False
 
 Display_fig_flag = True
 Continue_flag = True
