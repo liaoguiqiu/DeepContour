@@ -56,7 +56,7 @@ class myDataloader(object):
 
 
 
-        self.noisyflag = False
+        self.noisyflag = True
         self.read_all_flag=0
         self.read_record =0
         self.folder_pointer = 0
@@ -144,16 +144,33 @@ class myDataloader(object):
         return data
     def gray_scale_augmentation(self,orig_gray) :
         random_scale = 0.3 + (1.5  - 0.3) * np.random.random_sample()
-        aug_gray = orig_gray * random_scale
+        random_bias =   (np.random.random_sample() -0.5)*40
+        aug_gray = orig_gray * random_scale +random_bias
         aug_gray = np.clip(aug_gray, a_min = 0, a_max = 254)
 
         return aug_gray
     def nonelinear_scale_augmentation(self,orig_gray) :
-        random_scale = 0.7 + (1.5  - 0.7) * np.random.random_sample()
-        aug_gray = orig_gray.astype(float) * orig_gray.astype(float)/100.0*random_scale
-        aug_gray = np.clip(aug_gray, a_min = 0, a_max = 254)
+        mask = (orig_gray >40)*0.2
+        mask2=  (orig_gray <40) *1
+        
+         
+        aug_gray =  mask * orig_gray + mask2 * orig_gray 
 
-        return aug_gray
+        gamma  = 0.2
+        #aug_gray = np.array(255*(orig_gray.astype(float) / 255) ** gamma, dtype = 'uint8') 
+        #random_scale = 0.7 + (1.0  - 0.7) * np.random.random_sample()
+        ##aug_gray = orig_gray.astype(float) * orig_gray.astype(float)/100.0*random_scale
+        #aug_gray = orig_gray.astype(float) /1.3
+
+        aug_gray = np.clip(aug_gray/2, a_min = 0, a_max = 254)
+        Dice = int( np.random.random_sample()*10)
+        if Dice % 10 ==0 :
+            return orig_gray
+
+            
+
+        else:
+            return  aug_gray
     def random_min_clip_by_row(self,min1,min2,mat):
          rand= np.random.random_sample()
          rand = rand * (min2-min1) +min1
@@ -185,7 +202,7 @@ class myDataloader(object):
 
 
         return image,pathes 
-    def flips(self,image,pathes):
+    def flips(self,image,pathes):    #upside down
  
         H,W = image.shape
         fliper = np.random.random_sample() * 10
@@ -198,7 +215,7 @@ class myDataloader(object):
 
 
         return image,pathes 
-    def flips2(self,image,pathes):
+    def flips2(self,image,pathes):  # left to right
  
         H,W = image.shape
         fliper = np.random.random_sample() * 10
@@ -220,15 +237,17 @@ class myDataloader(object):
                 #img_piece = this_gray[:,this_pathx[0]:this_pathx[clen-1]]
                 # no crop blank version 
         factor=W2/W
+       
+
          
         this_pathy =  signal.resample(py, int(clen*factor))#resample the path
         #resample 
         this_pathy =  this_pathy*H2/H#unifrom
         # first determine the lef piece
-        pathl = np.zeros(int(px[0]*factor))+ 1.01*H2
+        pathl = np.zeros(int(px[0]*factor))+ 1.11*H2
         len1 = len(this_pathy)
         len2 = len(pathl)
-        pathr = np.zeros(W2-len1-len2) + 1.01*H2
+        pathr = np.zeros(W2-len1-len2) + 1.11*H2
         path_piece = np.append(pathl,this_pathy,axis=0)
         path_piece = np.append(path_piece,pathr,axis=0)
 
@@ -236,6 +255,9 @@ class myDataloader(object):
         #however because the label software can not label the leftmost and the rightmost points,
         #so it will be given a max value,  I crop the edge of the label, remember to crop the image correspondingly .
 
+         # conver the blank value to extrem high value
+        mask = path_piece >(H2-5)
+        path_piece = path_piece + mask * H2
         #path_piece = signal.resample(path_piece[3:W2-3], W2)
         return path_piece
 
@@ -332,7 +354,7 @@ class myDataloader(object):
                         this_gray  = np . clip( this_gray , clip_limitation,255) # change the clip value depend on the ID
                 if Augment_add_lines== True:
                     this_gray  = self.add_lines_to_matrix( this_gray  )
-                #this_gray = self.gray_scale_augmentation(this_gray)
+                #this_gray = self.nonelinear_scale_augmentation(this_gray)
                 H,W = this_gray.shape
                 c_num = len(this_pathx)
 
@@ -343,10 +365,12 @@ class myDataloader(object):
                 img_piece = this_gray #[60:H,:] 
                 img_piece = cv2.resize(img_piece, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
                 if self.noisyflag == True:
-                    img_piece = self.gray_scale_augmentation (img_piece)
-                    img_piece= Basic_Operator.add_speckle_or_not(img_piece)
+                    img_piece = self.nonelinear_scale_augmentation(img_piece)
+
+                    #img_piece = self.gray_scale_augmentation (img_piece)
+                    #img_piece= Basic_Operator.add_speckle_or_not(img_piece)
                     #img_piece= Basic_Operator.add_noise_or_not(img_piece)
-                    img_piece = Basic_Operator.add_gap_or_not(img_piece)
+                    #img_piece = Basic_Operator.add_gap_or_not(img_piece)
                     #img_piece  = self . noisy( "blur" ,  img_piece )
                     #img_piece  = self . noisy( "s&p" ,  img_piece )
 
@@ -383,7 +407,7 @@ class myDataloader(object):
 
                 #path_piece   = np.clip(path_piece,0,self.img_size)
                 img_piece, self.input_path [this_pointer ,:, :] = self.rolls(img_piece,self.input_path [this_pointer ,:, :])
-                img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
+                #img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
                 img_piece, self.input_path [this_pointer ,:, :] = self.flips2(img_piece,self.input_path [this_pointer ,:, :])
 
 
