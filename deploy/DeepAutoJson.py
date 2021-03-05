@@ -121,6 +121,8 @@ class  Auto_json_label(object):
         self.database_root = "D:/Deep learning/dataset/original/new_catheter_ruler/2/"
         self.database_root = "D:/Deep learning/dataset/original/phantom_2th_march_2021/1/"
         self.database_root = "D:/Deep learning/dataset/original/paper_with_strong_shadow/1/"
+        self.database_root = "D:/Deep learning/dataset/original/animal_tissue/2/"
+
 
          
 
@@ -129,7 +131,7 @@ class  Auto_json_label(object):
         #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
 
 
-        self.f_downsample_factor = 8
+        self.f_downsample_factor = 30
         self.all_dir = self.database_root + "pic_all/"
         self.image_dir   = self.database_root + "pic/"
         self.json_dir =  self.database_root + "label/" # for this class sthis dir ist save the modified json 

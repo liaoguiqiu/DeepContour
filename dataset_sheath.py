@@ -56,7 +56,7 @@ class myDataloader(object):
 
 
 
-        self.noisyflag = True
+        self.noisyflag = False
         self.read_all_flag=0
         self.read_record =0
         self.folder_pointer = 0
@@ -150,13 +150,14 @@ class myDataloader(object):
 
         return aug_gray
     def nonelinear_scale_augmentation(self,orig_gray) :
-        mask = (orig_gray >40)*0.2
-        mask2=  (orig_gray <40) *1
+        gamma  = np.random.random_sample()*0.6 +0.4
+
+        mask = (orig_gray >50)* gamma
+        mask2=  (orig_gray <50) *1
         
          
         aug_gray =  mask * orig_gray + mask2 * orig_gray 
 
-        gamma  = 0.2
         #aug_gray = np.array(255*(orig_gray.astype(float) / 255) ** gamma, dtype = 'uint8') 
         #random_scale = 0.7 + (1.0  - 0.7) * np.random.random_sample()
         ##aug_gray = orig_gray.astype(float) * orig_gray.astype(float)/100.0*random_scale
@@ -257,7 +258,7 @@ class myDataloader(object):
 
          # conver the blank value to extrem high value
         mask = path_piece >(H2-5)
-        path_piece = path_piece + mask * H2
+        path_piece = path_piece + mask * H2*0.2
         #path_piece = signal.resample(path_piece[3:W2-3], W2)
         return path_piece
 
@@ -370,8 +371,8 @@ class myDataloader(object):
                     #img_piece = self.gray_scale_augmentation (img_piece)
                     #img_piece= Basic_Operator.add_speckle_or_not(img_piece)
                     #img_piece= Basic_Operator.add_noise_or_not(img_piece)
-                    #img_piece = Basic_Operator.add_gap_or_not(img_piece)
-                    #img_piece  = self . noisy( "blur" ,  img_piece )
+                    img_piece = Basic_Operator.add_gap_or_not(img_piece)
+                    img_piece  = self . noisy( "gauss_noise" ,  img_piece )
                     #img_piece  = self . noisy( "s&p" ,  img_piece )
 
                     #img_piece  = self . noisy( "speckle" ,  img_piece )

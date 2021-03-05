@@ -21,8 +21,8 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = True 
 OLG_flag = True
-Hybrid_OLG = True
-validation_flag = False
+Hybrid_OLG = False
+validation_flag = True
 
 Display_fig_flag = True
 Continue_flag = True
@@ -124,8 +124,8 @@ GANmodel.netD.apply(weights_init)
 GANmodel.netG.apply(weights_init)
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
-    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_3.pth'))
-    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_3.pth'))
+    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_4.pth'))
+    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_4.pth'))
     #GANmodel.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
 
     #torch.save(GANmodel.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")

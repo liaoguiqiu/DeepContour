@@ -239,8 +239,8 @@ class Pix2LineModel(BaseModel):
         # First, G(A) should fake the discriminator
         self.optimizer_G.zero_grad()        # set G's gradients to zero
 
-        self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
-        self.set_requires_grad(self.netG, False)  # D requires no gradients when optimizing G
+        #self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
+        #self.set_requires_grad(self.netG, False)  # D requires no gradients when optimizing G
         # just remain the upsample fusion parameter to optimization 
         #self.set_requires_grad(self.netG.side_branch1, False)  # D requires no gradients when optimizing G
         #self.set_requires_grad(self.netG.side_branch2, False)  # D requires no gradients when optimizing G
@@ -329,7 +329,7 @@ class Pix2LineModel(BaseModel):
         
         self.loss_G_L3 =  loss3[0] 
         #self.loss_G_L3.backward(retain_graph=True)
-        self.loss_G_L3.backward( )
+        self.loss_G_L3.backward( retain_graph=True)
 
         self.optimizer_G_3.step()             # udpate G's weights
 
@@ -342,13 +342,14 @@ class Pix2LineModel(BaseModel):
         self.optimizer_D.step()          # update D's weights
         # update G
 
-        self.backward_G()                   # calculate graidents for G
 
         self.backward_G_1()                   # calculate graidents for G
 
         self.backward_G_2()                   # calculate graidents for G
 
         self.backward_G_3()                   # calculate graidents for G
+        self.backward_G()                   # calculate graidents for G
+
         self.displayloss0 = self.loss_G_L0. data.mean()
 
         self.displayloss1 = self.loss_G_L1. data.mean()
