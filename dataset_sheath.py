@@ -372,7 +372,7 @@ class myDataloader(object):
                     #img_piece= Basic_Operator.add_speckle_or_not(img_piece)
                     #img_piece= Basic_Operator.add_noise_or_not(img_piece)
                     img_piece = Basic_Operator.add_gap_or_not(img_piece)
-                    img_piece  = self . noisy( "gauss_noise" ,  img_piece )
+                    img_piece  = self . noisy( "gauss_noise" ,  img_piece)
                     #img_piece  = self . noisy( "s&p" ,  img_piece )
 
                     #img_piece  = self . noisy( "speckle" ,  img_piece )
@@ -407,7 +407,7 @@ class myDataloader(object):
                     self.input_path [this_pointer ,iter, :] = path_piece
 
                 #path_piece   = np.clip(path_piece,0,self.img_size)
-                img_piece, self.input_path [this_pointer ,:, :] = self.rolls(img_piece,self.input_path [this_pointer ,:, :])
+                img_piece, self.input_path [this_pointer ,:, :] = self.rolls(img_piece,self.input_path [this_pointer ,:, :])  
                 #img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
                 img_piece, self.input_path [this_pointer ,:, :] = self.flips2(img_piece,self.input_path [this_pointer ,:, :])
 
