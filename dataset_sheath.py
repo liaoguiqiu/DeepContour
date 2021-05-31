@@ -21,6 +21,7 @@ Augment_limitation_flag = False
 Augment_add_lines = False
 Clip_mat_flag = False
 random_clip_flag = False
+Random_rotate = False 
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
 
 class myDataloader(object):
@@ -344,7 +345,7 @@ class myDataloader(object):
                 #path2 =  signal.resample(this_path, self.path_size)#resample the path
                 # concreate the image batch and path
                 this_gray  =   cv2.cvtColor(this_img, cv2.COLOR_BGR2GRAY)
-                
+                #this_gray  = this_gray[0:600,:]   # used to crop the image for IVUS image
                 # imag augmentation
                 if Augment_limitation_flag== True:
                     if  random_clip_flag == True:
@@ -407,7 +408,8 @@ class myDataloader(object):
                     self.input_path [this_pointer ,iter, :] = path_piece
 
                 #path_piece   = np.clip(path_piece,0,self.img_size)
-                img_piece, self.input_path [this_pointer ,:, :] = self.rolls(img_piece,self.input_path [this_pointer ,:, :])  
+                if Random_rotate == True:
+                    img_piece, self.input_path [this_pointer ,:, :] = self.rolls(img_piece,self.input_path [this_pointer ,:, :])  
                 #img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
                 img_piece, self.input_path [this_pointer ,:, :] = self.flips2(img_piece,self.input_path [this_pointer ,:, :])
 

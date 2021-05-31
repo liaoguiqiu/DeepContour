@@ -192,6 +192,8 @@ class Pix2LineModel(BaseModel):
 
         #self.real_B = realB.to(self.device)
         self.real_B=rendering.layers_visualized_integer_encodeing(pathes,Resample_size)
+        self.real_B_one_hot=rendering.layers_visualized_OneHot_encodeing(pathes,Resample_size)
+
         # LGQ add real path as creterioa for G
         self.real_pathes = pathes
         self.input_G  = inputG

@@ -226,21 +226,18 @@ def draw_coordinates_color_s(img1,vy0,vy1):
 
 
         return img1
-def display_prediction(mydata_loader,save_out,hot): # display in coordinates form 
-    gray2  =   (mydata_loader.input_image[0,0,:,:] *104)+104
+def display_prediction(read_id,mydata_loader,save_out,hot,hot_real): # display in coordinates form 
+    gray2 =   (mydata_loader.input_image[0,0,:,:] *104)+104
     show1 = gray2.astype(float)
     path2 = mydata_loader.input_path[0,:] 
     #path2  = signal.resample(path2, Resample_size)
     path2 = numpy.clip(path2,0,Resample_size-1)
-    color1  = numpy.zeros((show1.shape[0],show1.shape[1],3))
+    color1 = numpy.zeros((show1.shape[0],show1.shape[1],3))
     color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 
-         
-           
 
     for i in range ( len(path2)):
         color1 = draw_coordinates_color(color1,path2[i],i)
-                 
-            
+                             
             
     show2 =  gray2.astype(float)
     save_out = save_out.cpu().detach().numpy()
@@ -250,20 +247,30 @@ def display_prediction(mydata_loader,save_out,hot): # display in coordinates for
     save_out = numpy.clip(save_out,0,Resample_size-1)
     color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
     color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
-         
-           
+    colorhot_real = color *hot_real
+    sheath_real  = signal.resample(path2[0], Resample_size)
+    tissue_real  = signal.resample(path2[1], Resample_size)
+    colorhot_real = draw_coordinates_color_s(colorhot_real,sheath_real,tissue_real)
+    circular_color_real = Basic_oper.tranfer_frome_rec2cir2(colorhot_real) 
+    cv2.imshow('color real cir',circular_color_real.astype(numpy.uint8)) 
+    cv2.imwrite("D:/Deep learning/out/1out_img/ground_circ/"  +
+                        str(read_id) +".jpg",circular_color_real )  
 
     for i in range ( len(save_out)):
         this_coordinate = signal.resample(save_out[i], Resample_size)
         color = draw_coordinates_color(color,this_coordinate,i)
     colorhot = color *hot
+   
+
+
              
     sheath = signal.resample(save_out[0], Resample_size)
     tissue = signal.resample(save_out[1], Resample_size)
-
+   
     color = draw_coordinates_color_s(color,sheath,tissue)
     color2 = draw_coordinates_color_s(colorhot,sheath,tissue)
 
+    color_real  =  draw_coordinates_color_s(colorhot_real,sheath,tissue)
             
     #show3 = numpy.append(show1,show2,axis=1) # cascade
     show4 = numpy.append(color1,color,axis=1) # cascade
@@ -271,10 +278,16 @@ def display_prediction(mydata_loader,save_out,hot): # display in coordinates for
     circular2 = Basic_oper.tranfer_frome_rec2cir2(color2) 
 
 
+
     cv2.imshow('Deeplearning one 2',show4.astype(numpy.uint8)) 
     cv2.imshow('Deeplearning circ',circular1.astype(numpy.uint8)) 
     cv2.imshow('Deeplearning circ2',circular2.astype(numpy.uint8)) 
+    cv2.imwrite("D:/Deep learning/out/1out_img/seg_circ/"  +
+                        str(read_id) +".jpg",circular2 )  
     cv2.imshow('Deeplearning color',color2.astype(numpy.uint8)) 
+    cv2.imshow('  color real',color_real.astype(numpy.uint8)) 
+  
+
 
 
 
@@ -304,7 +317,6 @@ while(1):
         else:
            switcher =0
            mydata_loader =mydata_loader2 .read_a_batch()
-
            mydata_loader =mydata_loader2  
 
         #change to 3 chanels
@@ -320,7 +332,7 @@ while(1):
         #input = torch.from_numpy(numpy.float32(mydata_loader.input_image[0,:,:,:])) 
         input = input.to(device)                
    
-        patht= torch.from_numpy(numpy.float32(mydata_loader.input_path)/Resample_size )
+        patht= torch.from_numpy(numpy.float32(mydata_loader.input_path)/Resample_size)
         #patht=patht.to(device)
                 
         #patht= torch.from_numpy(numpy.float32(mydata_loader.input_path[0,:])/71.0 )
@@ -448,6 +460,17 @@ while(1):
             hot[:,:,1]  =  oneHot [1,:,:]
             hot[:,:,2]  =  oneHot [2,:,:]
 
+            oneHot_real =  GANmodel.real_B_one_hot[0,:,:,:].cpu().detach().numpy() 
+
+            
+            hot_real  = numpy.zeros((oneHot.shape[1],oneHot.shape[2],3))
+            hot_real[:,:,0]  =  oneHot_real [0,:,:]
+            hot_real[:,:,1]  =  oneHot_real [1,:,:]
+            hot_real[:,:,2]  =  oneHot_real [2,:,:]
+          
+
+
+
             #oneHot  = GANmodel.fake_B_1_hot[0,:,:,:]
             #oneHot = oneHot.view(Path_length,Path_length,3)
             #oneHot  =  oneHot.cpu().detach().numpy()
@@ -478,6 +501,15 @@ while(1):
             
             #show3 = numpy.append(show1,show2,axis=1) # cascade
             show4 = numpy.append(color1,color,axis=1) # cascade
+            # the circular of the original image 
+            circ_original = Basic_oper.tranfer_frome_rec2cir2(color1) 
+
+            cv2.imshow('Original circular',circ_original.astype(numpy.uint8)) 
+            cv2.imwrite("D:/Deep learning/out/1out_img/original_circ/"  +
+                        str(read_id) +".jpg",circ_original )
+
+            
+
 
             cv2.imshow('Deeplearning one',show4.astype(numpy.uint8)) 
 
@@ -488,7 +520,7 @@ while(1):
             #display_prediction(mydata_loader,  GANmodel.out_pathes[0],hot)
             #display_prediction(mydata_loader,  GANmodel.path_long3,hot)
             #display_prediction(mydata_loader,  GANmodel.out_pathes3,hot)
-            display_prediction(mydata_loader,  GANmodel.out_pathes0,hot)
+            display_prediction(read_id,mydata_loader,  GANmodel.out_pathes0,hot,hot_real)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
               break
