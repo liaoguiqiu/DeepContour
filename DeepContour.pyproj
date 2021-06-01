@@ -43,6 +43,9 @@
     <Compile Include="dataTool\tSNE.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="dataTool\tSNE_exa.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="deploy\correct_ruler_reference.py">
       <SubType>Code</SubType>
     </Compile>
