@@ -13,6 +13,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import seaborn as sns
 import cv2
 import os
+import glob
 # Fetch the minist dataset 
 #mnist = fetch_mldata("MNIST original")
 class Data_VIS (object):
@@ -20,12 +21,19 @@ class Data_VIS (object):
         dir = "D:/Deep learning/dataset/original/animal_tissue/1/pic_all/"
         dir = "D:/Deep learning/dataset/For_contour_sheath_train/train_OLG/pic/1/"
         dir = "D:/Deep learning/dataset/original/phantom/2/pic_all/"
+
+        # to go through this big folder in the fixed format:
+        # the "*" indicate that it can be any word for it  
+        all_dir_list  =  glob.glob("D:/Deep learning/dataset/original/*/*/pic_all/*.jpg")
+        len_all = len(all_dir_list)
         this_image = []
         S = 100
         self.S  = S
         buffer_L = 1000
         self. data_stack =  np.zeros ((buffer_L, S*S))
         self. label_stack = np.zeros (buffer_L)
+
+        # thsi is dir_list of a specific folder 
         read_sequence = os.listdir(dir) # all item stringin this folder
         seqence_Len = len(read_sequence)
         sample_space = int ((seqence_Len  - 1 )  / buffer_L)
