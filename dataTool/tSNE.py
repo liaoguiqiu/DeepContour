@@ -18,6 +18,8 @@ import os
 class Data_VIS (object):
     def __init__(self):
         dir = "D:/Deep learning/dataset/original/animal_tissue/1/pic_all/"
+        dir = "D:/Deep learning/dataset/For_contour_sheath_train/train_OLG/pic/1/"
+        dir = "D:/Deep learning/dataset/original/phantom/2/pic_all/"
         this_image = []
         S = 100
         self.S  = S
