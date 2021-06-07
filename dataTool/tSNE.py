@@ -21,7 +21,7 @@ class Data_VIS (object):
         dir = "D:/Deep learning/dataset/original/animal_tissue/1/pic_all/"
         dir = "D:/Deep learning/dataset/For_contour_sheath_train/train_OLG/pic/1/"
         dir = "D:/Deep learning/dataset/original/phantom/2/pic_all/"
-
+         
         # to go through this big folder in the fixed format:
         # the "*" indicate that it can be any word for it  
         all_dir_list  =  glob.glob("D:/Deep learning/dataset/original/*/*/pic_all/*.jpg")
@@ -29,19 +29,28 @@ class Data_VIS (object):
         this_image = []
         S = 100
         self.S  = S
-        buffer_L = 1000
+        sample_space  = 10 
+        buffer_L = int(len_all/sample_space)
+        # set the buffer len as the 
         self. data_stack =  np.zeros ((buffer_L, S*S))
         self. label_stack = np.zeros (buffer_L)
 
         # thsi is dir_list of a specific folder 
-        read_sequence = os.listdir(dir) # all item stringin this folder
-        seqence_Len = len(read_sequence)
-        sample_space = int ((seqence_Len  - 1 )  / buffer_L)
+        #read_sequence = all_dir_list  # all item stringin this folder
+
+        ##read_sequence = os.listdir(dir) # all item stringin this folder
+        #seqence_Len = len(read_sequence)
+        #sample_space = int ((seqence_Len  - 1 )  / buffer_L)
 
         # read image by image 
+
+        #initialized the first type
+        self.class_num = 1  # folder type number
+        first_dir  = all_dir_list[0]
+        pre_sub_f = first_dir. split ('\\') [1]
         for i in range(buffer_L):
             # read and tranform
-            this_dir = dir + read_sequence[i*sample_space] # sample with a  space inver
+            this_dir =  all_dir_list[i*sample_space] # sample with a  space inver
             this_image = cv2. imread(this_dir)
             this_image  =   cv2.cvtColor(this_image, cv2.COLOR_BGR2GRAY)
             this_image = cv2.resize(this_image, (S,S), interpolation=cv2.INTER_AREA)
@@ -52,13 +61,47 @@ class Data_VIS (object):
             flat_img = this_image.flatten()  # flat the image 
             self. data_stack[i,:] = flat_img
             # generate a fake lable 
-            self.label_stack [i] = '0'
+            # get the sub folder name to determine the label 
+
+            sub_f_l = this_dir. split ('\\')
+            sub_f = sub_f_l  [1] 
+            # check the class is switched or not 
+            if (sub_f != pre_sub_f):
+                self.class_num +=1
+                pre_sub_f=  sub_f
+
+            self.label_stack [i] =  str(self.class_num)
+            
+
+        #self. data_stack =  np.zeros ((buffer_L, S*S))
+        #self. label_stack = np.zeros (buffer_L)
+
+        ## thsi is dir_list of a specific folder 
+        #read_sequence = os.listdir(dir) # all item stringin this folder
+        #seqence_Len = len(read_sequence)
+        #sample_space = int ((seqence_Len  - 1 )  / buffer_L)
+
+        ## read image by image 
+        #for i in range(buffer_L):
+        #    # read and tranform
+        #    this_dir = dir + read_sequence[i*sample_space] # sample with a  space inver
+        #    this_image = cv2. imread(this_dir)
+        #    this_image  =   cv2.cvtColor(this_image, cv2.COLOR_BGR2GRAY)
+        #    this_image = cv2.resize(this_image, (S,S), interpolation=cv2.INTER_AREA)
+        #    cv2.imshow('combin video',this_image) 
+        #    cv2.waitKey(1)
+
+        #    # save the stack 
+        #    flat_img = this_image.flatten()  # flat the image 
+        #    self. data_stack[i,:] = flat_img
+        #    # generate a fake lable 
+        #    self.label_stack [i] = '0'
         
         # Equal space resample from a folder 
  
 
     def visualization(self):
-        number_lable = 1  # how may types of color labels 
+        number_lable = self.class_num  # how may types of color labels 
         
         X  = self.data_stack/255.0
         y = self . label_stack 
