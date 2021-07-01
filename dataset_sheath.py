@@ -27,6 +27,8 @@ transform = BaseTransform(  Resample_size,[104])  #gray scale data
 class myDataloader(object):
     def __init__(self, batch_size,image_size,path_size,validation= False,OLG=False):
         self.OLG_flag = OLG
+        self. GT = False
+        self.save_id =0
         self.com_dir = "../dataset/telecom/" # this dir is for the OLG
          # initial lizt the 
         self.talker = Communicate()
@@ -52,7 +54,8 @@ class myDataloader(object):
             self.OLG_flag = False
             self.dataroot = "../dataset/For_contour_sheath_train/test/pic/"
             self.signalroot ="../dataset/For_contour_sheath_train/test/label/" 
-        
+        else: 
+            self.GT = True  # for  trianing the GT should always be true
         
 
 
@@ -304,7 +307,9 @@ class myDataloader(object):
                 this_folder_list  = self.folder_list[self.folder_pointer]
         #read_end  = self.read_record+ self.batch_size
                 this_signal = self.signal[self.folder_pointer]
-                thisfolder_len =  len (this_signal.img_num)
+                #thisfolder_len =  len (this_signal.img_num)
+                thisfolder_len =  len (this_folder_list)
+
 
         #for i in range(read_start, read_end):
             #this_pointer = i -read_start
@@ -319,7 +324,7 @@ class myDataloader(object):
                 Image_ID = str(Image_ID_str)
             else:
                 Image_ID = int(Image_ID_str)
-
+            self.save_id= Image_ID
             #start to read image and paths to fill in the input bach
             this_image_path = this_folder_list[i] # read saved path
             this_img = cv2.imread(this_image_path)
@@ -332,12 +337,16 @@ class myDataloader(object):
             #Path_Index_list = Path_Index_list.astype(str)
 
             try:
-                Path_Index = Path_Index_list.index(Image_ID)
+                if self.GT == False:
+                    Path_Index = 0 # just use the first path
+                else:
+                    Path_Index = Path_Index_list.index(Image_ID)
             except ValueError:
                 print(Image_ID_str + "not path exsting")
 
-            else:             
-                Path_Index = Path_Index_list.index(Image_ID)  
+            else:
+                if self.GT == True:
+                    Path_Index = Path_Index_list.index(Image_ID)  
                 #for layers train alll  the x and y are list
                 this_pathx = this_signal.contoursx[Path_Index]
                 this_pathy = this_signal.contoursy[Path_Index]
@@ -411,7 +420,7 @@ class myDataloader(object):
                 if Random_rotate == True:
                     img_piece, self.input_path [this_pointer ,:, :] = self.rolls(img_piece,self.input_path [this_pointer ,:, :])  
                 #img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
-                img_piece, self.input_path [this_pointer ,:, :] = self.flips2(img_piece,self.input_path [this_pointer ,:, :])
+                #img_piece, self.input_path [this_pointer ,:, :] = self.flips2(img_piece,self.input_path [this_pointer ,:, :])
 
 
                 self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]/104.0

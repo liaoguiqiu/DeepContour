@@ -1,6 +1,11 @@
+# this file is more suitable for anlysising all pic in a structured folder 
+#the following has two examples of structured data folder 
+#all_dir_list  =  glob.glob("D:/Deep learning/dataset/original/*/*/pic_all/*.jpg")
+#all_dir_list  =  glob.glob("D:/Deep learning/dataset/label data/img/*/*.jpg")
+#all_dir_list  =  glob.glob("D:/Deep learning/dataset/label data/img_genetate_devi/*/*.jpg")
+
 from __future__ import print_function
 import time
-
 
 import numpy as np
 import pandas as pd
@@ -24,12 +29,17 @@ class Data_VIS (object):
          
         # to go through this big folder in the fixed format:
         # the "*" indicate that it can be any word for it  
-        all_dir_list  =  glob.glob("D:/Deep learning/dataset/original/*/*/pic_all/*.jpg")
+        #all_dir_list  =  glob.glob("D:/Deep learning/dataset/original/*/*/pic_all/*.jpg")
+        #all_dir_list  =  glob.glob("D:/Deep learning/dataset/label data/img/*/*.jpg")
+        all_dir_list  =  glob.glob("D:/Deep learning/dataset/label data/img_genetate_devi/*/*.jpg")
+
+
+        
         len_all = len(all_dir_list)
         this_image = []
         S = 100
         self.S  = S
-        sample_space  = 10 
+        sample_space  = 1 
         buffer_L = int(len_all/sample_space)
         # set the buffer len as the 
         self. data_stack =  np.zeros ((buffer_L, S*S))

@@ -30,7 +30,8 @@ Display_fig_flag = True
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
-
+#infinite saving term
+infinite_save_id =0
 
 pth_save_dir = "../out/sheathCGAN/"
 pth_save_dir = "../out/deep_layers/"
