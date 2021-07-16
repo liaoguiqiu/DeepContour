@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{bf6a4053-8842-49f4-bc13-3aa8116b1788}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>dataTool\read_Jsonpy.py</StartupFile>
+    <StartupFile>dataTool\generator_contour_sheath.py</StartupFile>
     <SearchPath>model;test_model;deploy;dataTool</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -37,6 +37,7 @@
     <Compile Include="contour_sheath_CGAN_train.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="dataTool\generator_contour_sheath.py" />
     <Compile Include="dataTool\matlab.py">
       <SubType>Code</SubType>
     </Compile>
