@@ -530,12 +530,11 @@ while(1):
             if cv2.waitKey(1) & 0xFF == ord('q'):
               break
     # do checkpointing
-    #torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch))
-    #torch.save(netD.state_dict(), '%s/netD_epoch_%d.pth' % (opt.outf, epoch
+   
     torch.save(GANmodel.netG.state_dict(), pth_save_dir+ "cGANG_epoch_"+str(epoch)+".pth")
     torch.save(GANmodel.netD.state_dict(), pth_save_dir+ "cGAND_epoch_"+str(epoch)+".pth")
     torch.save(GANmodel.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
-
+    #  the 
 
     #cv2.imwrite(Save_pic_dir  + str(epoch) +".jpg", show2)
     #cv2.imwrite(pth_save_dir  + str(epoch) +".jpg", show2)
