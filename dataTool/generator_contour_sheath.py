@@ -355,7 +355,7 @@ class Generator_Contour_sheath(object):
             #saved_stastics.all_statics_dir = os.path.join(self.signalroot, subfold, 'contour.pkl')
             this_contour_dir =  self.pkl_dir+ subfold+'/'  # for both linux and window
 
-            self.origin_data =self.origin_data.read_data(this_contour_dir)  # this original data
+            self.origin_data =self.origin_data.read_data(this_contour_dir)  # this original data label - pkl format
             #number_i +=1
             file_len = len(self.origin_data.img_num)
 
@@ -511,6 +511,8 @@ if __name__ == '__main__':
                     talker.save_data(com_dir)
             cv2.waitKey(1000)   
             print("waiting")
+
+
     # this is the identical function of the generator that warp the shape of the tisseu of the shealth
     # which will only keep the contour generator(not generate the image actually ), this file is just 
     #run before the generate so that the distribution of orginal label

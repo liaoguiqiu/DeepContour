@@ -19,8 +19,8 @@ class  Read_read_check_json_label(object):
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL/"
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE-center/"
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
-        sub_folder = "8/"
         self.database_root = "D:/Deep learning/dataset/label data/"
+        sub_folder = "8/"
 
         self.image_dir   = self.database_root + "img/" +sub_folder
         self.json_dir =  self.database_root + "label/" +sub_folder
