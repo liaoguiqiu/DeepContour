@@ -336,5 +336,5 @@ class  Auto_json_label(object):
                     #    data = JSON.load(f_dir)
 if __name__ == '__main__':
         cheker  = Auto_json_label()
-        #cheker.check_one_folder() 
+        cheker.check_one_folder() 
         cheker.downsample_folder()

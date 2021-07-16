@@ -16,3 +16,8 @@ tSNE.py: which is used to see the data distribution with the reduced dimention (
 
 
 
+
+In deploy folder (this is normally used after the nets are trained): 
+
+most of these scripts are used to predict contour, specifically 
+the DeepAutoJson.py is used to generate separated json files from the prediction result of the network.
