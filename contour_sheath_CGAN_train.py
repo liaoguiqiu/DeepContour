@@ -126,8 +126,8 @@ GANmodel.netD.apply(weights_init)
 GANmodel.netG.apply(weights_init)
 if opt.netD != '':
     #netD.load_state_dict(torch.load(opt.netD))
-    GANmodel.netG.load_state_dict(torch.load('../out/deep_layers/cGANG_epoch_5.pth'))
-    GANmodel.netD.load_state_dict(torch.load('../out/deep_layers/cGAND_epoch_5.pth'))
+    GANmodel.netG.load_state_dict(torch.load('../out/deep_layers/cGANG_epoch_1.pth'))
+    GANmodel.netD.load_state_dict(torch.load('../out/deep_layers/cGAND_epoch_1.pth'))
 
 print(GANmodel.netD)
 print(GANmodel.netG)
@@ -349,12 +349,13 @@ while(1):
             show4 = numpy.append(color1,color,axis=1) # cascade
 
             cv2.imshow('Deeplearning one',show4.astype(numpy.uint8)) 
-
+            cv2.imwrite("D:/Deep learning/out/1out_img/Ori_seg_rec_Unet/"  +
+                        str(infinite_save_id) +".jpg",show4 )
             real_label = GANmodel.real_B
             show5 =  real_label[0,0,:,:].cpu().detach().numpy()*255 
             cv2.imshow('real',show5.astype(numpy.uint8)) 
 
-
+            infinite_save_id += 1
             if cv2.waitKey(1) & 0xFF == ord('q'):
               break
     # do checkpointing
