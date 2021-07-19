@@ -6,32 +6,27 @@ from torch.autograd import Variable
 import layer_body_sheath
 from model import layer_body_sheath_res
 from test_model import layer_body_sheath_res2
-from test_model.loss_MTL import MTL_loss
-from scipy import signal 
-
 import arg_parse
 import cv2
 import numpy
-from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers,Generator_Contour_sheath
+from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate 
 
 from time import time
-validation_flag = True
-OLG_flag = True
-
+validation_flag = False
 import os
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
-Visdom_flag  = True 
+Visdom_flag  = False 
 Display_fig_flag = True
 Continue_flag = True
-
+OLG_flag = False
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 
 
-pth_save_dir = "../out/deep_sheath_res2/"
+pth_save_dir = "../out/deep_sheath_res/"
 #pth_save_dir = "../out/deep_sheath/"
 
  
@@ -49,7 +44,7 @@ print(torch.cuda.get_device_name(0))
 print(torch.cuda.is_available())
 dataroot = "../dataset/CostMatrix/"
 
-torch.set_num_threads(4)
+torch.set_num_threads(2)
 ######################################################################
 # Data
 # ----
@@ -88,6 +83,83 @@ nz = int(arg_parse.opt.nz) # number of latent variables
 ngf = int(arg_parse.opt.ngf) # inside generator
 ndf = int(arg_parse.opt.ndf) # inside discriminator
 nc = 3 # channels
+
+# custom weights initialization called on netG and netD
+def weights_init(m):
+    classname = m.__class__.__name__
+    if classname.find('Conv') != -1:
+        m.weight.data.normal_(0.0, 0.02)
+    elif classname.find('BatchNorm') != -1:
+        m.weight.data.normal_(1.0, 0.02)
+        m.bias.data.fill_(0)
+
+
+#netG = gan_body._netG()
+#netG.apply(weights_init)
+#if opt.netG != '':
+#    netG.load_state_dict(torch.load(opt.netG))
+#print(netG)
+
+
+#netD = gan_body._netD()
+#Guiqui 8 layers version
+#netD = gan_body._netD_8()
+
+#Guiqiu Resnet version
+netD = layer_body_sheath_res._netD_8_multiscal_fusion300_layer()
+#netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
+
+#netD = gan_body._netD_Resnet()
+
+
+
+
+netD.apply(weights_init)
+if Continue_flag == True:
+    netD.load_state_dict(torch.load(pth_save_dir +'netD_epoch_1.pth'))
+print(netD)
+ 
+
+criterion = nn.L1Loss()
+criterion2  = nn.CrossEntropyLoss()
+#criterion = nn.BCELoss()
+
+input = torch.FloatTensor(opt.batchSize, 3, opt.imageSize, opt.imageSize)
+noise = torch.FloatTensor(opt.batchSize, nz, 1, 1)
+fixed_noise = torch.FloatTensor(opt.batchSize, nz, 1, 1).normal_(0, 1)
+label = torch.FloatTensor(opt.batchSize)
+real_label = 1
+fake_label = 0
+
+if opt.cuda:
+    print("CUDA TRUE")
+    netD.cuda()
+    #netG.cuda()
+    criterion.cuda()
+    input, label = input.cuda(), label.cuda()
+    noise, fixed_noise = noise.cuda(), fixed_noise.cuda()
+
+
+fixed_noise = Variable(fixed_noise)
+
+# setup optimizer
+#optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
+#optimizerD = optim.SGD(netD.parameters(), lr=opt.lr,momentum= 0.9, weight_decay =2e-4 )
+
+
+#saved_stastics = MY_ANALYSIS()
+#saved_stastics=saved_stastics.read_my_signal_results()
+#saved_stastics.display()
+
+read_id =0
+
+epoch=0
+#transform = BaseTransform(  Resample_size,(104/256.0, 117/256.0, 123/256.0))
+#transform = BaseTransform(  Resample_size,[104])  #gray scale data
+iteration_num =0
+mydata_loader = myDataloader (Batch_size,Resample_size,Path_length,OLG = OLG_flag)
+test_data_loader =  myDataloader (Batch_size,Resample_size,Path_length,validation=True)
 
 def draw_coordinates_color(img1,vy,color):
         
@@ -169,8 +241,7 @@ def display_prediction(mydata_loader,save_out):
            
 
     for i in range ( len(save_out)):
-        this_coordinate = signal.resample(save_out[i], Resample_size)
-        color = draw_coordinates_color(color,this_coordinate,i)
+        color = draw_coordinates_color(color,save_out[i],i)
                 
           
 
@@ -181,83 +252,6 @@ def display_prediction(mydata_loader,save_out):
 
     cv2.imshow('Deeplearning one',show4.astype(numpy.uint8)) 
 
-# custom weights initialization called on netG and netD
-def weights_init(m):
-    classname = m.__class__.__name__
-    if classname.find('Conv') != -1:
-        m.weight.data.normal_(0.0, 0.02)
-    elif classname.find('BatchNorm') != -1:
-        m.weight.data.normal_(1.0, 0.02)
-        m.bias.data.fill_(0)
-
-
-#netG = gan_body._netG()
-#netG.apply(weights_init)
-#if opt.netG != '':
-#    netG.load_state_dict(torch.load(opt.netG))
-#print(netG)
-
-
-#netD = gan_body._netD()
-#Guiqui 8 layers version
-#netD = gan_body._netD_8()
-
-#Guiqiu Resnet version
-netD = layer_body_sheath_res2._netD_8_multiscal_fusion300_layer()
-#netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
-
-#netD = gan_body._netD_Resnet()
-
-
-
-
-netD.apply(weights_init)
-if Continue_flag == True:
-    netD.load_state_dict(torch.load(pth_save_dir +'netD_epoch_5.pth'))
-print(netD)
- 
-
-criterion = nn.L1Loss()
-criterion2  = nn.CrossEntropyLoss()
-#criterion = nn.BCELoss()
-
-input = torch.FloatTensor(opt.batchSize, 3, opt.imageSize, opt.imageSize)
-noise = torch.FloatTensor(opt.batchSize, nz, 1, 1)
-fixed_noise = torch.FloatTensor(opt.batchSize, nz, 1, 1).normal_(0, 1)
-label = torch.FloatTensor(opt.batchSize)
-real_label = 1
-fake_label = 0
-
-if opt.cuda:
-    print("CUDA TRUE")
-    netD.cuda()
-    #netG.cuda()
-    criterion.cuda()
-    input, label = input.cuda(), label.cuda()
-    noise, fixed_noise = noise.cuda(), fixed_noise.cuda()
-
-
-fixed_noise = Variable(fixed_noise)
-
-# setup optimizer
-#optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
-#optimizerD = optim.SGD(netD.parameters(), lr=opt.lr,momentum= 0.9, weight_decay =2e-4 )
-
-
-#saved_stastics = MY_ANALYSIS()
-#saved_stastics=saved_stastics.read_my_signal_results()
-#saved_stastics.display()
-
-read_id =0
-
-epoch=0
-#transform = BaseTransform(  Resample_size,(104/256.0, 117/256.0, 123/256.0))
-#transform = BaseTransform(  Resample_size,[104])  #gray scale data
-iteration_num =0
-mydata_loader = myDataloader (Batch_size,Resample_size,Path_length,OLG = OLG_flag)
-test_data_loader =  myDataloader (Batch_size,Resample_size,Path_length,validation=True)
-multi_criterator = MTL_loss()
 while(1):
     epoch+= 1
     #almost 900 pictures
@@ -285,20 +279,18 @@ while(1):
         #outputall =  outputall[:,:,0,:]
         output = outputall[0].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
         output1 = outputall[1].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
-        output3 = outputall[3].view(Batch_size,netD.layer_num,75).squeeze(1)
+        output2 = outputall[2].view(Batch_size,netD.layer_num,Path_length).squeeze(1)
         #output = outputall[0]  
         #output1 = outputall[1] 
         #output2 = outputall[2]  
         #output
-        loss = multi_criterator.multi_loss(outputall,labelv)
-        netD.zero_grad()
-        errD_real = loss[0]
-        errD_real1 = loss[1]
-        errD_real2 = loss[2]
-        errD_real3 = loss[3]
 
-        errD_real_fuse = 0.5*errD_real+  0.1*errD_real1 +  0.1*errD_real2 + 0.1*errD_real3
-        #errD_real_fuse = errD_real2 + errD_real3
+
+        netD.zero_grad()
+        errD_real = criterion(output, labelv)
+        errD_real1 = criterion(output1, labelv)
+        errD_real2 = criterion(output2, labelv)
+        errD_real_fuse = 1.0*(errD_real+  0.1*errD_real1 +  0.5*errD_real2)
         #errD_real_fuse = 1.0*(errD_real )
 
 
@@ -314,7 +306,7 @@ while(1):
         D_x = errD_real.data.mean()
         D_x1 = errD_real1.data.mean()
         D_x2 = errD_real2.data.mean()
-        D_xf = errD_real3.data.mean()
+        D_xf = errD_real_fuse.data.mean()
 
 
         optimizerD.step()

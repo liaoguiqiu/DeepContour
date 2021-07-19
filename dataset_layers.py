@@ -2,7 +2,8 @@ import cv2
 import numpy as np
 import os
 from analy import MY_ANALYSIS
-from generator_contour import  Generator_Contour,Save_Contour_pkl,Generator_Contour_layers
+from generator_contour import  Generator_Contour,Save_Contour_pkl
+#,Generator_Contour_layers
 from analy import Save_signal_enum
 from scipy import signal 
 from image_trans import BaseTransform  

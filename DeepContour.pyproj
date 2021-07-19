@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{bf6a4053-8842-49f4-bc13-3aa8116b1788}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>trainer\contour_sheath_train_with_D2.py</StartupFile>
+    <StartupFile>train_lumen_sheath\contour_sheath_CEnet_with_D.py</StartupFile>
     <SearchPath>model;test_model;deploy;dataTool</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -23,18 +23,16 @@
     <Compile Include="analy.py" />
     <Compile Include="analy_visdom.py" />
     <Compile Include="arg_parse.py" />
-    <Compile Include="arithmetic.py" />
     <Compile Include="basic_operator.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="classifier_svm.py" />
-    <Compile Include="contour_layers_train.py">
+    <Compile Include="train_4_layers\contour_layers_train.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="contour_sheath_CGAN_one_hot_train.py">
+    <Compile Include="train_lumen_sheath\contour_sheath_Unet_one_hot_with_D.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="contour_sheath_CGAN_train.py">
+    <Compile Include="train_lumen_sheath\contour_sheath_Unet_integer_with_D.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="dataTool\generator_contour_sheath.py" />
@@ -80,7 +78,7 @@
     <Compile Include="test_model\layer_GD.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="trainer\contour_sheath_train.py">
+    <Compile Include="train_lumen_sheath\contour_sheath_train.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="dataset.py">
@@ -107,13 +105,9 @@
     <Compile Include="deploy\validate_full.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="extract_imagenet.py" />
-    <Compile Include="gan_body.py" />
     <Compile Include="generator_contour.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="get_samples.py" />
-    <Compile Include="imagenet.py" />
     <Compile Include="image_trans.py">
       <SubType>Code</SubType>
     </Compile>
@@ -129,17 +123,16 @@
     <Compile Include="layer_generator_body.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="layer_generator_cgan_trainpy.py">
+    <Compile Include="train_4_layers\layer_generator_cgan_trainpy.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="layer_generator_train.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="layer_train_unspervised.py">
+    <Compile Include="train_4_layers\layer_train_unspervised.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="main.py" />
-    <Compile Include="contour_train.py">
+    <Compile Include="train_lumen\contour_train.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="model\base_model.py">
@@ -175,16 +168,7 @@
     <Compile Include="model\__init__.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="PathNetbody.py">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="rendering.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="testDataReading.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="test_Deep_finding.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="test_model\layer_body_sheath_res2.py">
@@ -196,13 +180,7 @@
     <Compile Include="test_model\__init__.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="trainer\contour_sheath_train2.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="trainer\contour_sheath_train_with_D.py">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="trainer\contour_sheath_train_with_D2.py">
+    <Compile Include="train_lumen_sheath\contour_sheath_CEnet_with_D.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -216,7 +194,9 @@
     <Folder Include="model\" />
     <Folder Include="model\options\" />
     <Folder Include="dataTool\" />
-    <Folder Include="trainer\" />
+    <Folder Include="train_lumen\" />
+    <Folder Include="train_4_layers\" />
+    <Folder Include="train_lumen_sheath\" />
     <Folder Include="test_model\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
