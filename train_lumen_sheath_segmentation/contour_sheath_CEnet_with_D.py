@@ -11,7 +11,7 @@ import arg_parse
 import cv2
 import numpy
 import rendering
-from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
+from dataTool. generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
 
 import os
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
