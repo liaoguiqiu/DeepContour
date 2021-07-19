@@ -28,7 +28,7 @@ import arg_parse
 import cv2
 import numpy
 import rendering
-from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers,Generator_Contour_sheath
+from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
 from time import time
 import os
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
@@ -335,6 +335,6 @@ class  Auto_json_label(object):
                     #with open(json_dir) as f_dir:
                     #    data = JSON.load(f_dir)
 if __name__ == '__main__':
-        cheker  = Auto_json_label()
-        cheker.check_one_folder() 
-        cheker.downsample_folder()
+        labeler  = Auto_json_label()
+        labeler.check_one_folder() 
+        labeler.downsample_folder()

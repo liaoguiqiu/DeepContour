@@ -74,7 +74,7 @@ class Generator_Contour(object):
         self.origin_data = Save_Contour_pkl()
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/VARY/"
         self.database_root ="../../OCT/beam_scanning/Data Set Reorganize/NORMAL/"
-        self.origin_data =self.origin_data.read_data(self.database_root)
+        #self.origin_data =self.origin_data.read_data(self.database_root)
         self.back_ground_root  =  "../../"     + "saved_background_for_generator/"
 
         self.save_img_dir = "../../"     + "saved_generated_contour/"

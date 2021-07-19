@@ -195,8 +195,8 @@ if __name__ == '__main__':
     #    JSON.dump(newdata, jsonFile)
 
 
-    cheker  = Read_read_check_json_label()
-    cheker.check_one_folder() # convert the Json file into pkl files 
+    converter  = Read_read_check_json_label()
+    converter.check_one_folder() # convert the Json file into pkl files 
 
 
 
