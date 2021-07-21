@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{bf6a4053-8842-49f4-bc13-3aa8116b1788}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>train_lumen_sheath\contour_sheath_CEnet_with_D.py</StartupFile>
+    <StartupFile>train_lumen_sheath_segmentation\contour_sheath_CEnet_with_D.py</StartupFile>
     <SearchPath>model;test_model;deploy;dataTool;dataTool</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -26,13 +26,13 @@
     <Compile Include="basic_operator.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="train_4_layers\contour_layers_train.py">
+    <Compile Include="train_4_layers_segmentation\contour_layers_train.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="train_lumen_sheath\contour_sheath_Unet_one_hot_with_D.py">
+    <Compile Include="train_lumen_sheath_segmentation\contour_sheath_Unet_one_hot_with_D.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="train_lumen_sheath\contour_sheath_Unet_integer_with_D.py">
+    <Compile Include="train_lumen_sheath_segmentation\contour_sheath_Unet_integer_with_D.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="dataTool\generator_contour_sheath.py" />
@@ -78,7 +78,7 @@
     <Compile Include="test_model\layer_GD.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="train_lumen_sheath\contour_sheath_train.py">
+    <Compile Include="train_lumen_sheath_segmentation\contour_sheath_train.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="dataset.py">
@@ -123,16 +123,16 @@
     <Compile Include="layer_generator_body.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="train_4_layers\layer_generator_cgan_trainpy.py">
+    <Compile Include="train_4_layers_segmentation\layer_generator_cgan_trainpy.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="layer_generator_train.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="train_4_layers\layer_train_unspervised.py">
+    <Compile Include="train_4_layers_segmentation\layer_train_unspervised.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="train_lumen\contour_train.py">
+    <Compile Include="train_lumen_segmentation\contour_train.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="model\base_model.py">
@@ -180,7 +180,7 @@
     <Compile Include="test_model\__init__.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="train_lumen_sheath\contour_sheath_CEnet_with_D.py">
+    <Compile Include="train_lumen_sheath_segmentation\contour_sheath_CEnet_with_D.py">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
@@ -194,9 +194,9 @@
     <Folder Include="model\" />
     <Folder Include="model\options\" />
     <Folder Include="dataTool\" />
-    <Folder Include="train_lumen\" />
-    <Folder Include="train_4_layers\" />
-    <Folder Include="train_lumen_sheath\" />
+    <Folder Include="train_lumen_segmentation\" />
+    <Folder Include="train_4_layers_segmentation\" />
+    <Folder Include="train_lumen_sheath_segmentation\" />
     <Folder Include="test_model\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
