@@ -26,6 +26,9 @@
     <Compile Include="basic_operator.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="model\options\train_opions_CEnets.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="train_4_layers_segmentation\contour_layers_train.py">
       <SubType>Code</SubType>
     </Compile>

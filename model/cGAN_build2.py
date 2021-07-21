@@ -1,6 +1,10 @@
+# this is the conditional GAN for Coordinates Encoding networks
+# the generator is the CEnets, the discriminator is the same as Unet
+#
+#
 import time
 import torch
-from model.options.train_options import TrainOptions
+from model.options.train_opions_CEnets  import TrainOptions_CEnets  
 from model.base_model import BaseModel
 #from data import create_dataset
 #from models import create_model
@@ -16,7 +20,7 @@ class CGAN_creator(object):
     def __init__(self):
         pass
     def creat_cgan(self):
-        opt = TrainOptions().parse()   # get training options
+        opt = TrainOptions_CEnets().parse()   # get training options
     #dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
     #dataset_size = len(dataset)    # get the number of images in the dataset.
     #print('The number of training images = %d' % dataset_size)

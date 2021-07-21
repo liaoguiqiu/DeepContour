@@ -178,21 +178,21 @@ torch.set_num_threads(2)
 #Guiqiu Resnet version
 #netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
 
-gancreator = cGAN_build2.CGAN_creator() # the Cgan for the segmentation 
-GANmodel= gancreator.creat_cgan()  #  G and D are created here 
+Model_creator = cGAN_build2.CGAN_creator() # the  CEnet trainer with CGAN
+CE_Nets= Model_creator.creat_cgan()  #  G and D are created here 
 #netD = gan_body._netD_Resnet()
 
 #netD.apply(weights_init)
-GANmodel.netD.apply(weights_init)
-GANmodel.netG.apply(weights_init)
+CE_Nets.netD.apply(weights_init)
+CE_Nets.netG.apply(weights_init)
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
-    GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_4.pth'))
-    GANmodel.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_4.pth'))
-    #GANmodel.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
+    CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_4.pth'))
+    CE_Nets.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_4.pth'))
+    #CE_Nets.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
 
-print(GANmodel.netD)
-print(GANmodel.netG)
+print(CE_Nets.netD)
+print(CE_Nets.netG)
  # no longer use the mine nets 
   
 real_label = 1
@@ -200,8 +200,8 @@ fake_label = 0
 
 if opt.cuda:
     print("CUDA TRUE")
-    GANmodel.netD.cuda()
-    GANmodel.netG.cuda()
+    CE_Nets.netD.cuda()
+    CE_Nets.netG.cuda()
      
 
 read_id =0
@@ -210,33 +210,30 @@ epoch=0
 #transform = BaseTransform(  Resample_size,(104/256.0, 117/256.0, 123/256.0))
 #transform = BaseTransform(  Resample_size,[104])  #gray scale data
 iteration_num =0
+# the first data loader  OLG=OLG_flag depends on this lag for the onlien e generating 
 mydata_loader1 = myDataloader (Batch_size,Resample_size,Path_length,validation = validation_flag,OLG=OLG_flag)
+# the second one will be a offline one for sure 
 mydata_loader2 = myDataloader (Batch_size,Resample_size,Path_length,validation = validation_flag,OLG=False)
-switcher =0
+switcher =0 # this determines to use only one data loader or not (if not, synthetic will be mixed with original)
 
 
 while(1):
     epoch+= 1
-    #almost 900 pictures
+    
     while(1):
         iteration_num +=1
         read_id+=1
         if (mydata_loader1.read_all_flag ==1):
             read_id =0
             mydata_loader1.read_all_flag =0
-            break
+            break   
 
-        #mydata_loader1 .read_a_batch()
-        #mydata_loader =mydata_loader1 
-
-         ##switch btween fake and real
+        #----switch between synthetic data  and  original data 
         if switcher==0:
            mydata_loader1 .read_a_batch()
            mydata_loader =mydata_loader1 
            if validation_flag == False and Hybrid_OLG == True   :
                 switcher=1
-          
-
         else:
            switcher =0
            mydata_loader =mydata_loader2 .read_a_batch()
@@ -261,11 +258,7 @@ while(1):
         #patht= torch.from_numpy(numpy.float32(mydata_loader.input_path[0,:])/71.0 )
         patht=patht.to(device)
         #inputv = Variable(input)
-        # using unsqueeze is import  for with out bactch situation
-        #inputv = Variable(input.unsqueeze(0))
-
-        #labelv = Variable(patht)
-        #inputv = input
+        
 
         #labelv = patht
         inputv = Variable(input )
@@ -286,24 +279,24 @@ while(1):
 
         real_pathes = labelv
           
-        GANmodel.update_learning_rate()    # update learning rates in the beginning of every epoch.
-        GANmodel.set_input(realA,real_pathes,inputv)         # unpack data from dataset and apply preprocessing
+        CE_Nets.update_learning_rate()    # update learning rates in the beginning of every epoch.
+        CE_Nets.set_input(realA,real_pathes,inputv)         # unpack data from dataset and apply preprocessing
 
         if validation_flag ==True:
-            GANmodel.forward()
-            GANmodel.error_calculation()
+            CE_Nets.forward()
+            CE_Nets.error_calculation()
         else:
-            GANmodel.optimize_parameters()   # calculate loss functions, get gradients, update network weights
+            CE_Nets.optimize_parameters()   # calculate loss functions, get gradients, update network weights
 
          
       
  
         if validation_flag ==False:
-            D_x = GANmodel.loss_D.data.mean()
-            G_x = GANmodel.displayloss1 
-            G_x_L12= GANmodel.displayloss2
-            #G_x = GANmodel.loss_G . data.mean() 
-            #G_x_L12= GANmodel.loss_G_L1_2 . data.mean()  
+            D_x = CE_Nets.loss_D.data.mean()
+            G_x = CE_Nets.displayloss1 
+            G_x_L12= CE_Nets.displayloss2
+            #G_x = CE_Nets.loss_G . data.mean() 
+            #G_x_L12= CE_Nets.loss_G_L1_2 . data.mean()  
 
         #D_x1 = errD_real1.data.mean()
         #D_x2 = errD_real2.data.mean()
@@ -323,11 +316,11 @@ while(1):
                      G_x, D_x, 0, 0, 0))
 
         if read_id % 2 == 0 and Visdom_flag == True and validation_flag==False:
-                plotter.plot( 'l0', 'l0', 'l0', iteration_num, GANmodel.displayloss0.cpu().detach().numpy())
+                plotter.plot( 'l0', 'l0', 'l0', iteration_num, CE_Nets.displayloss0.cpu().detach().numpy())
 
-                plotter.plot( 'l1', 'l1', 'l1', iteration_num, GANmodel.displayloss1.cpu().detach().numpy())
-                plotter.plot( 'l2', 'l2', 'l2', iteration_num, GANmodel.displayloss2.cpu().detach().numpy())
-                plotter.plot( 'l3', 'l3', 'l3', iteration_num, GANmodel.displayloss3.cpu().detach().numpy())
+                plotter.plot( 'l1', 'l1', 'l1', iteration_num, CE_Nets.displayloss1.cpu().detach().numpy())
+                plotter.plot( 'l2', 'l2', 'l2', iteration_num, CE_Nets.displayloss2.cpu().detach().numpy())
+                plotter.plot( 'l3', 'l3', 'l3', iteration_num, CE_Nets.displayloss3.cpu().detach().numpy())
                  
         if read_id % 1 == 0 and Display_fig_flag== True:
             #vutils.save_image(real_cpu,
@@ -342,21 +335,21 @@ while(1):
             color1  = numpy.zeros((show1.shape[0],show1.shape[1],3))
             color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 [:,:]
 
-            oneHot =  GANmodel.fake_B_1_hot[0,:,:,:].cpu().detach().numpy() 
+            oneHot =  CE_Nets.fake_B_1_hot[0,:,:,:].cpu().detach().numpy() 
 
             hot  = numpy.zeros((oneHot.shape[1],oneHot.shape[2],3))
             hot[:,:,0]  =  oneHot [0,:,:]
             hot[:,:,1]  =  oneHot [1,:,:]
             hot[:,:,2]  =  oneHot [2,:,:]
 
-            oneHot_real =  GANmodel.real_B_one_hot[0,:,:,:].cpu().detach().numpy() 
+            oneHot_real =  CE_Nets.real_B_one_hot[0,:,:,:].cpu().detach().numpy() 
           
             hot_real  = numpy.zeros((oneHot.shape[1],oneHot.shape[2],3))
             hot_real[:,:,0]  =  oneHot_real [0,:,:]
             hot_real[:,:,1]  =  oneHot_real [1,:,:]
             hot_real[:,:,2]  =  oneHot_real [2,:,:]
           
-            #oneHot  = GANmodel.fake_B_1_hot[0,:,:,:]
+            #oneHot  = CE_Nets.fake_B_1_hot[0,:,:,:]
             #oneHot = oneHot.view(Path_length,Path_length,3)
             #oneHot  =  oneHot.cpu().detach().numpy()
             #color1 = color1* hot
@@ -365,7 +358,7 @@ while(1):
             #for i in range ( len(path2)):
             #    color1 = draw_coordinates_color(color1,path2[i],i)
                  
-            saveout  = GANmodel.fake_B
+            saveout  = CE_Nets.fake_B
             show2 =  saveout[0,:,:,:].cpu().detach().numpy()*255 
 
             
@@ -398,24 +391,24 @@ while(1):
             cv2.imshow('Deeplearning one',show4.astype(numpy.uint8)) 
             cv2.imwrite("D:/Deep learning/out/1out_img/Ori_seg_rec/"  +
                         str(infinite_save_id) +".jpg",show4 )
-            real_label = GANmodel.real_B
+            real_label = CE_Nets.real_B
             show5 =  real_label[0,0,:,:].cpu().detach().numpy()*255 
             cv2.imshow('real',show5.astype(numpy.uint8)) 
             cv2.imwrite("D:/Deep learning/out/1out_img/ground_rec/"  +
                         str(infinite_save_id) +".jpg",show5 )
 
-            #display_prediction(mydata_loader,  GANmodel.out_pathes[0],hot)
-            #display_prediction(mydata_loader,  GANmodel.path_long3,hot)
-            #display_prediction(mydata_loader,  GANmodel.out_pathes3,hot)
-            display_prediction(read_id,mydata_loader,  GANmodel.out_pathes0,hot,hot_real)
+            #display_prediction(mydata_loader,  CE_Nets.out_pathes[0],hot)
+            #display_prediction(mydata_loader,  CE_Nets.path_long3,hot)
+            #display_prediction(mydata_loader,  CE_Nets.out_pathes3,hot)
+            display_prediction(read_id,mydata_loader,  CE_Nets.out_pathes0,hot,hot_real)
             infinite_save_id += 1 
             if cv2.waitKey(1) & 0xFF == ord('q'):
               break
     # do checkpointing
    
-    torch.save(GANmodel.netG.state_dict(), pth_save_dir+ "cGANG_epoch_"+str(epoch)+".pth")
-    torch.save(GANmodel.netD.state_dict(), pth_save_dir+ "cGAND_epoch_"+str(epoch)+".pth")
-    torch.save(GANmodel.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
+    torch.save(CE_Nets.netG.state_dict(), pth_save_dir+ "cGANG_epoch_"+str(epoch)+".pth")
+    torch.save(CE_Nets.netD.state_dict(), pth_save_dir+ "cGAND_epoch_"+str(epoch)+".pth")
+    torch.save(CE_Nets.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
     #  the 
 
     #cv2.imwrite(Save_pic_dir  + str(epoch) +".jpg", show2)
