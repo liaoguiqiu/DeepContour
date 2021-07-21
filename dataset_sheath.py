@@ -15,7 +15,7 @@ from basic_operator import Basic_Operator
 
 seed(1)
 Batch_size = 1
-Resample_size =256
+Resample_size =256 # the input and label will be resampled 
 Path_length = 256
 Augment_limitation_flag = False
 Augment_add_lines = False
@@ -37,6 +37,7 @@ class myDataloader(object):
             self.talker.training =1
         else:
             self.talker.training =2
+
 
         self.talker.pending =0 # no pending so all folder can be writed
         #self.talker.writing =2 

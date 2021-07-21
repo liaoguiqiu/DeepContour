@@ -158,8 +158,8 @@ def display_prediction(read_id,mydata_loader,save_out,hot,hot_real): # display i
     cv2.imshow('  color real',color_real.astype(numpy.uint8)) 
 
 
-Matrix_dir =  "../dataset/CostMatrix/1/"
-Save_pic_dir = '../DeepPathFinding/out/'
+#Matrix_dir =  "../dataset/CostMatrix/1/"
+#Save_pic_dir = '../DeepPathFinding/out/'
 opt = arg_parse.opt
 opt.cuda = True
 # check the cuda device 
@@ -211,16 +211,16 @@ epoch=0
 #transform = BaseTransform(  Resample_size,[104])  #gray scale data
 iteration_num =0
 # the first data loader  OLG=OLG_flag depends on this lag for the onlien e generating 
-mydata_loader1 = myDataloader (Batch_size,Resample_size,Path_length,validation = validation_flag,OLG=OLG_flag)
+mydata_loader1 = myDataloader(Batch_size,Resample_size,Path_length,validation = validation_flag,OLG=OLG_flag)
 # the second one will be a offline one for sure 
-mydata_loader2 = myDataloader (Batch_size,Resample_size,Path_length,validation = validation_flag,OLG=False)
+mydata_loader2 = myDataloader(Batch_size,Resample_size,Path_length,validation = validation_flag,OLG=False)
 switcher =0 # this determines to use only one data loader or not (if not, synthetic will be mixed with original)
 
 
-while(1):
+while(1): # main infinite loop 
     epoch+= 1
-    
-    while(1):
+    while(1): # loop for going through data set 
+        #-------------- load data and convert to GPU tensor format------------------#
         iteration_num +=1
         read_id+=1
         if (mydata_loader1.read_all_flag ==1):
@@ -243,7 +243,6 @@ while(1):
         ini_input = mydata_loader.input_image
         real =  torch.from_numpy(numpy.float32(ini_input)) 
         real = real.to(device)                
-
         np_input = numpy.append(ini_input,ini_input,axis=1)
         np_input = numpy.append(np_input,ini_input,axis=1)
 
@@ -253,32 +252,22 @@ while(1):
         input = input.to(device)                
    
         patht= torch.from_numpy(numpy.float32(mydata_loader.input_path)/Resample_size)
-        #patht=patht.to(device)
-                
+        #patht=patht.to(device)            
         #patht= torch.from_numpy(numpy.float32(mydata_loader.input_path[0,:])/71.0 )
         patht=patht.to(device)
         #inputv = Variable(input)
-        
-
         #labelv = patht
         inputv = Variable(input )
         #inputv = Variable(input.unsqueeze(0))
         #patht =patht.view(-1, 1).squeeze(1)
-
         labelv = Variable(patht)
-        # just test the first boundary effect 
-        #labelv  = labelv[:,0,:]
+        #-------------- load data and convert to GPU tensor format -  end------------------#
 
-        ###
-        ###chnage the imout domain can use the same label to ralize generating or line segementation 
-        #realA = rendering.layers_visualized(labelv,Resample_size)
-        #realB = real
+         
+
+        #--------------input, Forward network,  and compare output with the label------------------#
         realA =  real
-        #realB =  rendering.layers_visualized_integer_encodeing(labelv,Resample_size)
-        #realB =  rendering.layers_visualized (labelv,Resample_size)
-
         real_pathes = labelv
-          
         CE_Nets.update_learning_rate()    # update learning rates in the beginning of every epoch.
         CE_Nets.set_input(realA,real_pathes,inputv)         # unpack data from dataset and apply preprocessing
 
@@ -287,22 +276,19 @@ while(1):
             CE_Nets.error_calculation()
         else:
             CE_Nets.optimize_parameters()   # calculate loss functions, get gradients, update network weights
+        #--------------input, Forward network,  and compare output with the label - end------------------#
 
          
       
- 
+        #-------------- A variety of visualization  ------------------#
+        
         if validation_flag ==False:
             D_x = CE_Nets.loss_D.data.mean()
             G_x = CE_Nets.displayloss1 
             G_x_L12= CE_Nets.displayloss2
             #G_x = CE_Nets.loss_G . data.mean() 
             #G_x_L12= CE_Nets.loss_G_L1_2 . data.mean()  
-
-        #D_x1 = errD_real1.data.mean()
-        #D_x2 = errD_real2.data.mean()
-        #D_xf = errD_real_fuse.data.mean()
-
-
+             
         #optimizerG.step()
 
         #save_out  = Fake
@@ -349,23 +335,12 @@ while(1):
             hot_real[:,:,1]  =  oneHot_real [1,:,:]
             hot_real[:,:,2]  =  oneHot_real [2,:,:]
           
-            #oneHot  = CE_Nets.fake_B_1_hot[0,:,:,:]
-            #oneHot = oneHot.view(Path_length,Path_length,3)
-            #oneHot  =  oneHot.cpu().detach().numpy()
-            #color1 = color1* hot
-           
-
-            #for i in range ( len(path2)):
-            #    color1 = draw_coordinates_color(color1,path2[i],i)
-                 
+         
             saveout  = CE_Nets.fake_B
             show2 =  saveout[0,:,:,:].cpu().detach().numpy()*255 
 
             
-            #color  = numpy.zeros((show2.shape[1],show2.shape[2],3))
-            #color[:,:,0]  =  show2 [0,:,:]
-            #color[:,:,1]  =  show2 [1,:,:]
-            #color[:,:,2]  =  show2 [2,:,:]
+         
             color  = numpy.zeros((show2.shape[1],show2.shape[2],3))
             color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2[0,:,:] 
          
@@ -403,17 +378,17 @@ while(1):
             display_prediction(read_id,mydata_loader,  CE_Nets.out_pathes0,hot,hot_real)
             infinite_save_id += 1 
             if cv2.waitKey(1) & 0xFF == ord('q'):
-              break
+               break
+            #-------------- A variety of visualization - end (this part is a little messy..)  ------------------#
+            
     # do checkpointing
-   
+
+    #--------------  save the current trained model after going through a folder  ------------------#
     torch.save(CE_Nets.netG.state_dict(), pth_save_dir+ "cGANG_epoch_"+str(epoch)+".pth")
     torch.save(CE_Nets.netD.state_dict(), pth_save_dir+ "cGAND_epoch_"+str(epoch)+".pth")
     torch.save(CE_Nets.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
-    #  the 
-
-    #cv2.imwrite(Save_pic_dir  + str(epoch) +".jpg", show2)
-    #cv2.imwrite(pth_save_dir  + str(epoch) +".jpg", show2)
-    if epoch >=5:
+     
+    if epoch >=5: # just save 5 newest historical models  
         epoch =0
 
 
