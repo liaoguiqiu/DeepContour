@@ -44,16 +44,16 @@ class myDataloader(object):
         self.talker.save_data(self.com_dir) # save
 
 
-        self.dataroot = "../dataset/For_contour_sheath_train/train/pic/"
+        self.dataroot = "../dataset/For_contour_sheath_train/train/img/"
         self.signalroot ="../dataset/For_contour_sheath_train/train/label/" 
         if self.OLG_flag == True:
-           self.dataroot = "../dataset/For_contour_sheath_train/train_OLG/pic/"
+           self.dataroot = "../dataset/For_contour_sheath_train/train_OLG/img/"
            self.signalroot ="../dataset/For_contour_sheath_train/train_OLG/label/" 
 
 
         if validation  == True :
             self.OLG_flag = False
-            self.dataroot = "../dataset/For_contour_sheath_train/test/pic/"
+            self.dataroot = "../dataset/For_contour_sheath_train/test/img/"
             self.signalroot ="../dataset/For_contour_sheath_train/test/label/" 
         else: 
             self.GT = True  # for  trianing the GT should always be true

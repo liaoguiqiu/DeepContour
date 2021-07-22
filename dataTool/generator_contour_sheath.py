@@ -471,13 +471,14 @@ if __name__ == '__main__':
 
         talker=talker.read_data(com_dir)
         #initialize the protocol
+        #initialize the protocol
         #talker.pending = 1
         #talker=talker.save_data(com_dir)
 
         #generator.save_img_dir = "../../../../../"  + "Deep learning/dataset/"
         #generator.save_contour_dir = "../../"     + "saved_stastics_coutour_generated/"
 
-        imgbase_dir = "../../../../../"  + "Deep learning/dataset/For_contour_sheath_train/train_OLG/pic/"
+        imgbase_dir = "../../../../../"  + "Deep learning/dataset/For_contour_sheath_train/train_OLG/img/"
         labelbase_dir = "../../../../../"  + "Deep learning/dataset/For_contour_sheath_train/train_OLG/label/"
 
         while(1):
