@@ -1,6 +1,7 @@
 # the run py script for sheal and contour detection, 5th October 2020 update
 # this uses the encodinhg tranform to use discriminator
 # update on 26th July 
+#Setup the training
 import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
