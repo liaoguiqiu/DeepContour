@@ -1,4 +1,5 @@
 #log of modification cre
+# this is a test of the mirror
 # this  is used  to read json files and trasfer into a pkl file
 import json as JSON
 import cv2
