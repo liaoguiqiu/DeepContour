@@ -1,0 +1,206 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{bf6a4053-8842-49f4-bc13-3aa8116b1788}</ProjectGuid>
+    <ProjectHome />
+    <StartupFile>train_lumen_sheath_segmentation\contour_sheath_CEnet_with_D.py</StartupFile>
+    <SearchPath>model;test_model;deploy;dataTool;dataTool</SearchPath>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterId />
+    <Name>DeepContour</Name>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition=" '$(VisualStudioVersion)' == '' ">10.0</VisualStudioVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="analy.py" />
+    <Compile Include="analy_visdom.py" />
+    <Compile Include="arg_parse.py" />
+    <Compile Include="basic_operator.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\options\train_opions_CEnets.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="train_4_layers_segmentation\contour_layers_train.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="train_lumen_sheath_segmentation\contour_sheath_Unet_one_hot_with_D.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="train_lumen_sheath_segmentation\contour_sheath_Unet_integer_with_D.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="dataTool\generator_contour_sheath.py" />
+    <Compile Include="dataTool\matlab.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="dataTool\operater.py" />
+    <Compile Include="dataTool\operator2.py" />
+    <Compile Include="dataTool\read_Jsonpy.py" />
+    <Compile Include="dataTool\tSNE.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="dataTool\tSNE_exa.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="deploy\correct_ruler_reference.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="deploy\DeepAutoJson.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="deploy\find_shadow.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="deploy\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\cGAN_build2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\pix2line_model2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test_model\fusion_nets.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\pix2line_model.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test_model\fusion_nets3.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test_model\layer_GD.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="train_lumen_sheath_segmentation\contour_sheath_train.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="dataset.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="dataset_full_OLG.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="dataset_full_path.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="dataset_layers.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="dataset_sheath.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="deploy\basic_trans.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="deploy\validate.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="deploy\validate_full.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="dataTool\generator_contour.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="image_trans.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="layer_body.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="layer_body_sheath.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="layer_body_USN.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="layer_generator_body.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="train_4_layers_segmentation\layer_generator_cgan_trainpy.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="layer_generator_train.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="train_4_layers_segmentation\layer_train_unspervised.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="train_lumen_segmentation\contour_train.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\base_model.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\cGAN_build.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\layer_body_sheath_res.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\networks.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\options\base_options.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\options\train_options.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\options\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\pix2pix_model.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\template_model.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\test_build.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="model\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="rendering.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test_model\layer_body_sheath_res2.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test_model\loss_MTL.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="test_model\__init__.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="train_lumen_sheath_segmentation\contour_sheath_CEnet_with_D.py">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="images\A_B.png" />
+    <Content Include="images\means.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="images" />
+    <Folder Include="deploy\" />
+    <Folder Include="model\" />
+    <Folder Include="model\options\" />
+    <Folder Include="dataTool\" />
+    <Folder Include="train_lumen_segmentation\" />
+    <Folder Include="train_4_layers_segmentation\" />
+    <Folder Include="train_lumen_sheath_segmentation\" />
+    <Folder Include="test_model\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+</Project>
