@@ -20,7 +20,7 @@ from analy import Save_signal_enum
 import cv2
 import numpy
 from image_trans import BaseTransform  
-from generator_contour import Generator_Contour,Save_Contour_pkl
+from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl
 import matplotlib.pyplot as plt
 from scipy import signal 
 from scipy.signal import find_peaks
@@ -73,7 +73,7 @@ class Basic_oper(object):
         circular = circular.astype(np.uint8)
         #polar_image=cv2.rotate(polar_image,rotateCode = 0) 
         return circular
-    def tranfer_frome_rec2cir2(color, padding_H =58):
+    def tranfer_frome_rec2cir2(color, padding_H =1):
         H,W_ini,_ = color.shape
         padding = np.zeros((padding_H,W_ini,3))
          

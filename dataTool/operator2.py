@@ -5,7 +5,7 @@ import os
 import random
 import scipy.signal as signal
 from scipy.ndimage import gaussian_filter1d
-from operater import Basic_Operator
+from dataTool.operater import Basic_Operator
 from scipy import fftpack
 
 class Basic_Operator2:
@@ -190,6 +190,43 @@ class Basic_Operator2:
         #newy=new_contoury+r_vector
         #newx = np.arange(dx1, dx2)
         return newx,newy
+    def random_sheath_contour_ivus(H,W,x,y):
+        # first need to determine whether use the origina lcountour to shift
+
+        # random rol the sheath 
+         
+        np.roll(y, int(np.random.random_sample()*len(y)-1)) 
+
+        dc1 = np.random.random_sample()*10
+        dc1  = int(dc1)%2
+        if dc1==0: # not use the original signal 
+            # inital ramdon width and height
+           
+            # should mainly based o the sheath orginal contor
+            newy = signal.resample(y, W)
+            newx = np.arange(0, W)
+            r_vector   = np.random.sample(3)*3
+            r_vector=signal.resample(r_vector, W)
+            r_vector = gaussian_filter1d (r_vector ,10)
+
+            randomshift= 0
+            newy = newy + r_vector  + randomshift
+                    
+            newy = np.clip(newy,50,H-1)
+        else:       
+            newy = signal.resample(y, W)
+            newx = np.arange(0, W)
+        #width  = 30% - % 50
+
+
+        #sample = np.arange(width)
+        #r_vector   = np.random.sample(20)*20
+        #r_vector = gaussian_filter1d (r_vector ,10)
+        #newy = np.sin( 1*np.pi/width * sample)
+        #newy = -new_contoury*(dy2-dy1)+dy2
+        #newy=new_contoury+r_vector
+        #newx = np.arange(dx1, dx2)
+        return newx,newy
     def random_shape_contour3(H_ini,W_ini,H,W,sx,sy,x,y):
         # simple version, just move up and down
         dc1 =np.random.random_sample()*100
@@ -339,6 +376,68 @@ class Basic_Operator2:
         
         return newx,newy
     #draw color contour 
+    def random_shape_contour_ivus(H_ini,W_ini,H,W,sx,sy,x,y):
+        # simple version, just move up and down
+        dc1 =np.random.random_sample()*100
+        leny = len(y)
+        mask = y  < (H_ini -20)
+        r_vector   = np.random.sample(20)*50
+        r_vector=signal.resample(r_vector, leny)
+        r_vector = gaussian_filter1d (r_vector ,3)
+        shift = np.random.random_sample()*H/2 - H/5
+        newy = y +  mask*(r_vector+ shift)
+         
+        newx = x
+        
+        for i in range(len( newy ) ):
+
+            newy[i]  = np.clip(newy[i] , sy[newx[i]]+10,H-1) # allow it to merge int o 1 pix
+
+
+            
+
+        #width  = 30% - % 50
+        newy = np.clip(newy,0,H-1)
+        return newx,newy
+    # this one will not regard the original width of contour
+    def fill_sheath_with_contour_ivus(img1,H_new,W_new,contour0x,contour0y,
+                                    new_contourx,new_contoury):
+        H,W  = img1.shape
+        img1 = cv2.resize(img1, (W_new,H_new), interpolation=cv2.INTER_AREA)
+        contour0y = contour0y*H_new/H
+        points = len(contour0x)
+        points_new = len(new_contoury)
+        #W_new  = points_new
+        new  = np.zeros((H_new,W_new))
+        mask =  new  + 255
+        contour0y=signal.resample(contour0y, W_new)
+        contour0x=np.arange(0, W_new)
+        # use a dice to determin wheterh follw orgina sequnce 
+        Dice = int( np.random.random_sample()*10)
+
+        for i in range(W_new):
+            
+ 
+            line_it   =  i
+            #line_it   =  i
+
+
+            source_line = img1[:,contour0x[line_it]]
+            #directly_fillinnew
+            newy   = int(new_contoury[i] )
+            iniy   =  int (contour0y[line_it])   # add 5 to give more high light bondaries 
+            shift  =  int(newy - iniy)
+            if shift < 0:
+                new[0:newy,i] = source_line[-shift:iniy]
+                mask[0:newy,i] = 0
+            else :
+                new[shift:newy,i] = source_line[0:iniy]
+                mask[shift:newy,i]  = 0
+
+             
+            pass
+        pass
+        return new,mask
     def fill_sheath_with_contour(img1,H_new,W_new,contour0x,contour0y,
                                     new_contourx,new_contoury):
         H,W  = img1.shape

@@ -1,3 +1,4 @@
+
 #7th October 2020
 #update the gnerator to add the situation with sheath 
 import cv2
@@ -10,8 +11,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 #PythonETpackage for xml file edition
 import pickle
-from operater import Basic_Operator
-from operator2 import Basic_Operator2
+from dataTool.operater import Basic_Operator
+from dataTool.operator2 import Basic_Operator2
 # the generator and distribution monitoring 
 
 # this is used  to communicate with trainner py
@@ -78,16 +79,26 @@ class Generator_Contour_sheath(object):
     def __init__(self ):
         self.OLG_flag =False
         self.cv_display = False
+        self.dis_origin = True
         self.origin_data = Save_Contour_pkl()
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/VARY/"
-        self.image_dir ="C:/Users/u0132260/Documents/Data/ivus/img/"
-        self.pkl_dir ="C:/Users/u0132260/Documents/Data/ivus/seg label pkl/"
-        self.save_image_dir ="C:/Users/u0132260/Documents/Data/ivus/img_generate/" # this dir just save all together
-        self.save_image_dir_devi ="C:/Users/u0132260/Documents/Data/ivus/img_genetate_devi/" # this dir devide the generated images
+        self.image_dir ="../../dataset/ivus/img/"
+        self.pkl_dir ="../../dataset/ivus/seg label pkl/"
+        self.save_image_dir ="../../dataset/ivus/img_generate/" # this dir just save all together
+        self.save_image_dir_devi ="../../dataset/ivus/img_genetate_devi/" # this dir devide the generated images
 
-        self.save_pkl_dir ="C:/Users/u0132260/Documents/Data/ivus/pkl_generate/"
+        self.save_pkl_dir ="../../dataset/ivus/pkl_generate/"
         #self.origin_data =self.origin_data.read_data(self.pkl_dir)
         #self.origin_data = []
+
+        if not os.path.exists(self.save_image_dir):
+            os.makedirs(self.save_image_dir)
+
+        if not os.path.exists(self.save_image_dir_devi):
+            os.makedirs(self.save_image_dir_devi)
+
+        if not os.path.exists(self.save_pkl_dir):
+            os.makedirs(self.save_pkl_dir)
 
         self.back_ground_root  =  "../../"     + "saved_background_for_generator/"
 
@@ -150,7 +161,7 @@ class Generator_Contour_sheath(object):
         file_len = len(data.img_num)
         for num in range(file_len):
                 name = data.img_num[num]
-                img_path = self.save_image_dir +  str(name) + ".jpg"
+                img_path = self.save_image_dir +  str(name) + ".tif"
                 img_or = cv2.imread(img_path)
                 img1  =   cv2.cvtColor(img_or, cv2.COLOR_BGR2GRAY)
                 H,W = img1.shape
@@ -198,7 +209,7 @@ class Generator_Contour_sheath(object):
 
             for num in range(file_len):
                 name = self.origin_data.img_num[num]
-                img_path = self.image_dir+ subfold+'/' + name + ".jpg"
+                img_path = self.image_dir+ subfold+'/' + name + ".tif"
                 img_or = cv2.imread(img_path)
                 img1  =   cv2.cvtColor(img_or, cv2.COLOR_BGR2GRAY)
                 H,W = img1.shape
@@ -221,7 +232,7 @@ class Generator_Contour_sheath(object):
                 cont_points = sum(this_distance<0.006)
                 contact_r_ori .append(cont_points/W)
 
-                if self.cv_display ==True:
+                if self.dis_origin ==True:
                     # draw this original contour 
                     display = Basic_Operator.draw_coordinates_color(img_or,contourx[0],contoury[0],1) # draw the sheath
                     display = Basic_Operator.draw_coordinates_color(img_or,contourx[1],contoury[1],2) # draw the tissue
@@ -359,7 +370,7 @@ class Generator_Contour_sheath(object):
             #number_i +=1
             file_len = len(self.origin_data.img_num)
 
-            repeat = int(5000/file_len) # repeat to balance
+            repeat = int(150/file_len) # repeat to balance
             if repeat<1:
 
                 repeat = 1
@@ -384,7 +395,7 @@ class Generator_Contour_sheath(object):
                     # draw this original contour 
                     display = Basic_Operator.draw_coordinates_color(img_or,contourx[0],contoury[0],1) # draw the sheath
                     display = Basic_Operator.draw_coordinates_color(img_or,contourx[1],contoury[1],2) # draw the tissue
-                    if self.cv_display ==True:
+                    if self.dis_origin ==True:
                         cv2.imshow('origin',display.astype(np.uint8))
             
                     #new_contourx=contour0x  +200
@@ -393,16 +404,16 @@ class Generator_Contour_sheath(object):
                     H_new = H
                     W_new = W
                     # genrate the new sheath contour
-                    sheath_x,sheath_y = Basic_Operator2.random_sheath_contour(H_new,W_new,contourx[0],contoury[0])
+                    sheath_x,sheath_y = Basic_Operator2.random_sheath_contour_ivus(H_new,W_new,contourx[0],contoury[0])
 
-                    New_img , mask = Basic_Operator2. fill_sheath_with_contour(img1,H_new,W_new,contourx[0],contoury[0],
+                    New_img , mask = Basic_Operator2. fill_sheath_with_contour_ivus(img1,H_new,W_new,contourx[0],contoury[0],
                                         sheath_x,sheath_y)
                     if self.cv_display ==True:
 
                         cv2.imshow('shealth',New_img.astype(np.uint8))
 
                     #generate the signal 
-                    new_contourx,new_contoury = Basic_Operator2.random_shape_contour3(H,W,H_new,W_new,sheath_x,sheath_y,contourx[1],contoury[1])
+                    new_contourx,new_contoury = Basic_Operator2.random_shape_contour_ivus(H,W,H_new,W_new,sheath_x,sheath_y,contourx[1],contoury[1])
                     New_img , mask  = Basic_Operator2. fill_patch_base_origin2(img1,H_new,contourx[1],contoury[1],
                                         new_contourx,new_contoury,New_img , mask )
                 
@@ -447,8 +458,8 @@ class Generator_Contour_sheath(object):
                     print(str(name))
                     self.append_new_name_contour(img_id,new_cx,new_cy,self.save_pkl_dir)
                     # save them altogether 
-                    cv2.imwrite(self.save_image_dir  + str(img_id) +".jpg",combin )
-                    cv2.imwrite(self.save_image_dir_devi + subfold + '/' + str(img_id_devi) +".jpg",combin ) # save them separately
+                    cv2.imwrite(self.save_image_dir  + str(img_id) +".tif",combin )
+                    cv2.imwrite(self.save_image_dir_devi + subfold + '/' + str(img_id_devi) +".tif",combin ) # save them separately
 
 
                     # save them separetly 

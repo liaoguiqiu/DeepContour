@@ -8,7 +8,7 @@ from matplotlib.pyplot import *
 #PythonETpackage for xml file edition
  
 import pickle
-from operater import Basic_Operator
+from dataTool.operater import Basic_Operator
 class Communicate(object):
     def __init__(self ):
         #set = Read_read_check_ROI_label()
@@ -24,6 +24,7 @@ class Communicate(object):
         pass
     def read_data(self,dir):
         saved_path  = dir  + 'protocol.pkl'
+        sys.path.append(r'C:/Workdir/Develop/atlas_collab/DeepContour/dataTool')
         self = pickle.load(open(saved_path,'rb'),encoding='iso-8859-1')
         return self
     def save_data(self,dir):

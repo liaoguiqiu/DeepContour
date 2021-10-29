@@ -9,7 +9,7 @@ from test_model import layer_body_sheath_res2
 import arg_parse
 import cv2
 import numpy
-from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate 
+from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
 
 from time import time
 validation_flag = False

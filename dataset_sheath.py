@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import os
 from analy import MY_ANALYSIS
-from generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
+from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 from analy import Save_signal_enum
 from scipy import signal 
 from image_trans import BaseTransform  
@@ -21,15 +21,15 @@ Augment_limitation_flag = False
 Augment_add_lines = False
 Clip_mat_flag = False
 random_clip_flag = False
-Random_rotate = False 
+Random_rotate = True
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
 
 class myDataloader(object):
     def __init__(self, batch_size,image_size,path_size,validation= False,OLG=False):
         self.OLG_flag = OLG
-        self. GT = False
+        self. GT = True
         self.save_id =0
-        self.com_dir = "../dataset/telecom/" # this dir is for the OLG
+        self.com_dir = "../../dataset/telecom/" # this dir is for the OLG
          # initial lizt the 
         self.talker = Communicate()
         self.talker=self.talker.read_data(self.com_dir)
@@ -44,8 +44,8 @@ class myDataloader(object):
         self.talker.save_data(self.com_dir) # save
 
 
-        self.dataroot = "../dataset/For_contour_sheath_train/train/img/"
-        self.signalroot ="../dataset/For_contour_sheath_train/train/label/" 
+        self.dataroot = "../../dataset/For_contour_sheath_train/train/img/"
+        self.signalroot ="../../dataset/For_contour_sheath_train/train/label/"
         if self.OLG_flag == True:
            self.dataroot = "../dataset/For_contour_sheath_train/train_OLG/img/"
            self.signalroot ="../dataset/For_contour_sheath_train/train_OLG/label/" 
@@ -421,7 +421,7 @@ class myDataloader(object):
                 if Random_rotate == True:
                     img_piece, self.input_path [this_pointer ,:, :] = self.rolls(img_piece,self.input_path [this_pointer ,:, :])  
                 #img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
-                #img_piece, self.input_path [this_pointer ,:, :] = self.flips2(img_piece,self.input_path [this_pointer ,:, :])
+                img_piece, self.input_path [this_pointer ,:, :] = self.flips2(img_piece,self.input_path [this_pointer ,:, :])
 
 
                 self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]/104.0

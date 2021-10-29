@@ -19,13 +19,16 @@ class  Read_read_check_json_label(object):
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL/"
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE-center/"
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
-        self.database_root = "C:/Users/u0132260/Documents/Data/ivus/"
-        sub_folder = "2_PDE/"
+        self.database_root = "../../dataset/ivus/"
+        sub_folder = "2_PD8/"
 
         self.image_dir   = self.database_root + "img/" +sub_folder
         self.json_dir =  self.database_root + "label/" +sub_folder
         self.save_dir  =   self.database_root +"seg label pkl/" +sub_folder
         self.img_num = 0
+
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
          
         self.contours_x =  [] # no predefines # predefine there are 4 contours
         self.contours_y =  [] # predefine there are 4 contours
@@ -71,7 +74,7 @@ class  Read_read_check_json_label(object):
                         data = JSON.load(f_dir)
                     shape  = data["shapes"]
                     num_line  = len(shape)
-                    len_list=  num_line
+                    len_list=  2 
                     #with ZipFile(json_dir, 'r') as zipObj:
                     #       # Get list of files names in zip
                     #       #listOfiles = zipObj.namelist()
@@ -87,7 +90,7 @@ class  Read_read_check_json_label(object):
                     contoursx=[None]*len_list
                     contoursy=[None]*len_list
 
-                    for iter in range(len_list):
+                    for iter in range(num_line):
                         # get the name of one contour 
                         #  iter
                         coordinates  = shape[iter]["points"]
@@ -140,23 +143,35 @@ class  Read_read_check_json_label(object):
                             pathyl = signal.resample(pathyl, W)
                             pathxl = np.arange(0, W)
                             
-
-                        contoursx[iter] = pathxl
-                        contoursy[iter] = pathyl
+                        # change the index of the contour 
+                        # check the name lbel to fill the buffer
+                      
+                        if shape[iter]["label"] == 'catheter' or shape[iter]["label"] == '1' :
+                            contoursx[0] = pathxl
+                            contoursy[0] = pathyl
+                        elif shape[iter]["label"] == 'vessel' or shape[iter]["label"] == '2' :
+                            contoursx[1] = pathxl
+                            contoursy[1] = pathyl
+                        #elif shape[iter]["label"] == 'guide-wire'   :
+                        #    contoursx[2] = pathxl
+                        #    contoursy[2] = pathyl
+                        #else:
+                        #    contoursx[iter] = pathxl
+                        #    contoursy[iter] = pathyl
                         #max_buffer[iter] = np.min(pathyl)  #  use the minimal value to detemine which contour as the 1st and 2nd .....
-                        max_buffer[iter] = np.max(pathyl)  #  use the mean value to detemine which contour as the 1st and 2nd .....
+                        #max_buffer[iter] = np.max(pathyl)  #  use the mean value to detemine which contour as the 1st and 2nd .....
                         
                         pass
                     
 
                      #  use the minimal value to detemine which contour as the 1st and 2nd .....
-                    new_index  = np.argsort( max_buffer)
+                    
                     self.contours_x = [None]*len_list
                     self.contours_y = [None]*len_list
 
                     for iter in range(len_list):
-                        self.contours_x[iter] = contoursx[new_index[iter]]
-                        self.contours_y[iter] = contoursy[new_index[iter]]
+                        self.contours_x[iter] = contoursx[iter]
+                        self.contours_y[iter] = contoursy[iter]
                         if self.display_flag == True:
                             img1 = self.draw_coordinates_color(img1,self.contours_x[iter],
                                                                self.contours_y[iter],iter)
@@ -165,7 +180,7 @@ class  Read_read_check_json_label(object):
                     self.img_num = a
                     #self.contours_x = [path0ln, path1ln, path2ln, path3ln]
                     #self.saver.append_new_name_contour (self.img_num,self.contours,self.database_root)
-                    self.saver.append_new_name_contour (self.img_num,self.contours_x,self.contours_y,self.save_dir)
+                    self.saver.append_new_name_contour(self.img_num,self.contours_x,self.contours_y,self.save_dir)
 
                     cv2.imshow('pic',img1)
                     print(str(a))
