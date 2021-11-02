@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{bf6a4053-8842-49f4-bc13-3aa8116b1788}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>train_lumen_sheath_segmentation\contour_sheath_CEnet_with_D.py</StartupFile>
+    <StartupFile>train_multi_obj\CEnet_EXS_p.py</StartupFile>
     <SearchPath>model;test_model;deploy;dataTool;dataTool</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -32,6 +32,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="train_4_layers_segmentation\contour_layers_train.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="train_multi_obj\CEnet_EXS_p.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="train_lumen_sheath_segmentation\contour_sheath_Unet_one_hot_with_D.py">
@@ -199,6 +202,7 @@
     <Folder Include="model\" />
     <Folder Include="model\options\" />
     <Folder Include="dataTool\" />
+    <Folder Include="train_multi_obj\" />
     <Folder Include="train_lumen_segmentation\" />
     <Folder Include="train_4_layers_segmentation\" />
     <Folder Include="train_lumen_sheath_segmentation\" />
