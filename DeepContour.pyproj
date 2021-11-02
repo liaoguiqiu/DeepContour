@@ -26,6 +26,9 @@
     <Compile Include="basic_operator.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="dataset_ivus.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="dataTool\convertDomainLabels.py" />
     <Compile Include="dataTool\read_json_ivus.py" />
     <Compile Include="dataTool\read_json_ivus_fake.py">

@@ -17,9 +17,10 @@ from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl,Commun
 from dataTool.generator_contour_ivus import Generator_Contour_sheath
 
 import os
+
 #from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 #switch to another data loader for the IVUS, whih will have both the position and existence vector
-from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
+from dataset_ivus  import myDataloader,Batch_size,Resample_size, Path_length
 
 from deploy.basic_trans import Basic_oper
 
