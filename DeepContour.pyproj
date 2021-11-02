@@ -28,6 +28,9 @@
     </Compile>
     <Compile Include="dataTool\convertDomainLabels.py" />
     <Compile Include="dataTool\read_json_ivus.py" />
+    <Compile Include="dataTool\read_json_ivus_fake.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="model\options\train_opions_CEnets.py">
       <SubType>Code</SubType>
     </Compile>

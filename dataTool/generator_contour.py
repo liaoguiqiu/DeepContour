@@ -24,6 +24,7 @@ class Communicate(object):
         pass
     def read_data(self,dir):
         saved_path  = dir  + 'protocol.pkl'
+        #Guiqiu modified for testing the multi-training 
         sys.path.append(r'C:/Workdir/Develop/atlas_collab/DeepContour/dataTool')
         self = pickle.load(open(saved_path,'rb'),encoding='iso-8859-1')
         return self

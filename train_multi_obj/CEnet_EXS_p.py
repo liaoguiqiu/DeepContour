@@ -17,7 +17,10 @@ from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl,Commun
 from dataTool.generator_contour_ivus import Generator_Contour_sheath
 
 import os
+#from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
+#switch to another data loader for the IVUS, whih will have both the position and existence vector
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
+
 from deploy.basic_trans import Basic_oper
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -176,7 +179,7 @@ print(torch.cuda.device(0))
 print(torch.cuda.device_count())
 print(torch.cuda.get_device_name(0))
 print(torch.cuda.is_available())
-dataroot = "../dataset/CostMatrix/"
+#dataroot = "../dataset/CostMatrix/"
 torch.set_num_threads(2)
  
   
@@ -203,8 +206,8 @@ print(CE_Nets.netD)
 print(CE_Nets.netG)
  # no longer use the mine nets 
   
-real_label = 1
-fake_label = 0
+#real_label = 1
+#fake_label = 0
 
 if opt.cuda:
     print("CUDA TRUE")
