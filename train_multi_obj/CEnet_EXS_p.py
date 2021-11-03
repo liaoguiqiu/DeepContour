@@ -201,6 +201,8 @@ CE_Nets= Model_creator.creat_nets()   # one is for the contour cordinates
 #netD.apply(weights_init)
 CE_Nets.netD.apply(weights_init)
 CE_Nets.netG.apply(weights_init)
+CE_Nets.netE.apply(weights_init)
+
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
     CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
@@ -209,6 +211,8 @@ if Continue_flag == True:
 
 print(CE_Nets.netD)
 print(CE_Nets.netG)
+print(CE_Nets.netE)
+
  # no longer use the mine nets 
   
 #real_label = 1
@@ -218,6 +222,8 @@ if opt.cuda:
     print("CUDA TRUE")
     CE_Nets.netD.cuda()
     CE_Nets.netG.cuda()
+    CE_Nets.netE.cuda()
+
      
 
 read_id =0
@@ -254,7 +260,7 @@ while(1): # main infinite loop
            switcher =0
            mydata_loader =mydata_loader2 .read_a_batch()
            mydata_loader =mydata_loader2  
-
+        
         #change to 3 chanels
         ini_input = mydata_loader.input_image
         real =  torch.from_numpy(numpy.float32(ini_input)) 
@@ -267,16 +273,23 @@ while(1): # main infinite loop
         #input = torch.from_numpy(numpy.float32(mydata_loader.input_image[0,:,:,:])) 
         input = input.to(device)                
    
-        patht= torch.from_numpy(numpy.float32(mydata_loader.input_path)/Resample_size)
+        patht= torch.from_numpy(numpy.float32(mydata_loader.input_path)/Resample_size) # the coordinates should be uniformed by the image height
+        ex_t = torch.from_numpy(numpy.float32(mydata_loader.exis_vec))
+        patht=patht.to(device) # use the GPU 
+        ex_t = ex_t.to(device)
         #patht=patht.to(device)            
         #patht= torch.from_numpy(numpy.float32(mydata_loader.input_path[0,:])/71.0 )
-        patht=patht.to(device)
+        
+
+
         #inputv = Variable(input)
         #labelv = patht
         inputv = Variable(input )
         #inputv = Variable(input.unsqueeze(0))
         #patht =patht.view(-1, 1).squeeze(1)
         labelv = Variable(patht)
+        ex_v = Variable(ex_t)
+
         #-------------- load data and convert to GPU tensor format -  end------------------#
 
          
@@ -284,8 +297,9 @@ while(1): # main infinite loop
         #--------------input, Forward network,  and compare output with the label------------------#
         realA =  real
         real_pathes = labelv
+        real_exv = ex_v
         CE_Nets.update_learning_rate()    # update learning rates in the beginning of every epoch.
-        CE_Nets.set_input(realA,real_pathes,inputv)         # unpack data from dataset and apply preprocessing
+        CE_Nets.set_input(realA,real_pathes,real_exv,inputv)         # unpack data from dataset and apply preprocessing
 
         if validation_flag ==True:
             CE_Nets.forward()
@@ -321,7 +335,9 @@ while(1): # main infinite loop
                 plotter.plot( 'l0', 'l0', 'l0', iteration_num, CE_Nets.displayloss0.cpu().detach().numpy())
                 plotter.plot( 'l1', 'l1', 'l1', iteration_num, CE_Nets.displayloss1.cpu().detach().numpy())
                 plotter.plot( 'l2', 'l2', 'l2', iteration_num, CE_Nets.displayloss2.cpu().detach().numpy())
-                plotter.plot( 'l3', 'l3', 'l3', iteration_num, CE_Nets.displayloss3.cpu().detach().numpy())
+                #plotter.plot( 'l3', 'l3', 'l3', iteration_num, CE_Nets.displayloss3.cpu().detach().numpy())
+                plotter.plot( 'lE3', 'le3', 'le3', iteration_num, CE_Nets.displaylossE0 .cpu().detach().numpy())
+
                  
         if read_id % 1 == 0 and Display_fig_flag== True:
             #vutils.save_image(real_cpu,

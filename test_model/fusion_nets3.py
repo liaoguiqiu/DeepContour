@@ -10,7 +10,6 @@ import numpy as np
 import cv2
 
 
-
 class _2LayerScale1(nn.Module):
 #output width=((W-F+2*P )/S)+1
 
@@ -61,12 +60,10 @@ class _2LayerScale1(nn.Module):
         #     #nn.BatchNorm2d(1),
         #     #nn.LeakyReLU(0.1,inplace=True)
         #                                            )
-        self. low_scale_out = nn.Sequential(
-              
+        self. low_scale_out = nn.Sequential(         
              nn.Conv2d(feature, 2 ,(1,1), (1,1), (0,0), bias=False) #2*64           
              #nn.BatchNorm2d(1),
              #nn.LeakyReLU(0.1,inplace=True)
-               
                                  )
     def forward(self, x):
 

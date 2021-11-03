@@ -422,7 +422,7 @@ class myDataloader(object):
                     img_piece, self.input_path [this_pointer ,:, :],self.exis_vec [this_pointer ,:, :] =self.rolls(img_piece,self.input_path [this_pointer ,:, :],self.exis_vec [this_pointer ,:, :])  
     
                 #img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
-                img_piece, self.input_path [this_pointer ,:, :],self.exis_vec [this_pointer ,:, :] =  self.flips2(img_piece,self.input_path [this_pointer ,:, :],self.exis_vec [this_pointer ,:, :])
+                img_piece, self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :] =  self.flips2(img_piece,self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :])
                 
 
 

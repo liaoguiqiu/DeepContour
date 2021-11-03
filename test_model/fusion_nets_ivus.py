@@ -9,8 +9,8 @@ import torchvision.models
 import numpy as np
 import cv2
 
-Out_c = 3
-Input_c = 2 
+Out_c = 3 # depends on the bondaried to be preicted 
+Input_c = 3  #  the gray is converted into 3 channnels image 
 
 class _2LayerScale1(nn.Module):
 #output width=((W-F+2*P )/S)+1
@@ -88,13 +88,13 @@ class _2LayerScale1(nn.Module):
         side_out_long = side_out_long.view(-1,num,local_l).squeeze(1)# squess before fully connected 
         #local_bz,_,num,local_l = side_out_full.size() 
         #side_out_full = side_out_full.view(-1,num,local_l).squeeze(1)# squess before fully connected
-  
+        
         return side_out, side_out_low,side_out_long
 
 
 class _2LayerScale2(nn.Module):
 #output width=((W-F+2*P )/S)+1
-
+    
     def __init__(self):
         super(_2LayerScale2, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
@@ -102,12 +102,12 @@ class _2LayerScale2(nn.Module):
         feature = 8
 
          
-        self.layer_num =Input_c
+        #self.layer_num =Input_c
         #a side branch predict with original iamge with rectangular kernel
         #limit=1024
         self.side_branch1  =  nn.ModuleList()    
         
-        self.side_branch1.append(  baseM.conv_keep_W(3,feature))# 256*256 - 128*256
+        self.side_branch1.append(  baseM.conv_keep_W(Input_c,feature))# 256*256 - 128*256
 
         
       
@@ -148,7 +148,6 @@ class _2LayerScale2(nn.Module):
              nn.Conv2d(feature, Out_c ,(1,1), (1,1), (0,0), bias=False) #2*64           
              #nn.BatchNorm2d(1),
              #nn.LeakyReLU(0.1,inplace=True)
-               
                                  )   
     def forward(self, x):
 
@@ -187,13 +186,13 @@ class _2LayerScale3(nn.Module):
         feature = 32
 
          
-        self.layer_num =Input_c
+        #self.layer_num =Input_c
         #a side branch predict with original iamge with rectangular kernel
         # 256*256 - 128*256
         #limit=1024
         self.side_branch1  =  nn.ModuleList()    
         
-        self.side_branch1.append(  baseM.conv_keep_W(3,feature))# 64*256 - 32*256
+        self.side_branch1.append(  baseM.conv_keep_W(Input_c,feature))# 64*256 - 32*256
         self.side_branch1.append(  baseM.conv_keep_all(feature,feature))
       
 
@@ -236,8 +235,8 @@ class _2LayerScale3(nn.Module):
              nn.Conv2d(feature, Out_c ,(1,1), (1,1), (0,0), bias=False) #2*64           
              #nn.BatchNorm2d(1),
              #nn.LeakyReLU(0.1,inplace=True)
-               
                                  )
+
     def display_one_channel(self,img):
         gray2  =   img[0,0,:,:].cpu().detach().numpy()*104+104
         cv2.imshow('down on one',gray2.astype(np.uint8)) 
@@ -277,15 +276,22 @@ class _2LayerScale3(nn.Module):
 class Fusion(nn.Module):
 #output width=((W-F+2*P )/S)+1
 
-    def __init__(self):
+    def __init__(self,classfy = False):
         super(Fusion, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
         self. up2 = nn.ConvTranspose2d(512, 512,(1,4), (1,4), (0,0), bias=False)   
         self. up3 =   nn.ConvTranspose2d(1024, 512,(1,8), (1,8), (0,0), bias=False)  
         self. fusion = nn.Conv2d(2048,512,(1,3), (1,1), (0,1), bias=False)    # from 3 dpth branch to one   
-        self. fusion2 = nn.Conv2d(512,512 ,(1,3), (1,1), (0,1), bias=False)    # from 3 dpth branch to one   
-        self. fusion3 = nn.Conv2d(512 ,Out_c,(1,3), (1,1), (0,1), bias=False)    # from 3 dpth branch to one   
-        
+        self. fusion2 = nn.Conv2d(512,512 ,(1,3), (1,1), (0,1), bias=False)    # from 3 dpth branch to one
+        if (classfy == False):
+            self. fusion3 = nn.Conv2d(512 ,Out_c,(1,3), (1,1), (0,1), bias=False)    # from 3 dpth branch to one   
+        else:
+            self. fusion3 = nn.Sequential(
+              
+             nn.Conv2d(512 ,Out_c,(1,3), (1,1), (0,1), bias=False), #2*64           
+             #nn.BatchNorm2d(1),
+             nn.Softmax()
+                                 )
         self.tan_activation = nn.Tanh()
         
     def forward(self,side_out1,side_out2,side_out3):
@@ -299,7 +305,7 @@ class Fusion(nn.Module):
         fuse=self.fusion3(fuse)
 
 
-    
+        
 
         local_bz,num,_,local_l = fuse.size() 
 
@@ -311,7 +317,7 @@ class Fusion(nn.Module):
 class _2layerFusionNets_(nn.Module):
 #output width=((W-F+2*P )/S)+1
 
-    def __init__(self):
+    def __init__(self,classfy = False):
         super(_2layerFusionNets_, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
    
@@ -319,7 +325,7 @@ class _2layerFusionNets_(nn.Module):
          
         self.side_branch2  =  _2LayerScale2()  
         self.side_branch3  =  _2LayerScale3()   
-        self.fusion_layer = Fusion( )
+        self.fusion_layer = Fusion(classfy)
          
     def fuse_forward(self,side_out1,side_out2,side_out3):
          
