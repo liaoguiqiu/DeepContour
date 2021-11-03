@@ -33,7 +33,7 @@ Hybrid_OLG = False  # whether  mix with online generated images and real images 
 validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not 
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler 
-Continue_flag = False   # if not true, it start from scratch again
+Continue_flag = True   # if not true, it start from scratch again
 
 infinite_save_id =0 # use this method so that the index of the image will not start from 0 again when switch the folder    
 
@@ -104,6 +104,41 @@ def draw_coordinates_color_s(img1,vy0,vy1):
 
 
         return img1
+def display_prediction_exis(read_id,mydata_loader,save_out): # display in coordinates form 
+    gray2 =   (mydata_loader.input_image[0,0,:,:] *104)+104
+    show1 = gray2.astype(float)
+    path2 = mydata_loader.exis_vec[0,:] * Resample_size
+    #path2  = signal.resample(path2, Resample_size)
+    path2 = numpy.clip(path2,0,Resample_size-1)
+    color1 = numpy.zeros((show1.shape[0],show1.shape[1],3))
+    color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 
+
+    for i in range ( len(path2)):
+        color1 = draw_coordinates_color(color1,path2[i],i)
+                             
+            
+    show2 =  gray2.astype(float)
+    save_out = save_out.cpu().detach().numpy()
+
+    save_out  = save_out[0,:] *(Resample_size)
+    #save_out  = signal.resample(save_out, Resample_size)
+    save_out = numpy.clip(save_out,0,Resample_size-1)
+    color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
+    color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
+     
+     
+
+    for i in range ( len(save_out)):
+        this_coordinate = signal.resample(save_out[i], Resample_size)
+        color = draw_coordinates_color(color,this_coordinate,i)
+     
+    #show3 = numpy.append(show1,show2,axis=1) # cascade
+    show4 = numpy.append(color1,color,axis=1) # cascade
+ 
+     
+
+
+    cv2.imshow('Deeplearning exitence 2',show4.astype(numpy.uint8)) 
 def display_prediction(read_id,mydata_loader,save_out,hot,hot_real): # display in coordinates form 
     gray2 =   (mydata_loader.input_image[0,0,:,:] *104)+104
     show1 = gray2.astype(float)
@@ -207,6 +242,7 @@ if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
     CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
     CE_Nets.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_5.pth'))
+    CE_Nets.netE.load_state_dict(torch.load(pth_save_dir+'cGANE_epoch_5.pth'))
     #CE_Nets.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
 
 print(CE_Nets.netD)
@@ -409,7 +445,10 @@ while(1): # main infinite loop
             #display_prediction(mydata_loader,  CE_Nets.out_pathes[0],hot)
             #display_prediction(mydata_loader,  CE_Nets.path_long3,hot)
             #display_prediction(mydata_loader,  CE_Nets.out_pathes3,hot)
+            #display_prediction(read_id,mydata_loader,  CE_Nets.out_pathes0,hot,hot_real)
             display_prediction(read_id,mydata_loader,  CE_Nets.out_pathes0,hot,hot_real)
+            display_prediction_exis(read_id,mydata_loader,  CE_Nets.out_exis_v0 )
+
             infinite_save_id += 1 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                break
@@ -419,6 +458,8 @@ while(1): # main infinite loop
 
     #--------------  save the current trained model after going through a folder  ------------------#
     torch.save(CE_Nets.netG.state_dict(), pth_save_dir+ "cGANG_epoch_"+str(epoch)+".pth")
+    torch.save(CE_Nets.netE.state_dict(), pth_save_dir+ "cGANE_epoch_"+str(epoch)+".pth")
+
     torch.save(CE_Nets.netD.state_dict(), pth_save_dir+ "cGAND_epoch_"+str(epoch)+".pth")
     torch.save(CE_Nets.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
      
