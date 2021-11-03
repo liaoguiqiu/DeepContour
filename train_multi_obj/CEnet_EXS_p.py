@@ -5,7 +5,7 @@
 import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
-from model import cGAN_build2 # the mmodel
+from model import CE_build3 # the mmodel
 
  
 # the model
@@ -15,12 +15,12 @@ import numpy
 import rendering
 from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
 from dataTool.generator_contour_ivus import Generator_Contour_sheath
+from dataset_ivus  import myDataloader,Batch_size,Resample_size, Path_length
 
 import os
 
 #from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 #switch to another data loader for the IVUS, whih will have both the position and existence vector
-from dataset_ivus  import myDataloader,Batch_size,Resample_size, Path_length
 
 from deploy.basic_trans import Basic_oper
 
@@ -190,8 +190,11 @@ torch.set_num_threads(2)
 #Guiqiu Resnet version
 #netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
 
-Model_creator = cGAN_build2.CGAN_creator() # the  CEnet trainer with CGAN
-CE_Nets= Model_creator.creat_cgan()  #  G and D are created here 
+Model_creator = CE_build3.CE_creator() # the  CEnet trainer with CGAN
+#   Use the same arch to create two nets 
+CE_Nets= Model_creator.creat_nets()   # one is for the contour cordinates
+#Ex_Nets= Model_creator.creat_nets()   # one is for the contour existence
+
 #netD = gan_body._netD_Resnet()
 
 #netD.apply(weights_init)
@@ -315,7 +318,6 @@ while(1): # main infinite loop
 
         if read_id % 2 == 0 and Visdom_flag == True and validation_flag==False:
                 plotter.plot( 'l0', 'l0', 'l0', iteration_num, CE_Nets.displayloss0.cpu().detach().numpy())
-
                 plotter.plot( 'l1', 'l1', 'l1', iteration_num, CE_Nets.displayloss1.cpu().detach().numpy())
                 plotter.plot( 'l2', 'l2', 'l2', iteration_num, CE_Nets.displayloss2.cpu().detach().numpy())
                 plotter.plot( 'l3', 'l3', 'l3', iteration_num, CE_Nets.displayloss3.cpu().detach().numpy())
