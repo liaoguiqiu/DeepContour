@@ -6,7 +6,7 @@
     <ProjectGuid>{bf6a4053-8842-49f4-bc13-3aa8116b1788}</ProjectGuid>
     <ProjectHome />
     <StartupFile>train_multi_obj\CEnet_EXS_p.py</StartupFile>
-    <SearchPath>model;test_model;deploy;dataTool;dataTool</SearchPath>
+    <SearchPath>model;test_model;deploy;dataTool;dataTool;model;test_model</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{888888a0-9f3d-457c-b088-3a5042f75d52}</ProjectTypeGuids>
