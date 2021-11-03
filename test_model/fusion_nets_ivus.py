@@ -9,7 +9,8 @@ import torchvision.models
 import numpy as np
 import cv2
 
-
+Out_c = 3
+Input_c = 2 
 
 class _2LayerScale1(nn.Module):
 #output width=((W-F+2*P )/S)+1
@@ -21,7 +22,7 @@ class _2LayerScale1(nn.Module):
         feature = 8
 
          
-        self.layer_num =2
+        self.layer_num =Input_c
         #a side branch predict with original iamge with rectangular kernel
         # 256*256 - 128*256
         #limit=1024
@@ -63,7 +64,7 @@ class _2LayerScale1(nn.Module):
         #                                            )
         self. low_scale_out = nn.Sequential(
               
-             nn.Conv2d(feature, 2 ,(1,1), (1,1), (0,0), bias=False) #2*64           
+             nn.Conv2d(feature, Out_c ,(1,1), (1,1), (0,0), bias=False) #2*64           
              #nn.BatchNorm2d(1),
              #nn.LeakyReLU(0.1,inplace=True)
                
@@ -101,7 +102,7 @@ class _2LayerScale2(nn.Module):
         feature = 8
 
          
-        self.layer_num =2
+        self.layer_num =Input_c
         #a side branch predict with original iamge with rectangular kernel
         #limit=1024
         self.side_branch1  =  nn.ModuleList()    
@@ -144,7 +145,7 @@ class _2LayerScale2(nn.Module):
         #                                            )
         self. low_scale_out = nn.Sequential(
               
-             nn.Conv2d(feature, 2 ,(1,1), (1,1), (0,0), bias=False) #2*64           
+             nn.Conv2d(feature, Out_c ,(1,1), (1,1), (0,0), bias=False) #2*64           
              #nn.BatchNorm2d(1),
              #nn.LeakyReLU(0.1,inplace=True)
                
@@ -186,7 +187,7 @@ class _2LayerScale3(nn.Module):
         feature = 32
 
          
-        self.layer_num =2
+        self.layer_num =Input_c
         #a side branch predict with original iamge with rectangular kernel
         # 256*256 - 128*256
         #limit=1024
@@ -232,7 +233,7 @@ class _2LayerScale3(nn.Module):
         #                                            )
         self. low_scale_out = nn.Sequential(
               
-             nn.Conv2d(feature, 2 ,(1,1), (1,1), (0,0), bias=False) #2*64           
+             nn.Conv2d(feature, Out_c ,(1,1), (1,1), (0,0), bias=False) #2*64           
              #nn.BatchNorm2d(1),
              #nn.LeakyReLU(0.1,inplace=True)
                
@@ -283,7 +284,7 @@ class Fusion(nn.Module):
         self. up3 =   nn.ConvTranspose2d(1024, 512,(1,8), (1,8), (0,0), bias=False)  
         self. fusion = nn.Conv2d(2048,512,(1,3), (1,1), (0,1), bias=False)    # from 3 dpth branch to one   
         self. fusion2 = nn.Conv2d(512,512 ,(1,3), (1,1), (0,1), bias=False)    # from 3 dpth branch to one   
-        self. fusion3 = nn.Conv2d(512 ,2,(1,3), (1,1), (0,1), bias=False)    # from 3 dpth branch to one   
+        self. fusion3 = nn.Conv2d(512 ,Out_c,(1,3), (1,1), (0,1), bias=False)    # from 3 dpth branch to one   
         
         self.tan_activation = nn.Tanh()
         
