@@ -1,228 +1,227 @@
-#log of modification cre
-# this is a test of the mirror
-# this  is used  to read json files and trasfer into a pkl file
+# Log of modification cre
+# this  is used  to read json files and transfer into a pkl file
 import json as JSON
 import cv2
 import math
 import numpy as np
 import os
-import random 
+import random
 from zipfile import ZipFile
 import scipy.signal as signal
 import pandas as pd
+from collections import OrderedDict
 from generator_contour import Save_Contour_pkl
 
 
-class  Read_read_check_json_label(object):
-    def __init__(self ):
-        #self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
-        #self.roi_dir =  "../../OCT/beam_scanning/Data set/seg label/NORMAL-BACKSIDE-center/"
-        #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL/"
-        #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE-center/"
-        #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
+class Read_read_check_json_label(object):
+    def __init__(self):
+        # self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
+        # self.roi_dir =  "../../OCT/beam_scanning/Data set/seg label/NORMAL-BACKSIDE-center/"
+        # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL/"
+        # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE-center/"
+        # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
         self.database_root = "../../dataset/ivus/"
         sub_folder = "2_PD8/"
 
-        self.image_dir   = self.database_root + "img/" +sub_folder
-        self.json_dir =  self.database_root + "label/" +sub_folder
-        self.save_dir  =   self.database_root +"seg label pkl/" +sub_folder
+        self.image_dir = self.database_root + "img/" + sub_folder
+        self.json_dir = self.database_root + "label/" + sub_folder
+        self.save_dir = self.database_root + "seg label pkl/" + sub_folder
         self.img_num = 0
 
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
-         
-        self.contours_x =  [] # no predefines # predefine there are 4 contours
-        self.contours_y =  [] # predefine there are 4 contours
+
+        # self.contours_x = []  # no predefines # predefine there are 4 contours
+        # self.contours_y = []  # predefine there are 4 contours
 
         self.saver = Save_Contour_pkl()
         self.display_flag = True
-    def draw_coordinates_color(self,img1,vx,vy,color):
-        
-        if color ==0:
-           painter  = [254,0,0]
-        elif color ==1:
-           painter  = [0,254,0]
-        elif color ==2:
-           painter  = [0,0,254]
-        else :
-           painter  = [0,0,0]
-                    #path0  = signal.resample(path0, W)
-        H,W,_ = img1.shape
-        for j in range (len(vx)):
-                #path0l[path0x[j]]
-                dy = np.clip(vy[j],2,H-2)
-                dx = np.clip(vx[j],2,W-2)
 
-                img1[int(dy)+1,int(dx),:]=img1[int(dy),int(dx),:]=painter
-                #img1[int(dy)+1,dx,:]=img1[int(dy)-1,dx,:]=img1[int(dy),dx,:]=painter
+        self.labels_lists = {
+            'catheter': ['1', 'catheter', 'test'],
+            'lumen': ['2', 'vessel', 'lumen'],
+            'wire': ['guide-wire', 'guidewire'],
+            'media': ['vessel (media)', 'vessel(media)', 'media'],
+            'branch': ['vessel(side-branch)', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
+                       'side-branch', 'sidebranch', 'bifurcation'],
+            'stent': ['stent'],
+            'plaque': ['plaque'],
+            'calcium': ['calcification', 'calcium'],
+        }
 
+        # BGR because of OpenCV
+        self.color_list = [[75, 25, 230], [75, 180, 60], [25, 225, 255], [200, 130, 0], [48, 130, 245],
+                           [180, 30, 145], [240, 240, 70], [230, 50, 240], [60, 245, 210], [212, 190, 250],
+                           [128, 128, 0], [255, 190, 220], [40, 110, 170], [200, 250, 255], [0, 0, 128],
+                           [195, 255, 170], [0, 128, 128], [180, 215, 255], [128, 0, 0]]
 
-        return img1
-    def check_one_folder (self):
+    def draw_coordinates_color(self, _img, vx, vy, color_idx):
+
+        painter = self.color_list[color_idx]
+        h, w, _ = _img.shape
+
+        for j in range(len(vx)):
+            dy = np.clip(vy[j], 1, h - 2)  # clip in case coordinate y is at the border (to paint the y +1 and -1)
+            # dx = np.clip(vx[j], 0, w - 1)  # x coordinates are already one per A-line and within the image boundaries
+            dx = vx[j]
+
+            # _img[int(dy) + 1, int(dx), :] = _img[int(dy), int(dx), :] = painter
+            _img[int(dy) + 1, dx, :] = _img[int(dy) - 1, dx, :] = _img[int(dy), dx, :] = painter
+
+        return _img
+
+    def check_one_folder(self):
         for i in os.listdir(self.json_dir):
-    #for i in os.listdir("E:\\estimagine\\vs_project\\PythonApplication_data_au\\pic\\"):
-        # separath  the name of json 
+            # for i in os.listdir("E:\\estimagine\\vs_project\\PythonApplication_data_au\\pic\\"):
+            # separate the name of json
             a, b = os.path.splitext(i)
             # if it is a json it will have corresponding image 
-            if b == ".json" :
+            if b == ".json":
+                # with ZipFile(self.image_dir, 'r') as zipObj:
+                #     listOfFiles = zipObj.namelist()
+                # TODO: Extract image ext automatically
                 img_path = self.image_dir + a + ".tif"
                 img1 = cv2.imread(img_path)
                 if img1 is None:
-                    print ("no_img for this zip")
+                    print('No img with path: {0}'.format(img_path))
                 else:
                     json_dir = self.json_dir + a + b
                     with open(json_dir) as f_dir:
                         data = JSON.load(f_dir)
-                    shape  = data["shapes"]
-                    num_line  = len(shape)
-                    len_list=  2 
-                    #with ZipFile(json_dir, 'r') as zipObj:
+                    shape = data['shapes']
+                    num_labels = len(shape)
+                    # len_labels_list = len(self.labels_lists)
+                    # len_labels_list = 2
+                    # with ZipFile(json_dir, 'r') as zipObj:
                     #       # Get list of files names in zip
                     #       #listOfiles = zipObj.namelist()
-                    #       # this line of code is importanct sice the the formmer one will change the sequence 
+                    #       # this line of code is important since the the former one will change the sequence
                     #       listOfiles = zipObj.infolist()
                     #       len_list = len(listOfiles)
 
-                           
-                    #rois = read_roi_zip(roi_dir) # get all the coordinates
-                    gray  =   cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY) # transfer into gray image
-                    H,W   = gray.shape
-                    max_buffer  = np.zeros(len_list)
-                    contoursx=[None]*len_list
-                    contoursy=[None]*len_list
+                    # rois = read_roi_zip(roi_dir) # get all the coordinates
+                    gray = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)  # transfer into gray image
+                    H, W = gray.shape
 
-                    for iter in range(num_line):
-                        # get the name of one contour 
-                        #  iter
-                        coordinates  = shape[iter]["points"]
-                        coordinates = np.array(coordinates)
-                        #line_name  = os.path.splitext(listOfiles[iter].filename)
-                        #line_name =line_name[0] #just use the former one 
-                        #pathy = rois[line_name]['y']
-                        #pathx = rois[line_name]['x']
+                    #### Using OrderedDict for backward compatibility since index is important
+                    # contours_x is initialized to match the image width for all labels (we need a value per A-line)
+                    contours_x = OrderedDict({key: np.arange(0, W) for key in self.labels_lists.keys()})
 
-                        # delete the coordinate out side the boundary of image
-                        len_ori,_ = coordinates.shape
-                        target =0
+                    # contours_y is initialized to the image height for all A-lines
+                    contours_y = OrderedDict({key: np.ones(W) * H - 1 for key in self.labels_lists.keys()})
+
+                    # Initialize existence vectors per label = zeros to all A-lines
+                    contours_exist = OrderedDict({key: np.zeros(W, dtype=int) for key in self.labels_lists.keys()})
+
+                    for idx in range(num_labels):
+                        coordinates = np.array(shape[idx]['points'])
+
+                        # delete the coordinates outside the image boundaries
+                        len_ori, _ = coordinates.shape
+                        target = 0
                         for j in range(len_ori):
-
-                            if (coordinates[target,0] < 0 or coordinates[target,0]>(W-1) ) :# check the x coordinates
-                                coordinates= np.delete(coordinates , target,axis=0)
+                            # check the x and y coordinates outside the image boundaries -> delete if out
+                            if (coordinates[target, 0] < 0 or coordinates[target, 0] > (W - 1)) \
+                                    or (coordinates[target, 1] < 0 or coordinates[target, 1] > (H - 1)):
+                                coordinates = np.delete(coordinates, target, axis=0)
                             else:
-                                target +=1
+                                target += 1
 
+                        path_x = coordinates[:, 0]
+                        path_y = coordinates[:, 1]
 
-                        pathy  = coordinates[:,1]
-                        pathx  = coordinates[:,0]
+                        num_points = len(path_x)
+                        path_w = int(path_x[num_points - 1] - path_x[0])
 
-                        num_points = len(pathx)
-                        path_w  = pathx[num_points-1] - pathx[0]
-                        path_w = int(path_w)
-                        # sometimes the contour is plot in reversed direction  
-                        if  path_w<0:
-                            path_w=-path_w
-                            pathy=pathy[::-1]
-                            pathx=pathx[::-1]
+                        # sometimes the contour is in a reversed direction
+                        if path_w < 0:
+                            path_w = -path_w
+                            path_y = path_y[::-1]
+                            path_x = path_x[::-1]
 
-                        pathyl =  np.ones(int(path_w)) * np.nan
+                        path_yl = np.ones(int(path_w)) * np.nan
 
-                        for j in range (num_points):
-                            #importante sometimes the start point is nnot the lestmost
-                             this_index = np.clip(  pathx[j] - pathx[0], 0,path_w-1)
-                             pathyl[int(this_index)] = float (pathy[j] -1)
-                        add_3   = np.append(pathyl[::-1],pathyl,axis=0) # cascade
-                        add_3   = np.append(add_3,pathyl[::-1],axis=0) # cascade
+                        for j in range(num_points):
+                            # important sometimes the start point is not the lestmost
+                            this_index = np.clip(path_x[j] - path_x[0], 0, path_w - 1)
+                            path_yl[int(this_index)] = float(path_y[j])
+
+                        add_3 = np.append(path_yl[::-1], path_yl, axis=0)  # cascade
+                        add_3 = np.append(add_3, path_yl[::-1], axis=0)  # cascade
                         s = pd.Series(add_3)
-                        pathyl = s.interpolate(method = "linear")
-                        pathyl = pathyl[path_w:2*path_w].to_numpy() 
-                        pathxl = np.arange(int(pathx[0]) , int(pathx[0]) + path_w )
-                       
+                        path_yl = s.interpolate(method='linear')
+                        path_yl = path_yl[path_w:2 * path_w].to_numpy()
+                        path_xl = np.arange(int(path_x[0]), int(path_x[0]) + path_w)
 
+                        if len(path_xl) > 0.96 * W and len(path_xl) != W:  # correct the 'imperfect' label contours
+                            # remember to add resacle later TODO: what is this resacle? ask Guiqiu
+                            path_yl = signal.resample(path_yl, W)
+                            path_xl = np.arange(0, W)
 
-                        if len(pathxl) > 0.96 *W: #  correct  the unperfect label
-            # rememver to add resacle later
-                            pathyl = signal.resample(pathyl, W)
-                            pathxl = np.arange(0, W)
-                            
-                        # change the index of the contour 
-                        # check the name lbel to fill the buffer
-                      
-                        if shape[iter]["label"] == 'catheter' or shape[iter]["label"] == '1' :
-                            contoursx[0] = pathxl
-                            contoursy[0] = pathyl
-                        elif shape[iter]["label"] == 'vessel' or shape[iter]["label"] == '2' :
-                            contoursx[1] = pathxl
-                            contoursy[1] = pathyl
-                        #elif shape[iter]["label"] == 'guide-wire'   :
-                        #    contoursx[2] = pathxl
-                        #    contoursy[2] = pathyl
-                        #else:
-                        #    contoursx[iter] = pathxl
-                        #    contoursy[iter] = pathyl
-                        #max_buffer[iter] = np.min(pathyl)  #  use the minimal value to detemine which contour as the 1st and 2nd .....
-                        #max_buffer[iter] = np.max(pathyl)  #  use the mean value to detemine which contour as the 1st and 2nd .....
-                        
+                        #### Fill OrderedDict for the three vectors depending on the label
+                        # Note: Labels with no data (from the self.labels_lists) remain empty
+
+                        if shape[idx]["label"].lower() in list(
+                                label for sublist in list(self.labels_lists.values()) for label in sublist):
+                            current_label = \
+                                [key for key, value in self.labels_lists.items() if shape[idx]['label'] in value][0]
+
+                            # # initialize overlap_x as empty in case there is no overlap (to use in display)
+                            # overlap_x = np.array([])
+
+                            if 1 in contours_exist[current_label]:  # multiple vectors with same label
+                                # necessary to check if there are overlapping contours
+                                existing_contour_x = np.where(contours_exist[current_label] == 1)[0]
+                                overlap_x = np.intersect1d(existing_contour_x, path_xl)  # overlapped x coordinates
+
+                                # if there is an overlap --> keep contour points closer to scanning center
+                                if len(overlap_x) != 0:
+                                    new_y_overlapped = path_yl[overlap_x - path_xl[0]]
+                                    existing_y_overlapped = contours_y[current_label][overlap_x]
+                                    closer_to_center_y_overlapped = np.minimum(new_y_overlapped, existing_y_overlapped)
+
+                                    # "safe" to add y coordinates from this vector to label with existing contour with
+                                    # the same label
+                                    contours_y[current_label][path_xl] = path_yl
+
+                                    # overlap was determined before and the corresponding x coordinates can be adjusted
+                                    contours_y[current_label][overlap_x] = closer_to_center_y_overlapped
+
+                                    # change existence vector A-line for non-overlapping y coordinates
+                                    contours_exist[current_label][path_xl] = 1  # overlapping A-lines are already 1
+                                else:
+                                    # Add 1 to the A-lines where there is contour as there is no overlap
+                                    contours_exist[current_label][path_xl] = 1
+                                    contours_y[current_label][path_xl] = path_yl
+
+                            else:
+                                # Add 1 to the A-lines where there is contour
+                                contours_exist[current_label][path_xl] = 1
+                                # contours_x[current_label] = path_xl
+                                contours_y[current_label][path_xl] = path_yl
+
                         pass
-                    
 
-                     #  use the minimal value to detemine which contour as the 1st and 2nd .....
-                    
-                    self.contours_x = [None]*len_list
-                    self.contours_y = [None]*len_list
+                    if self.display_flag:  # for loop for display out of previous loop in case of overlap of contours
+                        for label, exist_v in contours_exist.items():
+                            if 1 in exist_v:
+                                index = list(contours_exist.keys()).index(label)
+                                img1 = self.draw_coordinates_color(img1, contours_x[label][
+                                    np.where(exist_v == 1)[0]], contours_y[label][np.where(exist_v == 1)[0]], index)
 
-                    for iter in range(len_list):
-                        self.contours_x[iter] = contoursx[iter]
-                        self.contours_y[iter] = contoursy[iter]
-                        if self.display_flag == True:
-                            img1 = self.draw_coordinates_color(img1,self.contours_x[iter],
-                                                               self.contours_y[iter],iter)
+                    # save this result
+                    self.img_num = a  # TODO: why assigning a to another variable?
 
-                    #save this result 
-                    self.img_num = a
-                    #self.contours_x = [path0ln, path1ln, path2ln, path3ln]
-                    #self.saver.append_new_name_contour (self.img_num,self.contours,self.database_root)
-                    self.saver.append_new_name_contour(self.img_num,self.contours_x,self.contours_y,self.save_dir)
+                    # TODO: check if append_new_name_contour is used anywhere else other than in this script
+                    self.saver.append_new_name_contour(self.img_num, contours_x, contours_y, contours_exist,
+                                                       self.save_dir)
 
-                    cv2.imshow('pic',img1)
+                    cv2.imshow('Image with highlighted contours', img1)
                     print(str(a))
-                    cv2.waitKey(10) 
+                    cv2.waitKey(10)
+
 
 if __name__ == '__main__':
-    #play with JSON gile 
-    #file_dir   = "D:/Deep learning/dataset/label data/label/0.json"
 
-    #with open(file_dir) as f:
-    #    data = JSON.load(f)
-    ## Output: {'name': 'Bob', 'languages': ['English', 'Fench']}
-    #print(data)
-    #newdata   = data 
-    #shape  = data["shapes"]
-    #print(shape)
-    #num_line  = len(shape)
-    #coordinate  = shape[0]["points"]
-    #num_points  = len(coordinate)
-    #for  i in range(num_points):
-    #    coordinate[i][1] = 100
-    #print(coordinate)
-    ### modify the coordinate 
-    #newdata["shapes"][0]["points"]  = coordinate
-    ##save 
-    #with open(file_dir, "w") as jsonFile:
-    #    JSON.dump(newdata, jsonFile)
-
-
-    converter  = Read_read_check_json_label()
-    converter.check_one_folder() # convert the Json file into pkl files 
-
-
-
-
-
-
-
-
-
-
-
-
-
+    converter = Read_read_check_json_label()
+    converter.check_one_folder()  # convert json files into pkl files
