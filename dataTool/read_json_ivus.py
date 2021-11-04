@@ -10,7 +10,7 @@ from zipfile import ZipFile
 import scipy.signal as signal
 import pandas as pd
 from collections import OrderedDict
-from generator_contour import Save_Contour_pkl
+from generator_contour_ivus import Save_Contour_pkl
 
 
 class Read_read_check_json_label(object):
