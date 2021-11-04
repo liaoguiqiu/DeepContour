@@ -14,6 +14,8 @@ import cv2
 import numpy
 import rendering
 from dataTool import generator_contour 
+from dataTool import generator_contour_ivus
+
 from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
 from dataTool.generator_contour_ivus import Generator_Contour_sheath
 from dataset_ivus  import myDataloader,Batch_size,Resample_size, Path_length
