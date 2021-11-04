@@ -73,7 +73,7 @@ class Pix2LineModel(BaseModel):
         #self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG, opt.norm,
         #                              not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
         self.netG  = fusion_nets_ivus._2layerFusionNets_() # generate the coodinates
-        self.netE  = fusion_nets_ivus._2layerFusionNets_(classfy = True) # generate the exsitence lalel
+        self.netE  = fusion_nets_ivus._2layerFusionNets_(classfy = False) # generate the exsitence lalel
 
         if self.isTrain:  # define a discriminator; conditional GANs need to take both input and output images; Therefore, #channels for D is input_nc + output_nc
             self.netD = networks.define_D(opt.input_nc + opt.output_nc, opt.ndf, opt.netD,
@@ -86,7 +86,7 @@ class Pix2LineModel(BaseModel):
             # LGQ add another loss for G
             self.criterionMTL= MTL_loss(Loss ="L1") # default loss =  L1", that is used  for the Coordinates position
             # LGQ add another loss for G
-            self.criterionMTL_BCE= MTL_loss(Loss ="BCE") # multi_scale_cross entrofy for the existence 
+            self.criterionMTL_BCE= MTL_loss(Loss ="L1") # multi_scale_cross entrofy for the existence 
 
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))

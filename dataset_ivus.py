@@ -265,7 +265,7 @@ class myDataloader(object):
         #however because the label software can not label the leftmost and the rightmost points,
         #so it will be given a max value,  I crop the edge of the label, remember to crop the image correspondingly .
 
-         # conver the blank value to extrem high value
+         # convert the blank value to extrem high value
         mask = path_piece >(H2-5)
         path_piece = path_piece + mask * H2*0.2
         existnence = mask * 1.0
