@@ -31,6 +31,7 @@
     <Compile Include="dataset_layers.py" />
     <Compile Include="dataset_sheath.py" />
     <Compile Include="dataTool\convertDomainLabels.py" />
+    <Compile Include="dataTool\convert_domain_labels.py" />
     <Compile Include="dataTool\generator_contour.py" />
     <Compile Include="dataTool\generator_contour_ivus.py" />
     <Compile Include="dataTool\generator_contour_sheath.py" />

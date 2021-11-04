@@ -13,7 +13,7 @@ from random import seed
 from random import random
 import pickle
 from basic_operator import Basic_Operator
-
+from scipy.interpolate import interp1d
 
 seed(1)
 Batch_size = 1
@@ -240,6 +240,26 @@ class myDataloader(object):
 
 
         return image,pathes, exs_p 
+    def disc_vector_resample(self,py,exis,px,H,W,H2,W2):
+        # use cv2 resampling wiht   nearest interpolation
+        clen = len(px)
+                #img_piece = this_gray[:,this_pathx[0]:this_pathx[clen-1]]
+                # no crop blank version 
+        #factor=W/W2
+        #factor=W2/W
+        #nearest_py = 
+        #xp = np.arange(0, len(a), 1.5)
+        #nearest_py = interp1d(np.arange(clen), py, kind='nearest')
+        #nearest_exi = interp1d(np.arange(clen), exis, kind='nearest')
+
+        this_pathy = cv2.resize(py, (W2,1), interpolation=cv2.INTER_NEAREST)
+         
+        #this_pathy =  signal.resample(py, int(clen*factor))#resample the path
+        #! resample binary vextor need to be checked
+        existnence = cv2.resize(exis, (W2,1), interpolation=cv2.INTER_NEAREST)
+        path_piece =  this_pathy*H2/H
+        return path_piece,existnence
+        
     def coordinates_and_existence(self,py,exis,px,H,W,H2,W2):
         # this function input the original coordinates of contour x and y, orginal image size and out put size
 
@@ -404,7 +424,7 @@ class myDataloader(object):
                     pathxiter  =  this_pathx [iter]
                     exis_iter= this_exist[iter]
                     # change the raw annotation into new perAline coordinates and existence vecor
-                    path_piece,existence_p=self.coordinates_and_existence(pathyiter,exis_iter,pathxiter,H,W,self.img_size,self.img_size)
+                    path_piece,existence_p=self.disc_vector_resample(pathyiter,exis_iter,pathxiter,H,W,self.img_size,self.img_size)
                     # when consider about  the blaank area,and use the special resize :
 
 
