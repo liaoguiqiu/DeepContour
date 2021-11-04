@@ -418,8 +418,8 @@ class myDataloader(object):
                 #path_piece   = np.clip(path_piece,0,self.img_size)
                 #////------test modification code should be modified after the true data ------------////////////
                 # just force the last element of t he label to be the same as the second one
-                self.input_path [this_pointer ,2, :] = self.input_path [this_pointer ,1, :] 
-                self.exis_vec  [this_pointer ,2, :] = self.exis_vec  [this_pointer ,1, :]
+                #self.input_path [this_pointer ,2, :] = self.input_path [this_pointer ,1, :] 
+                #self.exis_vec  [this_pointer ,2, :] = self.exis_vec  [this_pointer ,1, :]
 
                 if Random_rotate == True:
                     img_piece, self.input_path [this_pointer ,:, :],self.exis_vec [this_pointer ,:, :] =self.rolls(img_piece,self.input_path [this_pointer ,:, :],self.exis_vec [this_pointer ,:, :])  
