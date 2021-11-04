@@ -1,4 +1,3 @@
-# Mirror test
 # Script to convert labelme labels (in JSON files) from polar domain to cartesian domain and vice-versa
 # from bs4 import BeautifulSoup
 import os
@@ -337,7 +336,7 @@ class labelsConverter(object):
 
         for i in range(num_labels):
             # extract coordinates for each label
-            label_coordinates = np.array(labels[i]['points'])
+            label_coordinates = np.asarray(labels[i]['points'])
 
             if labels[i]['shape_type'] == 'circle':
                 num_points = 35  # user-defined number of points on the circumference for the coordinates
@@ -405,7 +404,7 @@ class labelsConverter(object):
             else:
                 raise NotImplementedError(
                     'Conversion type "{0}" not implemented: only "Polar" and "Cartesian" types are supported.'
-                        .format(self.params_convert['label_data']['conv_type']))
+                    .format(self.params_convert['label_data']['conv_type']))
 
         return contours_x, contours_y, label_coordinates_json_x, label_coordinates_json_y, adjusted_transitions
 
@@ -444,7 +443,7 @@ class labelsConverter(object):
             adjusted_transitions[idx_transition[0] + counter_new_points + 2] = 1
             counter_new_points += 2
 
-        return np.array(contours_xy_adjusted)[:, 0], np.array(contours_xy_adjusted)[:, 1], adjusted_transitions
+        return np.asarray(contours_xy_adjusted)[:, 0], np.asarray(contours_xy_adjusted)[:, 1], adjusted_transitions
         # x, y, indexes of adjusted contours transitions
 
     @staticmethod
@@ -510,8 +509,8 @@ class labelsConverter(object):
                 transitions[idx - 1] = 1  # indicate that there is a transition from the index flagged to the next
                 # point on the vectors of contours
 
-        r = np.array(r)
-        theta = np.array(theta)
+        r = np.asarray(r)
+        theta = np.asarray(theta)
 
         mag = kx * r
         angle = ky * theta
@@ -535,7 +534,7 @@ class labelsConverter(object):
         f = io.BytesIO()
         f.write(image_data)
         img_pil = PIL.Image.open(f)
-        img_arr = np.array(img_pil)
+        img_arr = np.asarray(img_pil)
 
         return img_arr
 
