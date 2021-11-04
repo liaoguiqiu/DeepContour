@@ -3,6 +3,8 @@ import cv2
 import numpy as np
 import os
 from analy import MY_ANALYSIS
+from dataTool import generator_contour 
+
 from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 from analy import Save_signal_enum
 from scipy import signal 
@@ -45,17 +47,17 @@ class myDataloader(object):
         self.talker.save_data(self.com_dir) # save
 
 
-        self.dataroot = "../../dataset/For_contour_sheath_train/train/img/"
-        self.signalroot ="../../dataset/For_contour_sheath_train/train/label/"
+        self.dataroot = "../../../../dataset/For_contour_sheath_train/train/img/"
+        self.signalroot ="../../../../dataset/For_contour_sheath_train/train/label/"
         if self.OLG_flag == True:
-           self.dataroot = "../dataset/For_contour_sheath_train/train_OLG/img/"
-           self.signalroot ="../dataset/For_contour_sheath_train/train_OLG/label/" 
+           self.dataroot = "../../dataset/For_contour_sheath_train/train_OLG/img/"
+           self.signalroot ="../../dataset/For_contour_sheath_train/train_OLG/label/" 
 
 
         if validation  == True :
             self.OLG_flag = False
-            self.dataroot = "../dataset/For_contour_sheath_train/test/img/"
-            self.signalroot ="../dataset/For_contour_sheath_train/test/label/" 
+            self.dataroot = "../../dataset/For_contour_sheath_train/test/img/"
+            self.signalroot ="../../dataset/For_contour_sheath_train/test/label/" 
         else: 
             self.GT = True  # for  trianing the GT should always be true
         
@@ -72,7 +74,10 @@ class myDataloader(object):
 
 
         self.input_image = np.zeros((batch_size,1,image_size,image_size))
-        self.input_path = np.zeros((batch_size,2,path_size)) # predifine the path number is 2
+        # the number of the contour has been increased, and another vector has beeen added
+        self.input_path = np.zeros((batch_size,3,path_size)) # predifine the path number is 2
+        self.exis_vec = np.zeros((batch_size,3,path_size)) # predifine the existence vector number is 2
+
         self.all_dir_list = os.listdir(self.dataroot)
         self.folder_num = len(self.all_dir_list)
         # create the buffer list
@@ -198,17 +203,17 @@ class myDataloader(object):
 
 
         return matrix 
-    def rolls(self,image,pathes):
+    def rolls(self,image,pathes,exis_vec):
  
         H,W = image.shape
         roller = np.random.random_sample() * W
         roller = int (roller)
         image = np.roll(image, roller, axis = 1)
         pathes = np.roll(pathes, roller, axis = 1)
+        exis_vec =  np.roll(exis_vec, roller, axis = 1)
 
 
-
-        return image,pathes 
+        return image,pathes,exis_vec
     def flips(self,image,pathes):    #upside down
  
         H,W = image.shape
@@ -222,7 +227,7 @@ class myDataloader(object):
 
 
         return image,pathes 
-    def flips2(self,image,pathes):  # left to right
+    def flips2(self,image,pathes,exs_p):  # left to right
  
         H,W = image.shape
         fliper = np.random.random_sample() * 10
@@ -231,15 +236,13 @@ class myDataloader(object):
             image=cv2.flip(image, 1) # flip  horizon
             #image = np.roll(image, roller, axis = 1)
             pathes =np.flip(pathes, 1)
+            exs_p = np.flip(exs_p, 1)
 
 
-
-        return image,pathes 
-    def downSamp_path(self,py,px,H,W,H2,W2):
+        return image,pathes, exs_p 
+    def coordinates_and_existence(self,py,px,H,W,H2,W2):
         # this function input the original coordinates of contour x and y, orginal image size and out put size
 
-
-        
         clen = len(px)
                 #img_piece = this_gray[:,this_pathx[0]:this_pathx[clen-1]]
                 # no crop blank version 
@@ -262,11 +265,12 @@ class myDataloader(object):
         #however because the label software can not label the leftmost and the rightmost points,
         #so it will be given a max value,  I crop the edge of the label, remember to crop the image correspondingly .
 
-         # conver the blank value to extrem high value
+         # convert the blank value to extrem high value
         mask = path_piece >(H2-5)
         path_piece = path_piece + mask * H2*0.2
+        existnence = mask * 1.0
         #path_piece = signal.resample(path_piece[3:W2-3], W2)
-        return path_piece
+        return path_piece,existnence
 
     def read_a_batch(self):
         read_start = self.read_record
@@ -393,21 +397,11 @@ class myDataloader(object):
 
                 for iter in range(c_num):
                     # when consider about  the blaank area :
-                        #pathyiter =  signal.resample(this_pathy[iter], int(clen*factor))#resample the path
-                        ##resample 
-                        #pathyiter =  pathyiter*self.img_size/H#resample the path
-
-                        ## set the blank area ( left or right) of the contour to a specific high value 
-                        #pathl = np.zeros(int(this_pathx[iter][0]*factor))+ 2*self.img_size
-                        #len1 = len(pathyiter)
-
-                        #len2 = len(pathl)
-                        #pathr = np.zeros(self.img_size-len1-len2) + 2*self.img_size
-                        #path_piece = np.append(pathl,pathyiter,axis=0)
-                        #path_piece = np.append(path_piece,pathr,axis=0)
+                         
                     pathyiter  =  this_pathy[iter]
                     pathxiter  =  this_pathx [iter]
-                    path_piece=self.downSamp_path(pathyiter,pathxiter,H,W,self.img_size,self.img_size)
+                    # change the raw annotation into new perAline coordinates and existence vecor
+                    path_piece,existence_p=self.coordinates_and_existence(pathyiter,pathxiter,H,W,self.img_size,self.img_size)
                     # when consider about  the blaank area,and use the special resize :
 
 
@@ -417,16 +411,25 @@ class myDataloader(object):
                     
                     #self.input_path [this_pointer ,iter, :] = pathyiter
                     self.input_path [this_pointer ,iter, :] = path_piece
-
+                    self.exis_vec  [this_pointer ,iter, :] = existence_p
                 #path_piece   = np.clip(path_piece,0,self.img_size)
+                #////------test modification code should be modified after the true data ------------////////////
+                # just force the last element of t he label to be the same as the second one
+                self.input_path [this_pointer ,2, :] = self.input_path [this_pointer ,1, :] 
+                self.exis_vec  [this_pointer ,2, :] = self.exis_vec  [this_pointer ,1, :]
+
                 if Random_rotate == True:
-                    img_piece, self.input_path [this_pointer ,:, :] = self.rolls(img_piece,self.input_path [this_pointer ,:, :])  
+                    img_piece, self.input_path [this_pointer ,:, :],self.exis_vec [this_pointer ,:, :] =self.rolls(img_piece,self.input_path [this_pointer ,:, :],self.exis_vec [this_pointer ,:, :])  
+    
                 #img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
-                img_piece, self.input_path [this_pointer ,:, :] = self.flips2(img_piece,self.input_path [this_pointer ,:, :])
+                img_piece, self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :] =  self.flips2(img_piece,self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :])
+                
 
 
                 self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]/104.0
                 
+
+
                 this_pointer +=1
                 #if(this_pointer>=self.batch_size): # this batch has been filled
                 #        break
@@ -463,7 +466,8 @@ class myDataloader(object):
             pass
         self.read_record=i # after reading , remember to  increase it 
 
-        return self.input_image,self.input_path
+        # additionally returen the exsitence pssibility 
+        return self.input_image,self.input_path, self.exis_vec
 
 
 ##test read 

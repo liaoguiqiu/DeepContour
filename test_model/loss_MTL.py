@@ -1,8 +1,11 @@
 import torch.nn as nn
 import torch.nn.functional as F
 class MTL_loss(object):
-   def __init__(self):
-       self.criterion = nn.L1Loss()
+   def __init__(self,Loss ="L1"):
+       if (Loss == "L1"):
+            self.criterion = nn.L1Loss()
+       else:
+            self.criterion = nn.BCELoss()
    def one_loss(self,output1,target1):
        b, _, len = output1.size()
        target_scaled = F.interpolate(target1, size=len, mode='area')

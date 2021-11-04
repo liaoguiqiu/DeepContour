@@ -5,7 +5,7 @@
 import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
-from model import cGAN_build2 # the mmodel
+from model import CE_build3 # the mmodel
 
  
 # the model
@@ -13,16 +13,21 @@ import arg_parse
 import cv2
 import numpy
 import rendering
+from dataTool import generator_contour 
 from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
 from dataTool.generator_contour_ivus import Generator_Contour_sheath
+from dataset_ivus  import myDataloader,Batch_size,Resample_size, Path_length
 
 import os
-from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
+
+#from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
+#switch to another data loader for the IVUS, whih will have both the position and existence vector
+
 from deploy.basic_trans import Basic_oper
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
-Visdom_flag  = True  # the flag of using the visdom or not
+Visdom_flag  = False  # the flag of using the visdom or not
 OLG_flag = False    # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
 validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
@@ -99,6 +104,41 @@ def draw_coordinates_color_s(img1,vy0,vy1):
 
 
         return img1
+def display_prediction_exis(read_id,mydata_loader,save_out): # display in coordinates form 
+    gray2 =   (mydata_loader.input_image[0,0,:,:] *104)+104
+    show1 = gray2.astype(float)
+    path2 = mydata_loader.exis_vec[0,:] * Resample_size
+    #path2  = signal.resample(path2, Resample_size)
+    path2 = numpy.clip(path2,0,Resample_size-1)
+    color1 = numpy.zeros((show1.shape[0],show1.shape[1],3))
+    color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 
+
+    for i in range ( len(path2)):
+        color1 = draw_coordinates_color(color1,path2[i],i)
+                             
+            
+    show2 =  gray2.astype(float)
+    save_out = save_out.cpu().detach().numpy()
+
+    save_out  = save_out[0,:] *(Resample_size)
+    #save_out  = signal.resample(save_out, Resample_size)
+    save_out = numpy.clip(save_out,0,Resample_size-1)
+    color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
+    color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
+     
+     
+
+    for i in range ( len(save_out)):
+        this_coordinate = signal.resample(save_out[i], Resample_size)
+        color = draw_coordinates_color(color,this_coordinate,i)
+     
+    #show3 = numpy.append(show1,show2,axis=1) # cascade
+    show4 = numpy.append(color1,color,axis=1) # cascade
+ 
+     
+
+
+    cv2.imshow('Deeplearning exitence 2',show4.astype(numpy.uint8)) 
 def display_prediction(read_id,mydata_loader,save_out,hot,hot_real): # display in coordinates form 
     gray2 =   (mydata_loader.input_image[0,0,:,:] *104)+104
     show1 = gray2.astype(float)
@@ -176,7 +216,7 @@ print(torch.cuda.device(0))
 print(torch.cuda.device_count())
 print(torch.cuda.get_device_name(0))
 print(torch.cuda.is_available())
-dataroot = "../dataset/CostMatrix/"
+#dataroot = "../dataset/CostMatrix/"
 torch.set_num_threads(2)
  
   
@@ -186,30 +226,40 @@ torch.set_num_threads(2)
 #Guiqiu Resnet version
 #netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
 
-Model_creator = cGAN_build2.CGAN_creator() # the  CEnet trainer with CGAN
-CE_Nets= Model_creator.creat_cgan()  #  G and D are created here 
+Model_creator = CE_build3.CE_creator() # the  CEnet trainer with CGAN
+#   Use the same arch to create two nets 
+CE_Nets= Model_creator.creat_nets()   # one is for the contour cordinates
+#Ex_Nets= Model_creator.creat_nets()   # one is for the contour existence
+
 #netD = gan_body._netD_Resnet()
 
 #netD.apply(weights_init)
 CE_Nets.netD.apply(weights_init)
 CE_Nets.netG.apply(weights_init)
+CE_Nets.netE.apply(weights_init)
+
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
     CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
     CE_Nets.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_5.pth'))
+    CE_Nets.netE.load_state_dict(torch.load(pth_save_dir+'cGANE_epoch_5.pth'))
     #CE_Nets.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
 
 print(CE_Nets.netD)
 print(CE_Nets.netG)
+print(CE_Nets.netE)
+
  # no longer use the mine nets 
   
-real_label = 1
-fake_label = 0
+#real_label = 1
+#fake_label = 0
 
 if opt.cuda:
     print("CUDA TRUE")
     CE_Nets.netD.cuda()
     CE_Nets.netG.cuda()
+    CE_Nets.netE.cuda()
+
      
 
 read_id =0
@@ -246,7 +296,7 @@ while(1): # main infinite loop
            switcher =0
            mydata_loader =mydata_loader2 .read_a_batch()
            mydata_loader =mydata_loader2  
-
+        
         #change to 3 chanels
         ini_input = mydata_loader.input_image
         real =  torch.from_numpy(numpy.float32(ini_input)) 
@@ -259,16 +309,23 @@ while(1): # main infinite loop
         #input = torch.from_numpy(numpy.float32(mydata_loader.input_image[0,:,:,:])) 
         input = input.to(device)                
    
-        patht= torch.from_numpy(numpy.float32(mydata_loader.input_path)/Resample_size)
+        patht= torch.from_numpy(numpy.float32(mydata_loader.input_path)/Resample_size) # the coordinates should be uniformed by the image height
+        ex_t = torch.from_numpy(numpy.float32(mydata_loader.exis_vec))
+        patht=patht.to(device) # use the GPU 
+        ex_t = ex_t.to(device)
         #patht=patht.to(device)            
         #patht= torch.from_numpy(numpy.float32(mydata_loader.input_path[0,:])/71.0 )
-        patht=patht.to(device)
+        
+
+
         #inputv = Variable(input)
         #labelv = patht
         inputv = Variable(input )
         #inputv = Variable(input.unsqueeze(0))
         #patht =patht.view(-1, 1).squeeze(1)
         labelv = Variable(patht)
+        ex_v = Variable(ex_t)
+
         #-------------- load data and convert to GPU tensor format -  end------------------#
 
          
@@ -276,8 +333,9 @@ while(1): # main infinite loop
         #--------------input, Forward network,  and compare output with the label------------------#
         realA =  real
         real_pathes = labelv
+        real_exv = ex_v
         CE_Nets.update_learning_rate()    # update learning rates in the beginning of every epoch.
-        CE_Nets.set_input(realA,real_pathes,inputv)         # unpack data from dataset and apply preprocessing
+        CE_Nets.set_input(realA,real_pathes,real_exv,inputv)         # unpack data from dataset and apply preprocessing
 
         if validation_flag ==True:
             CE_Nets.forward()
@@ -311,10 +369,11 @@ while(1): # main infinite loop
 
         if read_id % 2 == 0 and Visdom_flag == True and validation_flag==False:
                 plotter.plot( 'l0', 'l0', 'l0', iteration_num, CE_Nets.displayloss0.cpu().detach().numpy())
-
                 plotter.plot( 'l1', 'l1', 'l1', iteration_num, CE_Nets.displayloss1.cpu().detach().numpy())
                 plotter.plot( 'l2', 'l2', 'l2', iteration_num, CE_Nets.displayloss2.cpu().detach().numpy())
-                plotter.plot( 'l3', 'l3', 'l3', iteration_num, CE_Nets.displayloss3.cpu().detach().numpy())
+                #plotter.plot( 'l3', 'l3', 'l3', iteration_num, CE_Nets.displayloss3.cpu().detach().numpy())
+                plotter.plot( 'lE3', 'le3', 'le3', iteration_num, CE_Nets.displaylossE0 .cpu().detach().numpy())
+
                  
         if read_id % 1 == 0 and Display_fig_flag== True:
             #vutils.save_image(real_cpu,
@@ -386,7 +445,10 @@ while(1): # main infinite loop
             #display_prediction(mydata_loader,  CE_Nets.out_pathes[0],hot)
             #display_prediction(mydata_loader,  CE_Nets.path_long3,hot)
             #display_prediction(mydata_loader,  CE_Nets.out_pathes3,hot)
+            #display_prediction(read_id,mydata_loader,  CE_Nets.out_pathes0,hot,hot_real)
             display_prediction(read_id,mydata_loader,  CE_Nets.out_pathes0,hot,hot_real)
+            display_prediction_exis(read_id,mydata_loader,  CE_Nets.out_exis_v0 )
+
             infinite_save_id += 1 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                break
@@ -396,6 +458,8 @@ while(1): # main infinite loop
 
     #--------------  save the current trained model after going through a folder  ------------------#
     torch.save(CE_Nets.netG.state_dict(), pth_save_dir+ "cGANG_epoch_"+str(epoch)+".pth")
+    torch.save(CE_Nets.netE.state_dict(), pth_save_dir+ "cGANE_epoch_"+str(epoch)+".pth")
+
     torch.save(CE_Nets.netD.state_dict(), pth_save_dir+ "cGAND_epoch_"+str(epoch)+".pth")
     torch.save(CE_Nets.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
      

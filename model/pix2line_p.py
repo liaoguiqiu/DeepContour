@@ -215,13 +215,17 @@ class Pix2LineModel(BaseModel):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         start_time = time()
         #self.out_pathes = self.netG(self.input_G) # coordinates encoding
-        f1,self.out_pathes1,self.path_long1 = self.netG.side_branch1 (self.input_G) # coordinates encoding  
+        f1,self.out_pathes1,self.path_long1 = self.netG.side_branch1 (self.input_G) # coordinates encoding
+        
         f2,self.out_pathes2,self.path_long2 = self.netG.side_branch2 (self.input_G) # coordinates encoding
         f3,self.out_pathes3,self.path_long3 = self.netG.side_branch3 (self.input_G) # coordinates encoding
         self.out_pathes0 =self.netG. fuse_forward( f1,f2,f3)
         test_time_point = time()
         print (" all test point time is [%f] " % ( test_time_point - start_time))
         self.out_pathes = [self.out_pathes0,self.out_pathes1,self.out_pathes2,self.out_pathes3]
+
+
+
 
         self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes3,Resample_size)
         self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing  (self.out_pathes3,Resample_size)
