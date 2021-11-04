@@ -71,7 +71,7 @@ class myDataloader(object):
         self.batch_size  = batch_size
         self.img_size  = image_size
         self.path_size  = path_size
-
+        self.obj_num = 3 # take num of objects from vectors
 
         self.input_image = np.zeros((batch_size,1,image_size,image_size))
         # the number of the contour has been increased, and another vector has beeen added
@@ -240,7 +240,7 @@ class myDataloader(object):
 
 
         return image,pathes, exs_p 
-    def coordinates_and_existence(self,py,px,H,W,H2,W2):
+    def coordinates_and_existence(self,py,exis,px,H,W,H2,W2):
         # this function input the original coordinates of contour x and y, orginal image size and out put size
 
         clen = len(px)
@@ -251,6 +251,8 @@ class myDataloader(object):
 
          
         this_pathy =  signal.resample(py, int(clen*factor))#resample the path
+        #! resample binary vextor need to be checked
+        existnence =  signal.resample(exis, int(clen*factor))# ! resample binary vextor need to be checked
         #resample 
         this_pathy =  this_pathy*H2/H#unifrom
         # first determine the lef piece
@@ -268,7 +270,7 @@ class myDataloader(object):
          # convert the blank value to extrem high value
         mask = path_piece >(H2-5)
         path_piece = path_piece + mask * H2*0.2
-        existnence = mask * 1.0
+        #existnence = mask * 1.0
         #path_piece = signal.resample(path_piece[3:W2-3], W2)
         return path_piece,existnence
 
@@ -354,9 +356,9 @@ class myDataloader(object):
                 if self.GT == True:
                     Path_Index = Path_Index_list.index(Image_ID)  
                 #for layers train alll  the x and y are list
-                this_pathx = this_signal.contoursx[Path_Index]
-                this_pathy = this_signal.contoursy[Path_Index]
-
+                this_pathx = this_signal.contoursx[Path_Index,0:self.obj_num]
+                this_pathy = this_signal.contoursy[Path_Index,0:self.obj_num]
+                this_exist = this_signal.contours_exist [Path_Index,0:self.obj_num]
                 #path2 =  signal.resample(this_path, self.path_size)#resample the path
                 # concreate the image batch and path
                 this_gray  =   cv2.cvtColor(this_img, cv2.COLOR_BGR2GRAY)
@@ -400,8 +402,9 @@ class myDataloader(object):
                          
                     pathyiter  =  this_pathy[iter]
                     pathxiter  =  this_pathx [iter]
+                    exis_iter= this_exist[iter]
                     # change the raw annotation into new perAline coordinates and existence vecor
-                    path_piece,existence_p=self.coordinates_and_existence(pathyiter,pathxiter,H,W,self.img_size,self.img_size)
+                    path_piece,existence_p=self.coordinates_and_existence(pathyiter,exis_iter,pathxiter,H,W,self.img_size,self.img_size)
                     # when consider about  the blaank area,and use the special resize :
 
 
