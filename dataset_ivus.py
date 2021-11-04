@@ -47,8 +47,8 @@ class myDataloader(object):
         self.talker.save_data(self.com_dir) # save
 
 
-        self.dataroot = "../../../../dataset/For_contour_sheath_train/train/img/"
-        self.signalroot ="../../../../dataset/For_contour_sheath_train/train/label/"
+        self.dataroot = "../../dataset/For_contour_sheath_train/train/img/"
+        self.signalroot ="../../dataset/For_contour_sheath_train/train/label/"
         if self.OLG_flag == True:
            self.dataroot = "../../dataset/For_contour_sheath_train/train_OLG/img/"
            self.signalroot ="../../dataset/For_contour_sheath_train/train_OLG/label/" 
@@ -356,9 +356,9 @@ class myDataloader(object):
                 if self.GT == True:
                     Path_Index = Path_Index_list.index(Image_ID)  
                 #for layers train alll  the x and y are list
-                this_pathx = this_signal.contoursx[Path_Index,0:self.obj_num]
-                this_pathy = this_signal.contoursy[Path_Index,0:self.obj_num]
-                this_exist = this_signal.contours_exist [Path_Index,0:self.obj_num]
+                this_pathx = np.array(list(this_signal.contoursx[Path_Index].values())[0:self.obj_num])
+                this_pathy = np.array(list(this_signal.contoursy[Path_Index].values())[0:self.obj_num])
+                this_exist = np.array(list(this_signal.contours_exist[Path_Index].values())[0:self.obj_num])
                 #path2 =  signal.resample(this_path, self.path_size)#resample the path
                 # concreate the image batch and path
                 this_gray  =   cv2.cvtColor(this_img, cv2.COLOR_BGR2GRAY)
