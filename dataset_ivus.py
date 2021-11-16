@@ -241,22 +241,26 @@ class myDataloader(object):
 
         return image,pathes, exs_p 
     def disc_vector_resample(self,py,exis,px,H,W,H2,W2):
+        def resample(x,n,kind='nearest'):
+            factor = float(x.size/n)
+            f = interp1d(np.linspace(0,1,x.size),x,kind)
+            return f(np.linspace(0,1,n))
         # use cv2 resampling wiht   nearest interpolation
         clen = len(px)
                 #img_piece = this_gray[:,this_pathx[0]:this_pathx[clen-1]]
                 # no crop blank version 
-        #factor=W/W2
+        factor=W/W2
         #factor=W2/W
         #nearest_py = 
-        #xp = np.arange(0, len(a), 1.5)
+        #xp = np.arange(0, len(a), factor)
         #nearest_py = interp1d(np.arange(clen), py, kind='nearest')
         #nearest_exi = interp1d(np.arange(clen), exis, kind='nearest')
 
-        this_pathy = cv2.resize(py, (W2,1), interpolation=cv2.INTER_NEAREST)
-         
-        #this_pathy =  signal.resample(py, int(clen*factor))#resample the path
-        #! resample binary vextor need to be checked
-        existnence = cv2.resize(exis, (W2,1), interpolation=cv2.INTER_NEAREST)
+        this_pathy = resample(py,W2)
+        #
+        # #this_pathy =  signal.resample(py, int(clen*factor))#resample the path
+        # #! resample binary vextor need to be checked
+        existnence = resample(exis,W2)
         path_piece =  this_pathy*H2/H
         return path_piece,existnence
         
