@@ -95,12 +95,16 @@ class Generator_Contour_sheath(object):
         self.dis_origin = True
         self.origin_data = Save_Contour_pkl()
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/VARY/"
-        self.image_dir = "../../dataset/ivus/img/"
-        self.pkl_dir = "../../dataset/ivus/seg label pkl/"
-        self.save_image_dir = "../../dataset/ivus/img_generate/"  # this dir just save all together
-        self.save_image_dir_devi = "../../dataset/ivus/img_genetate_devi/"  # this dir devide the generated images
+        data_root = "../../dataset/ivus/"
+        data_root = "D:/Deep learning/dataset/label data/"
+        self.image_dir = data_root + "img/"
+        self.pkl_dir = data_root +"seg label pkl/"
+        self.save_image_dir =data_root + "img_generate/"  # this dir just save all together
+        self.save_image_dir_devi = data_root  + "img_genetate_devi/"  # this dir devide the generated images
+        self.save_pkl_dir = data_root   + "pkl_generate/"
 
-        self.save_pkl_dir = "../../dataset/ivus/pkl_generate/"
+
+
         # self.origin_data =self.origin_data.read_data(self.pkl_dir)
         # self.origin_data = []
 
@@ -377,7 +381,9 @@ class Generator_Contour_sheath(object):
             # this_folder_list =  os.listdir(os.path.join(self.pkl_dir, subfold))
             # this_folder_list2 = [ self.pkl_dir +subfold + "/" + pointer for pointer in this_folder_list]
             # self.folder_list[number_i] = this_folder_list2
-
+             
+            imagelist = os.listdir(self.image_dir + subfold + '/' )
+            _,image_type  = os.path.splitext(imagelist[0]) # first image of this folder  
             # change the dir firstly before read
             # saved_stastics.all_statics_dir = os.path.join(self.signalroot, subfold, 'contour.pkl')
             this_contour_dir = self.pkl_dir + subfold + '/'  # for both linux and window
@@ -396,7 +402,9 @@ class Generator_Contour_sheath(object):
 
                 for num in range(file_len):
                     name = self.origin_data.img_num[num]
-                    img_path = self.image_dir + subfold + '/' + name + ".tif"
+                    #img_path = self.image_dir + subfold + '/' + name + ".tif"
+                    img_path = self.image_dir + subfold + '/' + name + image_type
+
                     img_or = cv2.imread(img_path)
                     img1 = cv2.cvtColor(img_or, cv2.COLOR_BGR2GRAY)
                     H, W = img1.shape

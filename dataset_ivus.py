@@ -6,6 +6,7 @@ from analy import MY_ANALYSIS
 from dataTool import generator_contour 
 
 from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
+
 from analy import Save_signal_enum
 from scipy import signal 
 from image_trans import BaseTransform  
@@ -29,7 +30,7 @@ transform = BaseTransform(  Resample_size,[104])  #gray scale data
 class myDataloader(object):
     def __init__(self, batch_size,image_size,path_size,validation= False,OLG=False):
         self.OLG_flag = OLG
-        self. GT = True
+        self.GT = True
         self.save_id =0
         #Guiqiu modified for my computer
         self.com_dir = "../../dataset/telecom/" # this dir is for the OLG
@@ -45,21 +46,22 @@ class myDataloader(object):
         self.talker.pending =0 # no pending so all folder can be writed
         #self.talker.writing =2 
         self.talker.save_data(self.com_dir) # save
+        root = "D:/Deep learning/dataset/For IVUS/"
 
-
-        self.dataroot = "../../dataset/For_contour_sheath_train/train/img/"
-        self.signalroot ="../../dataset/For_contour_sheath_train/train/label/"
+        self.dataroot = root + "train/img/"
+        self.signalroot =root + "train/label/"
         if self.OLG_flag == True:
-           self.dataroot = "../../dataset/For_contour_sheath_train/train_OLG/img/"
-           self.signalroot ="../../dataset/For_contour_sheath_train/train_OLG/label/" 
+           self.dataroot = root + "train_OLG/img/"
+           self.signalroot =root + "train_OLG/label/" 
 
 
         if validation  == True :
             self.OLG_flag = False
-            self.dataroot = "../../dataset/For_contour_sheath_train/test/img/"
-            self.signalroot ="../../dataset/For_contour_sheath_train/test/label/" 
+            self.dataroot = root + "test/img/"
+            self.signalroot =root + "test/label/" 
         else: 
             self.GT = True  # for  trianing the GT should always be true
+                            # FOR TEST IT COULD BE TRUE 
         
 
 
@@ -71,12 +73,12 @@ class myDataloader(object):
         self.batch_size  = batch_size
         self.img_size  = image_size
         self.path_size  = path_size
-        self.obj_num = 3 # take num of objects from vectors
+        self.obj_num = 2 # take num of objects from vectors
 
         self.input_image = np.zeros((batch_size,1,image_size,image_size))
         # the number of the contour has been increased, and another vector has beeen added
-        self.input_path = np.zeros((batch_size,3,path_size)) # predifine the path number is 2
-        self.exis_vec = np.zeros((batch_size,3,path_size)) # predifine the existence vector number is 2
+        self.input_path = np.zeros((batch_size,self.obj_num,path_size)) # predifine the path number is 2
+        self.exis_vec = np.zeros((batch_size,self.obj_num,path_size)) # predifine the existence vector number is 2
 
         self.all_dir_list = os.listdir(self.dataroot)
         self.folder_num = len(self.all_dir_list)
@@ -370,7 +372,7 @@ class myDataloader(object):
 
             try:
                 if self.GT == False:
-                    Path_Index = 0 # just use the first path
+                    Path_Index = 0 # just use the first path, that is fake ground truth, just for testing
                 else:
                     Path_Index = Path_Index_list.index(Image_ID)
             except ValueError:

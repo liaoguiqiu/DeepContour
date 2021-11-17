@@ -22,11 +22,14 @@ import rendering
 
 
 import os
-from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
+#from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
+from dataset_ivus  import myDataloader,Batch_size,Resample_size, Path_length
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = False 
 Display_fig_flag = True
+Continue_flag = False
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
@@ -124,7 +127,7 @@ GANmodel= gancreator.creat_cgan()  #  G and D are created here
 #netD.apply(weights_init)
 GANmodel.netD.apply(weights_init)
 GANmodel.netG.apply(weights_init)
-if opt.netD != '':
+if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
     GANmodel.netG.load_state_dict(torch.load('../out/deep_layers/cGANG_epoch_1.pth'))
     GANmodel.netD.load_state_dict(torch.load('../out/deep_layers/cGAND_epoch_1.pth'))

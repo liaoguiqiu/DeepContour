@@ -21,15 +21,17 @@ import numpy
 from image_trans import BaseTransform  
 from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate 
 import rendering
-validation_flag = True
+validation_flag = False
 
 
 import os
-from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
+#from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
+from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length
+
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 Continue_flag = False
 # Switch control for the Visdom or Not
-Visdom_flag  = True 
+Visdom_flag  = False 
 Display_fig_flag = True
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter

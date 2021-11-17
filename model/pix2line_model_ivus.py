@@ -9,7 +9,7 @@ from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 from time import time
 import torch.nn as nn
 from torch.autograd import Variable
-
+from databufferExcel import EXCEL_saver
 #torch.autograd.set_detect_anomaly(True) # Fix for problem: RuntimeError: one of the variables needed for gradient
 # computation has been modified by an inplace operation: [torch.cuda.FloatTensor [1024]] is at version 3;
 # expected version 2 instead. Hint: enable anomaly detection to find the operation that failed to compute its gradient,
@@ -117,7 +117,7 @@ class Pix2LineModel(BaseModel):
         self.loss_G_L1 =torch.tensor(0,dtype=torch.float)
         self.loss_G_L2 =torch.tensor(0,dtype=torch.float)
         self.loss_G_L3 =torch.tensor(0,dtype=torch.float)
-
+        self.metrics_saver = EXCEL_saver(8) # 8 values
          
 
     def validation_init(self):
@@ -166,32 +166,37 @@ class Pix2LineModel(BaseModel):
         #loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
         #self.error = 1.0*loss[0] 
         #out_pathes[fusion_predcition][batch 0, contour index,:]
-        self.L1 += cal_L(self.out_pathes[0][0,0,:],self.real_pathes[0,0,:])
-        self.L2 += cal_L(self.out_pathes[0][0,1,:],self.real_pathes[0,1,:])
+        self.L1 = cal_L(self.out_pathes[0][0,0,:],self.real_pathes[0,0,:]) * Resample_size
+        self.L2 = cal_L(self.out_pathes[0][0,1,:],self.real_pathes[0,1,:]) * Resample_size
 
-        print (" L1 =  "  + str(self.L1/self.validation_cnt*Resample_size))
-        print (" L2 =  "  + str(self.L2/self.validation_cnt*Resample_size))
+        print (" L1 =  "  + str(self.L1))
+        print (" L2 =  "  + str(self.L2))
 
         # calculate J (IOU insetion portion)
         real_b_hot = rendering.layers_visualized_OneHot_encodeing  (self.real_pathes,Resample_size) 
         fake_b_hot = self.fake_B_1_hot 
         # this is the format of hot map
         #out  = torch.zeros([bz,3, H,W], dtype=torch.float)
-        self.J1 += cal_J(real_b_hot[0,0,:,:],fake_b_hot[0,0,:,:])
-        self.J2 += cal_J(real_b_hot[0,1,:,:],fake_b_hot[0,1,:,:])
-        self.J3 += cal_J(real_b_hot[0,2,:,:],fake_b_hot[0,2,:,:])
-        print (" J1 =  "  + str(self.J1/self.validation_cnt))
-        print (" J2 =  "  + str(self.J2/self.validation_cnt))
-        print (" J3 =  "  + str(self.J3/self.validation_cnt))
+        self.J1 = cal_J(real_b_hot[0,0,:,:],fake_b_hot[0,0,:,:])
+        self.J2 = cal_J(real_b_hot[0,1,:,:],fake_b_hot[0,1,:,:])
+        self.J3 = cal_J(real_b_hot[0,2,:,:],fake_b_hot[0,2,:,:])
+        print (" J1 =  "  + str(self.J1 ))
+        print (" J2 =  "  + str(self.J2 ))
+        print (" J3 =  "  + str(self.J3 ))
 
 
 
-        self.D1 += cal_D(real_b_hot[0,0,:,:],fake_b_hot[0,0,:,:])
-        self.D2 += cal_D(real_b_hot[0,1,:,:],fake_b_hot[0,1,:,:])
-        self.D3 += cal_D(real_b_hot[0,2,:,:],fake_b_hot[0,2,:,:])
-        print (" D1 =  "  + str(self.D1/self.validation_cnt))
-        print (" D2 =  "  + str(self.D2/self.validation_cnt))
-        print (" D3 =  "  + str(self.D3/self.validation_cnt))
+        self.D1 = cal_D(real_b_hot[0,0,:,:],fake_b_hot[0,0,:,:])
+        self.D2 = cal_D(real_b_hot[0,1,:,:],fake_b_hot[0,1,:,:])
+        self.D3 = cal_D(real_b_hot[0,2,:,:],fake_b_hot[0,2,:,:])
+        print (" D1 =  "  + str(self.D1 ))
+        print (" D2 =  "  + str(self.D2 ))
+        print (" D3 =  "  + str(self.D3 ))
+        vector = [self.L1,self.L2,self.J1, self.J2,self.J3,self.D1,self.D2,self.D3]
+        vector = torch.stack(vector)
+        vector= vector.cpu().detach().numpy()
+        save_dir = "D:/Deep learning/out/1Excel/"
+        self.metrics_saver.append_save(vector,save_dir)
 
     def set_input(self, realA,pathes,exis_v,input_img):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
