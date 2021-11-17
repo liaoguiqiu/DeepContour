@@ -44,18 +44,19 @@ class myDataloader(object):
         #self.talker.writing =2 
         self.talker.save_data(self.com_dir) # save
 
+        root = "D:/Deep learning/dataset/For IVUS/"
 
-        self.dataroot = "../../dataset/For_contour_sheath_train/train/img/"
-        self.signalroot ="../../dataset/For_contour_sheath_train/train/label/"
+        self.dataroot = root + "train/img/"
+        self.signalroot =root + "train/label/"
         if self.OLG_flag == True:
-           self.dataroot = "../dataset/For_contour_sheath_train/train_OLG/img/"
-           self.signalroot ="../dataset/For_contour_sheath_train/train_OLG/label/" 
+           self.dataroot = root + "train_OLG/img/"
+           self.signalroot =root + "train_OLG/label/" 
 
 
         if validation  == True :
             self.OLG_flag = False
-            self.dataroot = "../dataset/For_contour_sheath_train/test/img/"
-            self.signalroot ="../dataset/For_contour_sheath_train/test/label/" 
+            self.dataroot = root + "test/img/"
+            self.signalroot =root + "test/label/" 
         else: 
             self.GT = True  # for  trianing the GT should always be true
         

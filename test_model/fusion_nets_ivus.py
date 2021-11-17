@@ -9,7 +9,7 @@ import torchvision.models
 import numpy as np
 import cv2
 
-Out_c = 3 # depends on the bondaried to be preicted 
+Out_c = 2 # depends on the bondaried to be preicted 
 Input_c = 3  #  the gray is converted into 3 channnels image 
 
 class _2LayerScale1(nn.Module):
