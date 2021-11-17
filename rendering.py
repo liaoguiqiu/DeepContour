@@ -168,21 +168,54 @@ def layers_visualized_OneHot_encodeing(layers,H): # this is for sheath contour s
     #out   =( out  -0.5)/0.5
     out  = out.cuda()
     return out
+def integer2onehot(integer):
+    bz,c_n,H,W = integer.size() 
+    #layers = layers +0.1
+    #layers   =  layers * H
+    #layers = layers.type(torch.IntTensor)
+    #layers = torch.clamp(layers, 0, H-1)
+    # out depth = 3
+    out  = torch.zeros([bz,3, H,W], dtype=torch.float) #  has three channels of output, the none target area is zero 
+    # every layer need to mask the front part :
+    #for i in range(layer_n): 
+     
+         
+    out[:,0,:,:]= integer<0.25 # first chnnel is the backgrond 
+    #out[j,0,layers[j,1,k]:H,k]=1 #  
+
+    out[:,1,:,:]=(integer>0.25)*(integer<0.75) # second channel is the sheath, albels is 1
+
+    out[:,2,: ,:]=integer>0.75 # third  channel is the tisue, albels is 1
+    #out   =( out  -0.5)/0.5
+    out  = out.cuda()
+    return out
+
+
 def onehot2layers(onehot):
     _,H,W = onehot.size()
     layer1  = np.zeros(W)
     layer2  = np.ones(W) * (H-1)
-
     for i in range(W): # search the sheath contour  # second channel is the sheath
         for j in range(H-5):
-            if(onehot[1,j,i]>0.5 and onehot[1,j+2,i ]<0.5 and (onehot[0,j+2,i ]>0.5 or onehot[2,j+2,i ]>0.5 )):
+            if(onehot[1,j,i]>0.5 and onehot[1,j+2,i ]<0.5  ):
                 layer1[i]=j
                 break
     for i in range(W): # search the tissue contour 
         for j in range(H-5):
-            if(onehot[2,j,i ]<0.5 and onehot[2,j+2,i ]>0.5 and (onehot[0, j ,i ]>0.5 or onehot[1,j,i ]>0.5 )):
+            if(onehot[2,j,i ]<0.5 and onehot[2,j+2,i ]>0.5):
                 layer2[i]=j
                 break
+
+    #for i in range(W): # search the sheath contour  # second channel is the sheath
+    #    for j in range(H-5):
+    #        if(onehot[1,j,i]>0.5 and onehot[1,j+2,i ]<0.5 and (onehot[0,j+2,i ]>0.5 or onehot[2,j+2,i ]>0.5 )):
+    #            layer1[i]=j
+    #            break
+    #for i in range(W): # search the tissue contour 
+    #    for j in range(H-5):
+    #        if(onehot[2,j,i ]<0.5 and onehot[2,j+2,i ]>0.5 and (onehot[0, j ,i ]>0.5 or onehot[1,j,i ]>0.5 )):
+    #            layer2[i]=j
+    #            break
 
 
 

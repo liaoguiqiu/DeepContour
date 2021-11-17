@@ -27,9 +27,14 @@ from dataset_ivus  import myDataloader,Batch_size,Resample_size, Path_length
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
-Visdom_flag  = False 
-Display_fig_flag = True
-Continue_flag = False
+# Switch control for the Visdom or Not
+Visdom_flag  = False  # the flag of using the visdom or not
+OLG_flag = False    # flag of training with on line generating or not
+Hybrid_OLG = False  # whether  mix with online generated images and real images for training
+validation_flag = True  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
+Display_fig_flag = True  #  display and save result or not 
+Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler 
+Continue_flag = False  # if not true, it start from scratch again
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
@@ -175,7 +180,10 @@ epoch=0
 #transform = BaseTransform(  Resample_size,(104/256.0, 117/256.0, 123/256.0))
 #transform = BaseTransform(  Resample_size,[104])  #gray scale data
 iteration_num =0
-mydata_loader = myDataloader (Batch_size,Resample_size,Path_length)
+# the first data loader  OLG=OLG_flag depends on this lag for the onlien e generating 
+mydata_loader1 = myDataloader(Batch_size,Resample_size,Path_length,validation = validation_flag,OLG=OLG_flag)
+# the second one will be a offline one for sure 
+mydata_loader2 = myDataloader(Batch_size,Resample_size,Path_length,validation = validation_flag,OLG=False)
 def draw_coordinates_color(img1,vy,color):
         
         if color ==0:
@@ -198,17 +206,29 @@ def draw_coordinates_color(img1,vy,color):
 
 
         return img1
+
+
+switcher = 0
 while(1):
     epoch+= 1
     #almost 900 pictures
     while(1):
         iteration_num +=1
         read_id+=1
-        if (mydata_loader.read_all_flag ==1):
+        if (mydata_loader1.read_all_flag ==1):
             read_id =0
-            mydata_loader.read_all_flag =0
+            mydata_loader1.read_all_flag =0
             break
-
+         #----switch between synthetic data  and  original data 
+        if switcher==0:
+           mydata_loader1 .read_a_batch()
+           mydata_loader =mydata_loader1 
+           if validation_flag == False and Hybrid_OLG == True   :
+                switcher=1
+        else:
+           switcher =0
+           mydata_loader =mydata_loader2 .read_a_batch()
+           mydata_loader =mydata_loader2  
 
         mydata_loader .read_a_batch()
         #change to 3 chanels
@@ -253,9 +273,17 @@ while(1):
         realB =  rendering.layers_visualized_integer_encodeing(labelv,Resample_size)
 
         GANmodel.update_learning_rate()    # update learning rates in the beginning of every epoch.
-        GANmodel.set_input(realA,realB)         # unpack data from dataset and apply preprocessing
-        GANmodel.optimize_parameters()   # calculate loss functions, get gradients, update network weights
+        GANmodel.set_input(realA,realB,labelv)         # unpack data from dataset and apply preprocessing
 
+        if validation_flag == True :
+            GANmodel.forward()
+            GANmodel.error_calculation()
+            D_x =  0
+            G_x =  0
+        else:
+            GANmodel.optimize_parameters()   # calculate loss functions, get gradients, update network weights
+            D_x = GANmodel.loss_D.data.mean()
+            G_x = GANmodel.loss_G.data.mean()
          
         #outputall = netD(inputv)
         #outputall =  outputall[:,:,0,:]
@@ -283,8 +311,7 @@ while(1):
 
         
         #errD_real.backward()
-        D_x = GANmodel.loss_D.data.mean()
-        G_x = GANmodel.loss_G.data.mean()
+        
 
         #D_x1 = errD_real1.data.mean()
         #D_x2 = errD_real2.data.mean()
