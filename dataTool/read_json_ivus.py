@@ -1,5 +1,6 @@
 # Log of modification cre
 # this  is used  to read json files and transfer into a pkl file
+# Guiqiu modify this for spliting the data for train validation
 import json as JSON
 import cv2
 import math
@@ -12,8 +13,8 @@ import pandas as pd
 from collections import OrderedDict
 from generator_contour_ivus import Save_Contour_pkl
 Train_validation_split = True # flag for devide the data 
-Train_validation_devi = 2 # all data are equally devided by thsi number
-Test_fold = 1   # use the 1 st for training, the other for validation 
+Train_validation_devi = 3 # all data are equally devided by thsi number
+Test_fold = 0   # use the 0 st for training, the other for validation 
 class Read_read_check_json_label(object):
     def __init__(self):
         # self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
