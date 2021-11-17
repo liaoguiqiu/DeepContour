@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{96589756-6b6f-4001-9c57-3efe305f57e2}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>train_lumen_sheath_segmentation\contour_sheath_Unet_integer_with_D.py</StartupFile>
+    <StartupFile>dataTool\read_json_ivus.py</StartupFile>
     <SearchPath>dataTool;deploy;model</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>

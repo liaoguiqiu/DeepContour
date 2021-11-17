@@ -11,8 +11,9 @@ import scipy.signal as signal
 import pandas as pd
 from collections import OrderedDict
 from generator_contour_ivus import Save_Contour_pkl
-
-
+Train_validation_split = True # flag for devide the data 
+Train_validation_devi = 2 # all data are equally devided by thsi number
+Test_fold = 1   # use the 1 st for training, the other for validation 
 class Read_read_check_json_label(object):
     def __init__(self):
         # self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
@@ -28,15 +29,27 @@ class Read_read_check_json_label(object):
         self.image_dir = self.database_root + "img/" + sub_folder
         self.json_dir = self.database_root + "label/" + sub_folder
         self.save_dir = self.database_root + "seg label pkl/" + sub_folder
+        self.save_dir_train = self.database_root + "seg label pkl train/" + sub_folder
+        self.save_dir_test = self.database_root + "seg label pkl test/" + sub_folder
+
+
         self.img_num = 0
 
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
+        if not os.path.exists(self.save_dir_train):
+            os.makedirs(self.save_dir_train)
+        if not os.path.exists(self.save_dir_test):
+            os.makedirs(self.save_dir_test)
 
         # self.contours_x = []  # no predefines # predefine there are 4 contours
         # self.contours_y = []  # predefine there are 4 contours
 
         self.saver = Save_Contour_pkl()
+        self.saver_train = Save_Contour_pkl()
+        self.saver_test = Save_Contour_pkl()
+
+
         self.display_flag = True
 
         self.labels_lists = {
@@ -75,7 +88,8 @@ class Read_read_check_json_label(object):
     def check_one_folder(self):
         # check the image type:
         imagelist = os.listdir(self.image_dir)
-        _,b_i  = os.path.splitext(imagelist[0]) # first image of this folder  
+        _,b_i  = os.path.splitext(imagelist[0]) # first image of this folder 
+        within_folder_i = 0 
         for i in os.listdir(self.json_dir):
             # for i in os.listdir("E:\\estimagine\\vs_project\\PythonApplication_data_au\\pic\\"):
             # separate the name of json
@@ -222,10 +236,19 @@ class Read_read_check_json_label(object):
                     self.saver.append_new_name_contour(self.img_num, contours_x, contours_y, contours_exist,
                                                        self.save_dir)
 
+                    if Train_validation_split == True: 
+                       if within_folder_i%Train_validation_devi == Test_fold:
+                           self.saver_test.append_new_name_contour(self.img_num, contours_x, contours_y, contours_exist,
+                                                       self.save_dir_test)
+                       else:
+                           self.saver_train.append_new_name_contour(self.img_num, contours_x, contours_y, contours_exist,
+                                                       self.save_dir_train)
+
+
                     cv2.imshow('Image with highlighted contours', img1)
                     print(str(a))
                     cv2.waitKey(10)
-
+                    within_folder_i +=1 # this index is used to determine the train validation split 
 
 if __name__ == '__main__':
 
