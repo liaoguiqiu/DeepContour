@@ -75,6 +75,8 @@ class Save_Contour_pkl(object):
 
         # save the data
         save_path = dir + "seg label pkl/"
+        save_path = dir 
+
         with open(save_path + 'contours.pkl', 'wb') as f:
             pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
         pass

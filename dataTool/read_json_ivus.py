@@ -21,7 +21,9 @@ class Read_read_check_json_label(object):
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE-center/"
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
         self.database_root = "../../dataset/ivus/"
-        sub_folder = "2_PD8/"
+        self.database_root = "D:/Deep learning/dataset/label data/"
+
+        sub_folder = "1/"
 
         self.image_dir = self.database_root + "img/" + sub_folder
         self.json_dir = self.database_root + "label/" + sub_folder
@@ -71,6 +73,9 @@ class Read_read_check_json_label(object):
         return _img
 
     def check_one_folder(self):
+        # check the image type:
+        imagelist = os.listdir(self.image_dir)
+        _,b_i  = os.path.splitext(imagelist[0]) # first image of this folder  
         for i in os.listdir(self.json_dir):
             # for i in os.listdir("E:\\estimagine\\vs_project\\PythonApplication_data_au\\pic\\"):
             # separate the name of json
@@ -80,7 +85,8 @@ class Read_read_check_json_label(object):
                 # with ZipFile(self.image_dir, 'r') as zipObj:
                 #     listOfFiles = zipObj.namelist()
                 # TODO: Extract image ext automatically
-                img_path = self.image_dir + a + ".tif"
+                #img_path = self.image_dir + a + ".tif"
+                img_path = self.image_dir + a + b_i 
                 img1 = cv2.imread(img_path)
                 if img1 is None:
                     print('No img with path: {0}'.format(img_path))
