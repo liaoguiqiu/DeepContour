@@ -258,6 +258,9 @@ class Pix2LineModel(BaseModel):
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
         # Fake; stop backprop to the generator by detaching fake_B
+        self.set_requires_grad(self.netG, False)       
+        self.optimizer_D.zero_grad()        # set G's gradients to zero
+
         fake_AB = torch.cat((self.real_A, self.fake_B), 1)  # we use conditional GANs; we need to feed both input and output to the discriminator
         pred_fake = self.netD(fake_AB.detach())
         self.loss_D_fake = self.criterionGAN(pred_fake, False)
@@ -284,6 +287,8 @@ class Pix2LineModel(BaseModel):
         # self.set_requires_grad(self.netG.side_branch2.fullout, True)  # D requires no gradients when optimizing G
         # self.set_requires_grad(self.netG.side_branch3.fullout, True)  # D requires no gradients when optimizing G
         # self.set_requires_grad(self.netG.fusion_layer , True)  # D requires no gradients when optimizing G
+        self.set_requires_grad(self.netE, False)  # enable backprop for D
+        
         self.set_requires_grad(self.netG, True)
 
 
@@ -312,6 +317,8 @@ class Pix2LineModel(BaseModel):
         """Calculate GAN and L1 loss for the generator"""
         # First, G(A) should fake the discriminator
         self.optimizer_E.zero_grad()        # set G's gradients to zero
+        self.set_requires_grad(self.netG, False)       
+
         self.set_requires_grad(self.netE, True)       
         # use BEC for the existence vectors
         self.loss=self.criterionMTL_BCE.multi_loss([self.out_exis_v0],self.real_exv)
@@ -383,10 +390,10 @@ class Pix2LineModel(BaseModel):
     def optimize_parameters(self):
         self.forward()                   # compute fake images: G(A) # seperatee the for
         # update D
-        self.set_requires_grad(self.netD, True)  # enable backprop for D
-        self.optimizer_D.zero_grad()     # set D's gradients to zero
-        self.backward_D()                # calculate gradients for D
-        self.optimizer_D.step()          # update D's weights
+        #self.set_requires_grad(self.netD, True)  # enable backprop for D
+        #self.optimizer_D.zero_grad()     # set D's gradients to zero
+        #self.backward_D()                # calculate gradients for D
+        #self.optimizer_D.step()          # update D's weights
         # update G
 
 
@@ -396,7 +403,7 @@ class Pix2LineModel(BaseModel):
         #
         # self.backward_G_3()                   # calculate graidents for G
         self.backward_G()                   # calculate graidents for G
-        self.backward_E()                   # calculate graidents for E
+        #self.backward_E()                   # calculate graidents for E
 
 
         self.displayloss0 = self.loss_G_L0. data.mean()
@@ -404,7 +411,7 @@ class Pix2LineModel(BaseModel):
         self.displayloss2 = self.loss_G_L2. data.mean()
         self.displayloss3 = self.loss_G_L3. data.mean()
 
-        self.displaylossE0 = self.loss_E_L0. data.mean()
+        self.displaylossE0 = self.loss_G_L0. data.mean()
       
         #if self.  bw_cnt %2 ==0:
         #   self.backward_G()                   # calculate graidents for G

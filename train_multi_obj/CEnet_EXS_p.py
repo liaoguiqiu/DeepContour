@@ -349,9 +349,10 @@ while(1): # main infinite loop
         #-------------- A variety of visualization  ------------------#
         
         if validation_flag ==False:
-            D_x = CE_Nets.loss_D.data.mean()
             G_x = CE_Nets.displayloss1 
             G_x_L12= CE_Nets.displayloss2
+            #D_x = CE_Nets.loss_D.data.mean()
+            D_x  = G_x
             #G_x = CE_Nets.loss_G . data.mean() 
             #G_x_L12= CE_Nets.loss_G_L1_2 . data.mean()  
              

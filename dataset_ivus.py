@@ -17,7 +17,7 @@ from basic_operator import Basic_Operator
 from scipy.interpolate import interp1d
 
 seed(1)
-Batch_size = 2
+Batch_size = 1
 Resample_size =256 # the input and label will be resampled 
 Path_length = 256
 Augment_limitation_flag = True
