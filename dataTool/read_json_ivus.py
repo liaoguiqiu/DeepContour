@@ -15,6 +15,7 @@ from generator_contour_ivus import Save_Contour_pkl
 Train_validation_split = True # flag for devide the data 
 Train_validation_devi = 3 # all data are equally devided by thsi number
 Test_fold = 0   # use the 0 st for training, the other for validation 
+Delete_outsider_flag =False
 class Read_read_check_json_label(object):
     def __init__(self):
         # self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
@@ -25,7 +26,7 @@ class Read_read_check_json_label(object):
         self.database_root = "../../dataset/ivus/"
         self.database_root = "D:/Deep learning/dataset/label data/"
 
-        sub_folder = "3/"
+        sub_folder = "phantom1/"
 
         self.image_dir = self.database_root + "img/" + sub_folder
         self.json_dir = self.database_root + "label/" + sub_folder
@@ -139,14 +140,15 @@ class Read_read_check_json_label(object):
 
                         # delete the coordinates outside the image boundaries
                         len_ori, _ = coordinates.shape
-                        target = 0
-                        for j in range(len_ori):
-                            # check the x and y coordinates outside the image boundaries -> delete if out
-                            if (coordinates[target, 0] < 0 or coordinates[target, 0] > (W - 1)) \
-                                    or (coordinates[target, 1] < 0 or coordinates[target, 1] > (H - 1)):
-                                coordinates = np.delete(coordinates, target, axis=0)
-                            else:
-                                target += 1
+                        if Delete_outsider_flag:
+                            target = 0
+                            for j in range(len_ori):
+                                # check the x and y coordinates outside the image boundaries -> delete if out
+                                if (coordinates[target, 0] < 0 or coordinates[target, 0] > (W - 1)) \
+                                        or (coordinates[target, 1] < 0 or coordinates[target, 1] > (H - 1)):
+                                    coordinates = np.delete(coordinates, target, axis=0)
+                                else:
+                                    target += 1
 
                         path_x = coordinates[:, 0]
                         path_y = coordinates[:, 1]
@@ -171,6 +173,7 @@ class Read_read_check_json_label(object):
                         add_3 = np.append(add_3, path_yl[::-1], axis=0)  # cascade
                         s = pd.Series(add_3)
                         path_yl = s.interpolate(method='linear')
+
                         path_yl = path_yl[path_w:2 * path_w].to_numpy()
                         path_xl = np.arange(int(path_x[0]), int(path_x[0]) + path_w)
 
@@ -178,7 +181,7 @@ class Read_read_check_json_label(object):
                             # remember to add resacle later TODO: what is this resacle? ask Guiqiu
                             path_yl = signal.resample(path_yl, W)
                             path_xl = np.arange(0, W)
-
+                        
                         #### Fill OrderedDict for the three vectors depending on the label
                         # Note: Labels with no data (from the self.labels_lists) remain empty
 
@@ -255,3 +258,4 @@ if __name__ == '__main__':
 
     converter = Read_read_check_json_label()
     converter.check_one_folder()  # convert json files into pkl files
+     

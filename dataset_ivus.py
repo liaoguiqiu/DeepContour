@@ -17,12 +17,12 @@ from basic_operator import Basic_Operator
 from scipy.interpolate import interp1d
 
 seed(1)
-Batch_size = 1
+Batch_size = 2
 Resample_size =256 # the input and label will be resampled 
 Path_length = 256
-Augment_limitation_flag = False
+Augment_limitation_flag = True
 Augment_add_lines = False
-Clip_mat_flag = False
+Clip_mat_flag = True
 random_clip_flag = False
 Random_rotate = True
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
@@ -66,7 +66,7 @@ class myDataloader(object):
 
 
 
-        self.noisyflag = False
+        self.noisyflag = True
         self.read_all_flag=0
         self.read_record =0
         self.folder_pointer = 0
@@ -163,7 +163,7 @@ class myDataloader(object):
 
         return aug_gray
     def nonelinear_scale_augmentation(self,orig_gray) :
-        gamma  = np.random.random_sample()*0.6 +0.4
+        gamma  = np.random.random_sample()*0.5 +0.6
 
         mask = (orig_gray >50)* gamma
         mask2=  (orig_gray <50) *1
@@ -382,9 +382,15 @@ class myDataloader(object):
                 if self.GT == True:
                     Path_Index = Path_Index_list.index(Image_ID)  
                 #for layers train alll  the x and y are list
-                this_pathx = np.array(list(this_signal.contoursx[Path_Index].values())[0:self.obj_num])
-                this_pathy = np.array(list(this_signal.contoursy[Path_Index].values())[0:self.obj_num])
-                this_exist = np.array(list(this_signal.contours_exist[Path_Index].values())[0:self.obj_num])
+                if  self.all_dir_list[self.folder_pointer] == "1s":
+                    this_pathx = this_signal.contoursx[Path_Index]
+                    this_pathy = this_signal.contoursy[Path_Index]
+                    this_exist = this_pathy
+                else:
+                    this_pathx = np.array(list(this_signal.contoursx[Path_Index].values())[0:self.obj_num])
+                    this_pathy = np.array(list(this_signal.contoursy[Path_Index].values())[0:self.obj_num])
+                    this_exist = np.array(list(this_signal.contours_exist[Path_Index].values())[0:self.obj_num])
+               
                 #path2 =  signal.resample(this_path, self.path_size)#resample the path
                 # concreate the image batch and path
                 this_gray  =   cv2.cvtColor(this_img, cv2.COLOR_BGR2GRAY)
@@ -413,10 +419,10 @@ class myDataloader(object):
                     img_piece = self.nonelinear_scale_augmentation(img_piece)
 
                     #img_piece = self.gray_scale_augmentation (img_piece)
-                    #img_piece= Basic_Operator.add_speckle_or_not(img_piece)
-                    #img_piece= Basic_Operator.add_noise_or_not(img_piece)
+                    img_piece= Basic_Operator.add_speckle_or_not(img_piece)
+                    img_piece= Basic_Operator.add_noise_or_not(img_piece)
                     img_piece = Basic_Operator.add_gap_or_not(img_piece)
-                    img_piece  = self . noisy( "gauss_noise" ,  img_piece)
+                    #img_piece  = self . noisy( "gauss_noise" ,  img_piece)
                     #img_piece  = self . noisy( "s&p" ,  img_piece )
 
                     #img_piece  = self . noisy( "speckle" ,  img_piece )

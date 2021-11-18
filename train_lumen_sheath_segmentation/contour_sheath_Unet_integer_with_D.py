@@ -18,6 +18,7 @@ import cv2
 import numpy
 from image_trans import BaseTransform  
 from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate 
+from dataTool.generator_contour_ivus import Generator_Contour_sheath
 import rendering
 
 
@@ -31,10 +32,10 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 Visdom_flag  = False  # the flag of using the visdom or not
 OLG_flag = False    # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
-validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
+validation_flag = True  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not 
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler 
-Continue_flag = False  # if not true, it start from scratch again
+Continue_flag = True  # if not true, it start from scratch again
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
     plotter = VisdomLinePlotter(env_name='path finding training Plots')

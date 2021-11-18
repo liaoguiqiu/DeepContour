@@ -74,7 +74,6 @@ class Save_Contour_pkl(object):
         # TODO: check if this function is used anywhere else other than read_json
 
         # save the data
-        save_path = dir + "seg label pkl/"
         save_path = dir 
 
         with open(save_path + 'contours.pkl', 'wb') as f:
@@ -98,7 +97,7 @@ class Generator_Contour_sheath(object):
         data_root = "../../dataset/ivus/"
         data_root = "D:/Deep learning/dataset/label data/"
         self.image_dir = data_root + "img/"
-        self.pkl_dir = data_root +"seg label pkl/"
+        self.pkl_dir = data_root +"seg label pkl train/"
         self.save_image_dir =data_root + "img_generate/"  # this dir just save all together
         self.save_image_dir_devi = data_root  + "img_genetate_devi/"  # this dir devide the generated images
         self.save_pkl_dir = data_root   + "pkl_generate/"
@@ -180,7 +179,7 @@ class Generator_Contour_sheath(object):
         file_len = len(data.img_num)
         for num in range(file_len):
             name = data.img_num[num]
-            img_path = self.save_image_dir + str(name) + ".tif"
+            img_path = self.save_image_dir + str(name) + image_type
             img_or = cv2.imread(img_path)
             img1 = cv2.cvtColor(img_or, cv2.COLOR_BGR2GRAY)
             H, W = img1.shape
@@ -231,7 +230,7 @@ class Generator_Contour_sheath(object):
 
             for num in range(file_len):
                 name = self.origin_data.img_num[num]
-                img_path = self.image_dir + subfold + '/' + name + ".tif"
+                img_path = self.image_dir + subfold + '/' + name + image_type
                 img_or = cv2.imread(img_path)
                 img1 = cv2.cvtColor(img_or, cv2.COLOR_BGR2GRAY)
                 H, W = img1.shape
@@ -392,7 +391,7 @@ class Generator_Contour_sheath(object):
             # number_i +=1
             file_len = len(self.origin_data.img_num)
 
-            repeat = int(150 / file_len)  # repeat to balance
+            repeat = int(2000 / file_len)  # repeat to balance
             if repeat < 1:
                 repeat = 1
 
@@ -402,7 +401,7 @@ class Generator_Contour_sheath(object):
 
                 for num in range(file_len):
                     name = self.origin_data.img_num[num]
-                    #img_path = self.image_dir + subfold + '/' + name + ".tif"
+                    #img_path = self.image_dir + subfold + '/' + name + image_type
                     img_path = self.image_dir + subfold + '/' + name + image_type
 
                     img_or = cv2.imread(img_path)
@@ -411,8 +410,10 @@ class Generator_Contour_sheath(object):
                     # just use the first contour
                     # contour0x  = self.origin_data.contoursx[num][0]
                     # contour0y  = self.origin_data.contoursy[num][0]
-                    contourx = self.origin_data.contoursx[num]
-                    contoury = self.origin_data.contoursy[num]
+               
+                    
+                    contourx = np.array(list(self.origin_data.contoursx[num].values())[0:2])
+                    contoury = np.array(list(self.origin_data.contoursy[num].values())[0:2])
 
                     # draw this original contour 
                     display = Basic_Operator.draw_coordinates_color(img_or, contourx[0], contoury[0],
@@ -483,8 +484,8 @@ class Generator_Contour_sheath(object):
                     print(str(name))
                     self.append_new_name_contour(img_id, new_cx, new_cy, self.save_pkl_dir)
                     # save them altogether 
-                    cv2.imwrite(self.save_image_dir + str(img_id) + ".tif", combin)
-                    cv2.imwrite(self.save_image_dir_devi + subfold + '/' + str(img_id_devi) + ".tif",
+                    cv2.imwrite(self.save_image_dir + str(img_id) + image_type, combin)
+                    cv2.imwrite(self.save_image_dir_devi + subfold + '/' + str(img_id_devi) + image_type,
                                 combin)  # save them separately
 
                     # save them separetly
