@@ -67,6 +67,9 @@ class myDataloader(object):
 
 
         self.noisyflag = True
+        if validation == True:
+            self.noisyflag = False
+            
         self.read_all_flag=0
         self.read_record =0
         self.folder_pointer = 0
@@ -419,9 +422,9 @@ class myDataloader(object):
                     img_piece = self.nonelinear_scale_augmentation(img_piece)
 
                     #img_piece = self.gray_scale_augmentation (img_piece)
-                    img_piece= Basic_Operator.add_speckle_or_not(img_piece)
+                    #img_piece= Basic_Operator.add_speckle_or_not(img_piece)
                     img_piece= Basic_Operator.add_noise_or_not(img_piece)
-                    img_piece = Basic_Operator.add_gap_or_not(img_piece)
+                    #img_piece = Basic_Operator.add_gap_or_not(img_piece)
                     #img_piece  = self . noisy( "gauss_noise" ,  img_piece)
                     #img_piece  = self . noisy( "s&p" ,  img_piece )
 

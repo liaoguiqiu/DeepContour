@@ -177,18 +177,18 @@ class Pix2LineModel(BaseModel):
         fake_b_hot = self.fake_B_1_hot 
         # this is the format of hot map
         #out  = torch.zeros([bz,3, H,W], dtype=torch.float)
-        self.J1 = cal_J(real_b_hot[0,0,:,:],fake_b_hot[0,0,:,:])
-        self.J2 = cal_J(real_b_hot[0,1,:,:],fake_b_hot[0,1,:,:])
-        self.J3 = cal_J(real_b_hot[0,2,:,:],fake_b_hot[0,2,:,:])
+        self.J1 = cal_J(real_b_hot[0,0,:,40:Resample_size-40],fake_b_hot[0,0,:,40:Resample_size-40])
+        self.J2 = cal_J(real_b_hot[0,1,:,40:Resample_size-40],fake_b_hot[0,1,:,40:Resample_size-40])
+        self.J3 = cal_J(real_b_hot[0,2,:,40:Resample_size-40],fake_b_hot[0,2,:,40:Resample_size-40])
         print (" J1 =  "  + str(self.J1 ))
         print (" J2 =  "  + str(self.J2 ))
         print (" J3 =  "  + str(self.J3 ))
 
 
 
-        self.D1 = cal_D(real_b_hot[0,0,:,:],fake_b_hot[0,0,:,:])
-        self.D2 = cal_D(real_b_hot[0,1,:,:],fake_b_hot[0,1,:,:])
-        self.D3 = cal_D(real_b_hot[0,2,:,:],fake_b_hot[0,2,:,:])
+        self.D1 = cal_D(real_b_hot[0,0,:,40:Resample_size-40],fake_b_hot[0,0,:,40:Resample_size-40])
+        self.D2 = cal_D(real_b_hot[0,1,:,40:Resample_size-40],fake_b_hot[0,1,:,40:Resample_size-40])
+        self.D3 = cal_D(real_b_hot[0,2,:,40:Resample_size-40],fake_b_hot[0,2,:,40:Resample_size-40])
         print (" D1 =  "  + str(self.D1 ))
         print (" D2 =  "  + str(self.D2 ))
         print (" D3 =  "  + str(self.D3 ))
@@ -251,8 +251,8 @@ class Pix2LineModel(BaseModel):
         self.out_exis_v0 =self.netE.fuse_forward(f_e1,f_e2,f_e3)
         self.out_exis_vs = [self.out_exis_v0,self.out_exis_v1,self.out_exis_v2,self.out_exis_v3]
 
-        self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes3,Resample_size)
-        self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing(self.out_pathes3,Resample_size)
+        self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes0,Resample_size)
+        self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing(self.out_pathes0,Resample_size)
         #self.fake_B = self.netG(self.real_A)  # G(A)
 
     def backward_D(self):

@@ -6,7 +6,7 @@ import rendering
 from dataset_ivus import Resample_size 
 import numpy as np
 from databufferExcel import EXCEL_saver
-Convert_Unet_to_layer =False # the flag for convert the unet to laer
+Convert_Unet_to_layer =True # the flag for convert the unet to laer
 class Pix2PixModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
 
@@ -123,29 +123,30 @@ class Pix2PixModel(BaseModel):
         fake_b_hot = rendering.integer2onehot  ( self.fake_B) 
         # this is the format of hot map
         #out  = torch.zeros([bz,3, H,W], dtype=torch.float)
-        self.J1 = cal_J(real_b_hot[0,0,:,:],fake_b_hot[0,0,:,:])
-        self.J2 = cal_J(real_b_hot[0,1,:,:],fake_b_hot[0,1,:,:])
-        self.J3 = cal_J(real_b_hot[0,2,:,:],fake_b_hot[0,2,:,:])
+        cutedge = 30
+        self.J1 = cal_J(real_b_hot[0,0,:,cutedge:Resample_size-cutedge],fake_b_hot[0,0,:,cutedge:Resample_size-cutedge])
+        self.J2 = cal_J(real_b_hot[0,1,:,cutedge:Resample_size-cutedge],fake_b_hot[0,1,:,cutedge:Resample_size-cutedge])
+        self.J3 = cal_J(real_b_hot[0,2,:,cutedge:Resample_size-cutedge],fake_b_hot[0,2,:,cutedge:Resample_size-cutedge])
         print (" J1 =  "  + str(self.J1 ))
         print (" J2 =  "  + str(self.J2 ))
         print (" J3 =  "  + str(self.J3 ))
 
 
 
-        self.D1 = cal_D(real_b_hot[0,0,:,:],fake_b_hot[0,0,:,:])
-        self.D2 = cal_D(real_b_hot[0,1,:,:],fake_b_hot[0,1,:,:])
-        self.D3 = cal_D(real_b_hot[0,2,:,:],fake_b_hot[0,2,:,:])
+        self.D1 = cal_D(real_b_hot[0,0,:,cutedge:Resample_size-cutedge],fake_b_hot[0,0,:,cutedge:Resample_size-cutedge])
+        self.D2 = cal_D(real_b_hot[0,1,:,cutedge:Resample_size-cutedge],fake_b_hot[0,1,:,cutedge:Resample_size-cutedge])
+        self.D3 = cal_D(real_b_hot[0,2,:,cutedge:Resample_size-cutedge],fake_b_hot[0,2,:,cutedge:Resample_size-cutedge])
         print (" D1 =  "  + str(self.D1 ))
         print (" D2 =  "  + str(self.D2 ))
         print (" D3 =  "  + str(self.D3 ))
         if Convert_Unet_to_layer == True : 
-            pth1, pth2= rendering.onehot2layers( fake_b_hot[0,:,:,:])
+            pth1, pth2= rendering.onehot2layers( fake_b_hot[0,:,:,cutedge:Resample_size-cutedge])
             pth1 = torch.from_numpy(pth1 )
             pth2= torch.from_numpy(pth2 )
             pth1 =  pth1.cuda()
             pth2 = pth2.cuda()
-            self.L1 = cal_L(pth1,self.real_pathes[0,0,:]* Resample_size) 
-            self.L2 = cal_L(pth2,self.real_pathes[0,1,:]* Resample_size) 
+            self.L1 = cal_L(pth1/ Resample_size,self.real_pathes[0,0,cutedge:Resample_size-cutedge]) *  Resample_size
+            self.L2 = cal_L(pth2/  Resample_size,self.real_pathes[0,1,cutedge:Resample_size-cutedge]) * Resample_size
 
             print (" L1 =  "  + str(self.L1))
             print (" L2 =  "  + str(self.L2))

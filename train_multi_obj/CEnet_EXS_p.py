@@ -240,9 +240,9 @@ CE_Nets.netE.apply(weights_init)
 
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
-    CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_1.pth'))
-    CE_Nets.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_1.pth'))
-    CE_Nets.netE.load_state_dict(torch.load(pth_save_dir+'cGANE_epoch_1.pth'))
+    CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
+    CE_Nets.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_5.pth'))
+    CE_Nets.netE.load_state_dict(torch.load(pth_save_dir+'cGANE_epoch_5.pth'))
     #CE_Nets.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
 
 print(CE_Nets.netD)
