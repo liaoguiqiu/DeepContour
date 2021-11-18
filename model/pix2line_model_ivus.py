@@ -300,16 +300,18 @@ class Pix2LineModel(BaseModel):
         #self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
 
         #LGQ special fusion loss
-        self.loss=self.criterionMTL.multi_loss([self.out_pathes0],self.real_pathes)
+        #self.loss=self.criterionMTL.multi_loss([self.out_pathes0],self.real_pathes)
+        self.loss=self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
+
 
         #self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] + 0.1*loss[2] + 0.2*loss[3])*self.opt.lambda_L1
         #self.loss_G_L1 =( 1.0*loss[0]  + 0.02*loss[1] + 0.02*loss[2]+ 0.02*loss[3]+ 0.02*loss[4]+ 0.02*loss[5])*self.opt.lambda_L1
         #self.loss_G_L1_2 = 0.5*loss[0] 
         #self.loss_G_L1 =( 1.0*loss[0]  +   0.01*loss[1] + 0.01*loss[2] +0.01*loss[3]  )*self.opt.lambda_L1
         # self.loss_G_L0 =( self.loss[0]    )*self.opt.lambda_L1
-        self.loss_G_L0 = (self.loss[0])
+        #self.loss_G_L0 = (self.loss[0])
         # self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
-        self.loss_G =   self.loss_G_L0
+        self.loss_G =   ( 1.0*self.loss[0]  + 0.5*self.loss[1] + 0.1*self.loss[2] + 0.1*self.loss[3])
 
         self.loss_G.backward(retain_graph=True)
         #self.optimizer_G.step()             # udpate G's weights
@@ -407,12 +409,12 @@ class Pix2LineModel(BaseModel):
         #self.backward_E()                   # calculate graidents for E
 
 
-        self.displayloss0 = self.loss_G_L0. data.mean()
-        self.displayloss1 = self.loss_G_L1. data.mean()
-        self.displayloss2 = self.loss_G_L2. data.mean()
-        self.displayloss3 = self.loss_G_L3. data.mean()
+        self.displayloss0 = self.loss_G. data.mean()
+        self.displayloss1 = self.loss_G. data.mean()
+        self.displayloss2 = self.loss_G. data.mean()
+        self.displayloss3 = self.loss_G. data.mean()
 
-        self.displaylossE0 = self.loss_G_L0. data.mean()
+        self.displaylossE0 = self.loss_G. data.mean()
       
         #if self.  bw_cnt %2 ==0:
         #   self.backward_G()                   # calculate graidents for G
