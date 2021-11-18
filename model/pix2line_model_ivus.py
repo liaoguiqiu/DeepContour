@@ -166,8 +166,9 @@ class Pix2LineModel(BaseModel):
         #loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
         #self.error = 1.0*loss[0] 
         #out_pathes[fusion_predcition][batch 0, contour index,:]
-        self.L1 = cal_L(self.out_pathes[0][0,0,:],self.real_pathes[0,0,:]) * Resample_size
-        self.L2 = cal_L(self.out_pathes[0][0,1,:],self.real_pathes[0,1,:]) * Resample_size
+        cutedge = 30
+        self.L1 = cal_L(self.out_pathes[0][0,0,cutedge:Resample_size-cutedge],self.real_pathes[0,0,cutedge:Resample_size-cutedge]) * Resample_size
+        self.L2 = cal_L(self.out_pathes[0][0,1,cutedge:Resample_size-cutedge],self.real_pathes[0,1,cutedge:Resample_size-cutedge]) * Resample_size
 
         print (" L1 =  "  + str(self.L1))
         print (" L2 =  "  + str(self.L2))
@@ -177,18 +178,18 @@ class Pix2LineModel(BaseModel):
         fake_b_hot = self.fake_B_1_hot 
         # this is the format of hot map
         #out  = torch.zeros([bz,3, H,W], dtype=torch.float)
-        self.J1 = cal_J(real_b_hot[0,0,:,40:Resample_size-40],fake_b_hot[0,0,:,40:Resample_size-40])
-        self.J2 = cal_J(real_b_hot[0,1,:,40:Resample_size-40],fake_b_hot[0,1,:,40:Resample_size-40])
-        self.J3 = cal_J(real_b_hot[0,2,:,40:Resample_size-40],fake_b_hot[0,2,:,40:Resample_size-40])
+        self.J1 = cal_J(real_b_hot[0,0,:,cutedge:Resample_size-cutedge],fake_b_hot[0,0,:,cutedge:Resample_size-cutedge])
+        self.J2 = cal_J(real_b_hot[0,1,:,cutedge:Resample_size-cutedge],fake_b_hot[0,1,:,cutedge:Resample_size-cutedge])
+        self.J3 = cal_J(real_b_hot[0,2,:,cutedge:Resample_size-cutedge],fake_b_hot[0,2,:,cutedge:Resample_size-cutedge])
         print (" J1 =  "  + str(self.J1 ))
         print (" J2 =  "  + str(self.J2 ))
         print (" J3 =  "  + str(self.J3 ))
 
 
 
-        self.D1 = cal_D(real_b_hot[0,0,:,40:Resample_size-40],fake_b_hot[0,0,:,40:Resample_size-40])
-        self.D2 = cal_D(real_b_hot[0,1,:,40:Resample_size-40],fake_b_hot[0,1,:,40:Resample_size-40])
-        self.D3 = cal_D(real_b_hot[0,2,:,40:Resample_size-40],fake_b_hot[0,2,:,40:Resample_size-40])
+        self.D1 = cal_D(real_b_hot[0,0,:,cutedge:Resample_size-cutedge],fake_b_hot[0,0,:,cutedge:Resample_size-cutedge])
+        self.D2 = cal_D(real_b_hot[0,1,:,cutedge:Resample_size-cutedge],fake_b_hot[0,1,:,cutedge:Resample_size-cutedge])
+        self.D3 = cal_D(real_b_hot[0,2,:,cutedge:Resample_size-cutedge],fake_b_hot[0,2,:,cutedge:Resample_size-cutedge])
         print (" D1 =  "  + str(self.D1 ))
         print (" D2 =  "  + str(self.D2 ))
         print (" D3 =  "  + str(self.D3 ))
