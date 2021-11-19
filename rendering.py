@@ -180,12 +180,12 @@ def integer2onehot(integer):
     #for i in range(layer_n): 
      
          
-    out[:,0,:,:]= integer<0.25 # first chnnel is the backgrond 
+    out[:,0,:,:]= integer[:,0,:,:]<0.25 # first chnnel is the backgrond 
     #out[j,0,layers[j,1,k]:H,k]=1 #  
 
-    out[:,1,:,:]=(integer>0.25)*(integer<0.75) # second channel is the sheath, albels is 1
+    out[:,1,:,:]=(integer[:,0,:,:]>0.25)*(integer[:,0,:,:]<0.75) # second channel is the sheath, albels is 1
 
-    out[:,2,: ,:]=integer>0.75 # third  channel is the tisue, albels is 1
+    out[:,2,: ,:]=integer[:,0,:,:]>0.75 # third  channel is the tisue, albels is 1
     #out   =( out  -0.5)/0.5
     out  = out.cuda()
     return out

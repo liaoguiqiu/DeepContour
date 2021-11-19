@@ -17,7 +17,7 @@ from basic_operator import Basic_Operator
 from scipy.interpolate import interp1d
 
 seed(1)
-Batch_size = 4
+Batch_size = 1
 Resample_size =256 # the input and label will be resampled 
 Path_length = 256
 Augment_limitation_flag = True
@@ -71,6 +71,7 @@ class myDataloader(object):
             self.noisyflag = False
             
         self.read_all_flag=0
+        self.read_all_flag2=0
         self.read_record =0
         self.folder_pointer = 0
         self.batch_size  = batch_size
@@ -496,6 +497,7 @@ class myDataloader(object):
                     self.folder_pointer+=1
                     if (self.folder_pointer>= self.folder_num):
                         self.folder_pointer =0
+                        self.read_all_flag2 = 1
                     pass
             #self.read_record=i # after reading , remember to  increase it 
             

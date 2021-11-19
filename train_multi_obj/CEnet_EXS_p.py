@@ -43,6 +43,8 @@ if Visdom_flag == True:
 
 # pth_save_dir = "C:/Workdir/Develop/atlas_collab/out/sheathCGAN_coordinates3/"
 pth_save_dir = "../../out/sheathCGAN_coordinates3/"
+backup_dir = "../../out/backup/"
+
 #pth_save_dir = "../out/deep_layers/"
 
 if not os.path.exists(pth_save_dir):
@@ -240,9 +242,9 @@ CE_Nets.netE.apply(weights_init)
 
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
-    CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
-    CE_Nets.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_5.pth'))
-    CE_Nets.netE.load_state_dict(torch.load(pth_save_dir+'cGANE_epoch_5.pth'))
+    CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_1.pth'))
+    CE_Nets.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_1.pth'))
+    CE_Nets.netE.load_state_dict(torch.load(pth_save_dir+'cGANE_epoch_1.pth'))
     #CE_Nets.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
 
 print(CE_Nets.netD)
@@ -277,6 +279,9 @@ switcher =0 # this determines to use only one data loader or not (if not, synthe
 
 while(1): # main infinite loop 
     epoch+= 1
+    if mydata_loader1.read_all_flag2 == 1 and validation_flag ==True:
+        break
+
     while(1): # loop for going through data set 
         #-------------- load data and convert to GPU tensor format------------------#
         iteration_num +=1

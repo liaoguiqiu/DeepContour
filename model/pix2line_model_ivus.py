@@ -311,7 +311,7 @@ class Pix2LineModel(BaseModel):
         # self.loss_G_L0 =( self.loss[0]    )*self.opt.lambda_L1
         #self.loss_G_L0 = (self.loss[0])
         # self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
-        self.loss_G =   ( 1.0*self.loss[0]  + 0.5*self.loss[1] + 0.1*self.loss[2] + 0.1*self.loss[3])
+        self.loss_G =   ( 1.0*self.loss[0]  + 0.1*self.loss[1] + 0.01*self.loss[2] + 0.01*self.loss[3])
 
         self.loss_G.backward(retain_graph=True)
         #self.optimizer_G.step()             # udpate G's weights

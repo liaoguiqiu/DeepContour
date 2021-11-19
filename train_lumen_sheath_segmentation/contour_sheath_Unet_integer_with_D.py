@@ -212,6 +212,8 @@ def draw_coordinates_color(img1,vy,color):
 switcher = 0
 while(1):
     epoch+= 1
+    if mydata_loader1.read_all_flag2 == 1 and validation_flag ==True:
+        break
     #almost 900 pictures
     while(1):
         iteration_num +=1
@@ -231,7 +233,6 @@ while(1):
            mydata_loader =mydata_loader2 .read_a_batch()
            mydata_loader =mydata_loader2  
 
-        mydata_loader .read_a_batch()
         #change to 3 chanels
         ini_input = mydata_loader.input_image
         real =  torch.from_numpy(numpy.float32(ini_input)) 
@@ -387,7 +388,7 @@ while(1):
             cv2.imshow('real',show5.astype(numpy.uint8)) 
 
             infinite_save_id += 1
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if cv2.waitKey(10) & 0xFF == ord('q'):
               break
     # do checkpointing
     #torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch))

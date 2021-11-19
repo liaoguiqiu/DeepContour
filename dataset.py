@@ -11,7 +11,7 @@ from random import random
 import pickle
 
 seed(1)
-Batch_size = 2
+Batch_size = 4
 Resample_size =300
 Path_length = 300
 Augment_limitation_flag = False
