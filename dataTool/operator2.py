@@ -384,7 +384,7 @@ class Basic_Operator2:
         r_vector   = np.random.sample(20)*50
         r_vector=signal.resample(r_vector, leny)
         r_vector = gaussian_filter1d (r_vector ,3)
-        shift = np.random.random_sample()*H/4 - H/2
+        shift = np.random.random_sample()*H/2 - H/4
         newy = y +  mask*(r_vector+ shift)
          
         newx = x
