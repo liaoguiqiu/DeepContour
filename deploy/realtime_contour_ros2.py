@@ -6,6 +6,8 @@ from std_msgs.msg import String
 from sensor_msgs.msg import Image # Image is the message type
 from std_msgs.msg import Float64
 from cv_bridge import CvBridge # Package to convert between ROS and OpenCV Images
+from rospy_tutorials.msg import Floats
+from rospy.numpy_msg import numpy_msg
 
 import cv2
 import numpy as np
@@ -27,7 +29,7 @@ matplotlib.use('TkAgg')
 rospy.init_node('OCT', anonymous=True)
 # pub = rospy.Publisher('OCT_img', String, queue_size=10)
 pub = rospy.Publisher("/OCT_frames_gui", Image, queue_size=10) # the publisher for hte image
-pub_dis = rospy.Publisher("/OCT_dis", Float64, queue_size=10) # the ublisher for thre ssidtance
+pub_dis = rospy.Publisher("/OCT_dis", numpy_msg(Floats), queue_size=10) # the ublisher for thre ssidtance
 
 def talker():
     pub = rospy.Publisher('chatter', String, queue_size=10)
@@ -46,8 +48,10 @@ def img_publisher(current_frame_thr,y1,y2):
     y = y2- y1
     min_idex = np.argmin(y)
     min_dis  = y[min_idex]
-    msg = Float64()
-    msg.data = min_dis
+    # msg = Floats()
+    thres = min_dis+3
+    contact = sum(y<5)     # the size of the contact region
+    msg   = np.array([min_dis,contact] ) .astype("float32")
     pub_dis.publish(msg)
     # hello_str = "hello world %s" % rospy.get_time()
     # rospy.loginfo(hello_str)
