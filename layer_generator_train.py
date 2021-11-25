@@ -5,16 +5,18 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torch.autograd import Variable
+import gan_body
 import layer_body
 import layer_generator_body
 
 import arg_parse
+import imagenet
 from analy import MY_ANALYSIS
 from analy import Save_signal_enum
 import cv2
 import numpy
 from image_trans import BaseTransform  
-from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate  
+from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers
 
 
 import os
@@ -26,7 +28,7 @@ Display_fig_flag = True
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
-Continue_flag = False 
+
 
 pth_save_dir = "../out/deep_layers/"
  
@@ -118,7 +120,7 @@ netG = layer_generator_body._generator__()
 netD.apply(weights_init)
 netG.apply(weights_init)
 
-if  Continue_flag == True : 
+if opt.netD != '':
     netD.load_state_dict(torch.load(opt.netD))
     netG.load_state_dict(torch.load('../out/deep_layers/netG_epoch_5.pth'))
 

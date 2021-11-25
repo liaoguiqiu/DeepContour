@@ -12,8 +12,8 @@ from dataset import Resample_size
 
 parser = argparse.ArgumentParser()
 # parser.add_argument('--dataset', required=True, help='cifar10 | lsun | imagenet | folder | lfw | fake')
-#parser.add_argument('--dataset', default='lsun', help='cifar10 | lsun | imagenet | folder | lfw | fake')
-#parser.add_argument('--dataroot', default='/media/annusha/BigPapa/Study/DL/lsun/data', help='path to dataset')
+parser.add_argument('--dataset', default='lsun', help='cifar10 | lsun | imagenet | folder | lfw | fake')
+parser.add_argument('--dataroot', default='/media/annusha/BigPapa/Study/DL/lsun/data', help='path to dataset')
 parser.add_argument('--workers', type=int, help='number of data loading workers', default=0)
 parser.add_argument('--batchSize', type=int, default=1, help='input batch size')
 parser.add_argument('--imageSize', type=int, default=Resample_size, help='the height / width of the input image to network')

@@ -1,22 +1,18 @@
 # this scrip is written for the dots video
 
 import cv2
-import math
 import numpy as np
 import os
-import random 
-from zipfile import ZipFile
 import scipy.signal as signal
-import pandas as pd
-from DeepAutoJson import Auto_json_label
+from deploy.DeepAutoJson import Auto_json_label
 from dataTool.matlab import Save_Signal_matlab
 import matplotlib
 matplotlib.use('TkAgg')
 from scipy.ndimage import gaussian_filter1d
 
-import matplotlib.pyplot as plt
+from dataset_sheath import Resample_size
 
-from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
+
 def draw_coordinates_color(img1,vy,color):
         
         if color ==0:

@@ -1,30 +1,57 @@
-# DeepContour
+# Deep Convolution Generative Adversarial Networks
+
+Implementation  on pytorch.
+
+code based on https://github.com/soumith/dcgan.torch and https://github.com/pytorch/examples/tree/master/dcgan
+
+original article: https://arxiv.org/abs/1511.06434
+
+used datasets: imagenet(32x32), lsun(conference_room), food-101
+
+required nvidia graphic card
+
+### Usage
+```
+as default behaviour - training on lsun dataset
+usage: main.py [--dataset DATASET] [--dataroot DATAROOT] [--workers WORKERS]
+               [--batchSize BATCHSIZE] [--imageSize IMAGESIZE] [--nz NZ]
+               [--ngf NGF] [--ndf NDF] [--niter NITER] [--lr LR]
+               [--beta1 BETA1] [--netG NETG] [--netD NETD]
+               [--outf OUTPUTFOLD] [--manualSeed SEED] [--train_svm]
+
+arguments:
+  --dataset DATASET     cifar10 | lsun | imagenet | folder | lfw
+  --dataroot DATAROOT   path to dataset
+  --workers WORKERS     number of data loading workers
+  --batchSize BATCHSIZE
+                        input batch size
+  --imageSize IMAGESIZE
+                        the height / width of the input image to network
+  --nz NZ               size of the latent z vector
+  --ngf NGF
+  --ndf NDF
+  --niter NITER         number of epochs to train for
+  --lr LR               learning rate, default=0.0002
+  --beta1 BETA1         beta1 for adam. default=0.5
+  --netG NETG           path to netG (to continue training)
+  --netD NETD           path to netD (to continue training)
+  --outf OUTPUTFOLD     folder to output images and model checkpoints
+  --manualSeed SEED     manual seed
+  --train_svm           enable train svm using saved features
+  
+```
+
+* *main.py* - train dcgan
+
+* *arithmetic.py* - create some new images applying "image arithmetic"
+
+* *classifier_svm.py* - without flag --train_svm just create and store features, with - download features and train svm. Metrics: accuracy for the whole dataset, precision and recall for each class.
+
+* *extract_imagenet.py* - create pictures from pickle
+
+* *get_samples.py* - use pretrained generator to get samples from noise
 
 
-Mirrored from https://github.com/liaoguiqiu/DeepContour
+![alt text](https://github.com/Annusha/dcgan/blob/master/images/means.png)
 
-
-Coordinates encoding for the lumen segmentation of OCT and IVUS
-
-
-In data toolfolder (most of these scripts are merged from the segmentation project : https://github.com/liaoguiqiu/OCT_segmentation)
-
-
-read_json.py: transfer one folder of separeted json file into one compact pkl
-
-
-generator_contour_sheath.py : generated ramdom image with folder of image and the corresponding pkl; it also embeds some scripts to check the stastics of the distribution of the labeled contour 
-
-
-tSNE.py: which is used to see the data distribution with the reduced dimention (current this file does not consider about the label)
-
-
-
-
-In deploy folder (this is normally used after the nets are trained): 
-
-most of these scripts are used to predict contour, specifically:
- 
-DeepAutoJson.py is used to generate separated json files from the prediction result of the network.
-
-And it also has a function for downsampling the dataset for trianing and testing.
+![alt text](https://github.com/Annusha/dcgan/blob/master/images/A_B.png)

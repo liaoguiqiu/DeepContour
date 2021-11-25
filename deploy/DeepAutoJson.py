@@ -9,7 +9,7 @@ import os
 import random 
 from zipfile import ZipFile
 import scipy.signal as signal
-import pandas as pd
+# import pandas as pd
 from generator_contour import Save_Contour_pkl
 #from seg_one_1 import Seg_One_1
 import codecs
@@ -28,7 +28,7 @@ import arg_parse
 import cv2
 import numpy
 import rendering
-from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
+from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate,Generator_Contour_layers,Generator_Contour_sheath
 from time import time
 import os
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
@@ -104,34 +104,28 @@ class  Auto_json_label(object):
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE-center/"
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
         # check the cuda device 
-        pth_save_dir = "../out/sheathCGAN_coordinates3/"
+        pth_save_dir = "/home/icube/OCT_projects/Contour_project/out/sheathCGAN_coordinates3/"
         # the portion of attated image to 2     sides
         self.attatch_rate  = 0.2 
 
-        jason_tmp_dir  =  "D:/Deep learning/dataset/original/phantom/1/label/0.json"
-        # read th jso fie in hte start :
-        with open(jason_tmp_dir) as dir:
-            self.jason_tmp = JSON.load(dir)
-        self.shapeTmp  = self.jason_tmp["shapes"]
-        self.coordinates0 = self.jason_tmp["shapes"] [1]["points"] # remember add finding corred label 1!!!
-        self.co_len = len (self.coordinates0) 
+        # jason_tmp_dir  =  "D:/Deep learning/dataset/original/phantom/1/label/0.json"
+        # # read th jso fie in hte start :
+        # with open(jason_tmp_dir) as dir:
+        #     self.jason_tmp = JSON.load(dir)
+        # self.shapeTmp  = self.jason_tmp["shapes"]
+        # self.coordinates0 = self.jason_tmp["shapes"] [1]["points"] # remember add finding corred label 1!!!
+        # self.co_len = len (self.coordinates0)
 
         #self.database_root = "D:/Deep learning/dataset/original/phantom/2/"
         #self.database_root = "D:/Deep learning/dataset/original/dots/3/"
         self.database_root = "D:/Deep learning/dataset/original/new_catheter_ruler/2/"
-        self.database_root = "D:/Deep learning/dataset/original/phantom_2th_march_2021/1/"
-        self.database_root = "D:/Deep learning/dataset/original/paper_with_strong_shadow/1/"
-        self.database_root = "D:/Deep learning/dataset/original/animal_tissue/2/"
-
-
-         
 
 
         #self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
         #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
 
 
-        self.f_downsample_factor = 30
+        self.f_downsample_factor = 46
         self.all_dir = self.database_root + "pic_all/"
         self.image_dir   = self.database_root + "pic/"
         self.json_dir =  self.database_root + "label/" # for this class sthis dir ist save the modified json 
@@ -154,7 +148,7 @@ class  Auto_json_label(object):
         gancreator = cGAN_build2.CGAN_creator() # the Cgan for the segmentation 
         self.GANmodel= gancreator.creat_cgan()  #  G and D are created here 
         # for the detection just use the Gnets
-        self.GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_2.pth'))
+        self.GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_4.pth'))
         self.GANmodel.netG.cuda()
     def downsample_folder(self):#this is to down sample the image in one folder
         read_sequence = os.listdir(self.all_dir) # read all file name
@@ -229,7 +223,7 @@ class  Auto_json_label(object):
         inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(extend,H_s,W_s)
 
         self.GANmodel.set_G_input(inputV) 
-        self.GANmodel.forward() # predict the path 
+        self.GANmodel.forward_for_deploy() # predict the path
         pathes  =  self.GANmodel.out_pathes0 [0].cpu().detach().numpy()
         #pathes = numpy.clip(pathes,0,1)
         #pathes = pathes*H/Resample_size
@@ -335,6 +329,6 @@ class  Auto_json_label(object):
                     #with open(json_dir) as f_dir:
                     #    data = JSON.load(f_dir)
 if __name__ == '__main__':
-        labeler  = Auto_json_label()
-        labeler.check_one_folder() 
-        labeler.downsample_folder()
+        cheker  = Auto_json_label()
+        #cheker.check_one_folder() 
+        cheker.downsample_folder()
