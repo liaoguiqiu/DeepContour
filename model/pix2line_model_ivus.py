@@ -226,9 +226,9 @@ class Pix2LineModel(BaseModel):
         self.real_exv  =  exis_v 
         self.input_G  = input_img
         self.input_E  = input_img
-    def set_G_input(self,input_G):
-        self.input_G  = input_G 
-
+    def set_GE_input(self,img):
+        self.input_G  = img 
+        self.input_E = img
  
 
 

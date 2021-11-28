@@ -22,7 +22,8 @@ import io
 import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
-from model import cGAN_build2 # the mmodel
+#from model import cGAN_build2 # the mmodel
+from model import CE_build3 # the mmodel
 # the model
 import arg_parse
 import cv2
@@ -31,7 +32,7 @@ import rendering
 from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
 from time import time
 import os
-from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
+from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length
 from deploy import basic_trans
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -114,7 +115,7 @@ class  Auto_json_label(object):
         # the portion of attated image to 2     sides
         self.attatch_rate  = 0.2 
 
-        jason_tmp_dir  =  "C:/Workdir/Develop/atlas_collab/dataset/ivus/label/2_PD8/image0199.json"
+        jason_tmp_dir  =  "D:/Deep learning/dataset/original/animal_tissue/1/label/100.json"
         # read th jso fie in hte start :
         with open(jason_tmp_dir) as dir:
             self.jason_tmp = JSON.load(dir)
@@ -127,11 +128,7 @@ class  Auto_json_label(object):
         # self.database_root = "D:/Deep learning/dataset/original/new_catheter_ruler/2/"
         # self.database_root = "D:/Deep learning/dataset/original/phantom_2th_march_2021/1/"
         # self.database_root = "D:/Deep learning/dataset/original/paper_with_strong_shadow/1/"
-        self.database_root = "C:/Workdir/Develop/atlas_collab/dataset/ivus/"
-
-
-         
-
+        self.database_root = "D:/Deep learning/dataset/original/paper_with_strong_shadow/1/"
 
         #self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
         #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
@@ -139,8 +136,10 @@ class  Auto_json_label(object):
 
         self.f_downsample_factor = 30
         self.all_dir = self.database_root + "pic_all/"
-        self.image_dir   = self.database_root + "img/2_PD8/"
-        self.json_dir =  self.database_root + "label/2_PD8/" # for this class sthis dir ist save the modified json
+        #self.image_dir   = self.database_root + "img/"
+        self.image_dir   = self.database_root + "pic/"
+
+        self.json_dir =  self.database_root + "label/" # for this class sthis dir ist save the modified json
         self.json_save_dir  = self.database_root + "label_generate/"
         self.img_num = 0
          
@@ -157,11 +156,16 @@ class  Auto_json_label(object):
         print(torch.cuda.get_device_name(0))
         print(torch.cuda.is_available())
         torch.set_num_threads(2)
-        gancreator = cGAN_build2.CGAN_creator() # the Cgan for the segmentation 
-        self.GANmodel= gancreator.creat_cgan()  #  G and D are created here 
+
+        Model_creator = CE_build3.CE_creator() # the  CEnet trainer with CGAN
+#   Use the same arch to create two nets 
+        self.CE_Nets= Model_creator.creat_nets()   # one is for the contour cordinates
+        
         # for the detection just use the Gnets
-        self.GANmodel.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_2.pth'))
-        self.GANmodel.netG.cuda()
+        self.CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_2.pth'))
+        self.CE_Nets.netG.cuda()
+        self.CE_Nets.netE.cuda()
+
     def downsample_folder(self):#this is to down sample the image in one folder
         read_sequence = os.listdir(self.all_dir) # read all file name
         seqence_Len = len(read_sequence)    # get all file number 
@@ -234,9 +238,9 @@ class  Auto_json_label(object):
         #inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(img1,Resample_size,Resample_size)
         inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(extend,H_s,W_s)
 
-        self.GANmodel.set_G_input(inputV) 
-        self.GANmodel.forward() # predict the path 
-        pathes  =  self.GANmodel.out_pathes0 [0].cpu().detach().numpy()
+        self.CE_Nets.set_GE_input(inputV) 
+        self.CE_Nets.forward() # predict the path 
+        pathes  =  self.CE_Nets.out_pathes0 [0].cpu().detach().numpy()
         #pathes = numpy.clip(pathes,0,1)
         #pathes = pathes*H/Resample_size
         #coordinates1 = encode_path_as_coordinates(pathes[0],Resample_size,Resample_size,H,W)
@@ -251,6 +255,8 @@ class  Auto_json_label(object):
         return coordinates1,coordinates2
 
     def check_one_folder (self):
+        imagelist = os.listdir(self.image_dir   )
+        _,image_type  = os.path.splitext(imagelist[0]) # first image of this folder 
         #for i in os.listdir(self.image_dir): # star from the image folder
         for i in os.listdir(self.image_dir): # star from the image folder
 
@@ -258,8 +264,8 @@ class  Auto_json_label(object):
         # separath  the name of json 
             a, b = os.path.splitext(i)
             # if it is a img it will have corresponding image 
-            if b == ".tif" :
-                img_path = self.image_dir + a + ".tif"
+            if b == image_type :
+                img_path = self.image_dir + a + image_type
                 #jason_path  = self.json_dir + a + ".json"
                 img1 = cv2.imread(img_path)
                 
@@ -276,9 +282,9 @@ class  Auto_json_label(object):
                     ##inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(img1,Resample_size,Resample_size)
                     #inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(extend,Resample_size,Resample_size)
 
-                    #self.GANmodel.set_G_input(inputV) 
-                    #self.GANmodel.forward() # predict the path 
-                    #pathes  =  self.GANmodel.out_pathes0 [0].cpu().detach().numpy()
+                    #self.CE_Nets.set_G_input(inputV) 
+                    #self.CE_Nets.forward() # predict the path 
+                    #pathes  =  self.CE_Nets.out_pathes0 [0].cpu().detach().numpy()
                     ##pathes = numpy.clip(pathes,0,1)
                     ##pathes = pathes*H/Resample_size
                     ##coordinates1 = encode_path_as_coordinates(pathes[0],Resample_size,Resample_size,H,W)
@@ -329,7 +335,7 @@ class  Auto_json_label(object):
                     this_json ["shapes"]   = shape_temp
                     this_json ["imageHeight"] = H
                     this_json ["imageWidth"] = W
-                    this_json ["imagePath"] = a+ ".tif"
+                    this_json ["imagePath"] = a+ image_type
                     this_json [ "imageData"]  = encodeImageForJson(img1)
                     #shape  = data["shapes"]
                     with open(save_json_dir, "w") as jsonFile:
@@ -343,4 +349,4 @@ class  Auto_json_label(object):
 if __name__ == '__main__':
         labeler  = Auto_json_label()
         labeler.check_one_folder() 
-        labeler.downsample_folder()
+        #labeler.downsample_folder()
