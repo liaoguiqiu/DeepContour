@@ -205,11 +205,11 @@ class Basic_Operator2:
             # should mainly based o the sheath orginal contor
             newy = signal.resample(y, W)
             newx = np.arange(0, W)
-            r_vector   = np.random.sample(3)*3
+            r_vector   = np.random.sample(20)*10
             r_vector=signal.resample(r_vector, W)
             r_vector = gaussian_filter1d (r_vector ,10)
 
-            randomshift= 0
+            randomshift= np.random.random_sample()*20-10
             newy = newy + r_vector  + randomshift
                     
             newy = np.clip(newy,50,H-1)

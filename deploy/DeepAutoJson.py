@@ -37,7 +37,29 @@ from deploy import basic_trans
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+def draw_coordinates_color(img1,vy,color):
+        if color ==0:
+           painter  = [254,0,0]
+        elif color ==1:
+           painter  = [0,254,0]
+        elif color ==2:
+           painter  = [0,0,254]
+        else :
+           painter  = [0,0,0]
+                    #path0  = signal.resample(path0, W)
+        H,W,_ = img1.shape
+        for j in range (W):
+                #path0l[path0x[j]]
+                dy = numpy.clip(vy[j],2,H-2)
+            
 
+                img1[int(dy)+1,j,:]=img1[int(dy),j,:]=painter
+                img1[int(dy)-1,j,:]=img1[int(dy)-2,j,:]=painter
+
+                #img1[int(dy)+1,dx,:]=img1[int(dy)-1,dx,:]=img1[int(dy),dx,:]=painter
+
+
+        return img1
 def encodeImageForJson(image):
     img_pil = PIL.Image.fromarray(image, mode='RGB')
     f = io.BytesIO()
@@ -79,7 +101,7 @@ def encode_as_coordinates_padding(path,h,w,H,W,rate,points = 150):
     right = int(points*(1 - r))
 
     d3 = signal.resample(y,  points)
-    d3 = signal.medfilt(d3,5)
+    #d3 = signal.medfilt(d3,5)
 
     y = d3[left:right]
     l = len(y)
@@ -113,7 +135,7 @@ class  Auto_json_label(object):
         # check the cuda device 
         pth_save_dir = "../../out/sheathCGAN_coordinates3/"
         # the portion of attated image to 2     sides
-        self.attatch_rate  = 0.2 
+        self.attatch_rate  = 0.0
 
         jason_tmp_dir  =  "D:/Deep learning/dataset/original/animal_tissue/1/label/100.json"
         # read th jso fie in hte start :
@@ -128,7 +150,7 @@ class  Auto_json_label(object):
         # self.database_root = "D:/Deep learning/dataset/original/new_catheter_ruler/2/"
         # self.database_root = "D:/Deep learning/dataset/original/phantom_2th_march_2021/1/"
         # self.database_root = "D:/Deep learning/dataset/original/paper_with_strong_shadow/1/"
-        self.database_root = "D:/Deep learning/dataset/original/paper_with_strong_shadow/1/"
+        self.database_root = "D:/Deep learning/dataset/original/IVUS1/"
 
         #self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
         #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
@@ -162,7 +184,7 @@ class  Auto_json_label(object):
         self.CE_Nets= Model_creator.creat_nets()   # one is for the contour cordinates
         
         # for the detection just use the Gnets
-        self.CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_2.pth'))
+        self.CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
         self.CE_Nets.netG.cuda()
         self.CE_Nets.netE.cuda()
 
@@ -229,18 +251,26 @@ class  Auto_json_label(object):
 
         new_p = pathes[:,int(rate*l):int((1-rate)*l)]
        
-    def predict_contour(self,gray,H_s, W_s , attatch_rate=0.5,points = 64):
+    def predict_contour(self,gray,H_s, W_s , attatch_rate=0.1,points = 64):
         #gray  =   cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         H,W   = gray.shape
         extend = np.append(gray[:,int((1-attatch_rate)*W):W],gray,axis=1) # cascade
         extend = np.append(extend,gray[:,0:int(attatch_rate*W)],axis=1) # cascade
+        img_piece = cv2.cvtColor(extend, cv2.COLOR_GRAY2RGB)
 
+        img_piece = cv2.resize(img_piece, (W_s,H_s), interpolation=cv2.INTER_AREA)
         #inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(img1,Resample_size,Resample_size)
         inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(extend,H_s,W_s)
 
         self.CE_Nets.set_GE_input(inputV) 
         self.CE_Nets.forward() # predict the path 
         pathes  =  self.CE_Nets.out_pathes0 [0].cpu().detach().numpy()
+        img_draw =  draw_coordinates_color(img_piece.astype(np.uint8),pathes[0]*H_s,0) 
+        img_draw =  draw_coordinates_color(img_draw,pathes[1]*H_s,1) 
+        cv2.imshow('predicit_auto json',img_draw.astype(np.uint8)) 
+        cv2.waitKey(1)
+        
+        
         #pathes = numpy.clip(pathes,0,1)
         #pathes = pathes*H/Resample_size
         #coordinates1 = encode_path_as_coordinates(pathes[0],Resample_size,Resample_size,H,W)
@@ -274,7 +304,7 @@ class  Auto_json_label(object):
                 else:
                     gray  =   cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
                     H,W   = gray.shape
-                    coordinates1,coordinates2  = self.predict_contour(gray,Resample_size, Resample_size,points=64 )
+                    coordinates1,coordinates2  = self.predict_contour(gray,Resample_size, Resample_size,attatch_rate=self.attatch_rate,points=780 )
                     
                     #extend = np.append(gray[:,int((1-self.attatch_rate)*W):W],gray,axis=1) # cascade
                     #extend = np.append(extend,gray[:,0:int(self.attatch_rate*W)],axis=1) # cascade

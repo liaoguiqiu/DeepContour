@@ -89,7 +89,7 @@ class Save_Contour_pkl(object):
 
 class Generator_Contour_sheath(object):
     def __init__(self):
-        self.OLG_flag = False
+        self.OLG_flag = True
         self.cv_display = False
         self.dis_origin = True
         self.origin_data = Save_Contour_pkl()
@@ -97,7 +97,9 @@ class Generator_Contour_sheath(object):
         data_root = "../../dataset/ivus/"
         data_root = "D:/Deep learning/dataset/label data/"
         self.image_dir = data_root + "img/"
-        self.pkl_dir = data_root +"seg label pkl train/"
+        self.pkl_dir = data_root +"seg label pkl/"
+        #self.pkl_dir = data_root +"seg label pkl train/"
+
         self.save_image_dir =data_root + "img_generate/"  # this dir just save all together
         self.save_image_dir_devi = data_root  + "img_genetate_devi/"  # this dir devide the generated images
         self.save_pkl_dir = data_root   + "pkl_generate/"
@@ -391,7 +393,7 @@ class Generator_Contour_sheath(object):
             # number_i +=1
             file_len = len(self.origin_data.img_num)
 
-            repeat = int(500 / file_len)  # repeat to balance
+            repeat = int(50 / file_len)  # repeat to balance
             if repeat < 1:
                 repeat = 1
 
@@ -502,7 +504,7 @@ if __name__ == '__main__':
     generator = Generator_Contour_sheath()
     if generator.OLG_flag == True:
         talker = Communicate()
-        com_dir = "../../../../../" + "Deep learning/dataset/telecom/"
+        com_dir = "D:/Deep learning/dataset/telecom/"
 
         talker = talker.read_data(com_dir)
         # initialize the protocol
@@ -513,17 +515,19 @@ if __name__ == '__main__':
         # generator.save_img_dir = "../../../../../"  + "Deep learning/dataset/"
         # generator.save_contour_dir = "../../"     + "saved_stastics_coutour_generated/"
 
-        imgbase_dir = "../../../../../" + "Deep learning/dataset/For_contour_sheath_train/train_OLG/img/"
-        labelbase_dir = "../../../../../" + "Deep learning/dataset/For_contour_sheath_train/train_OLG/label/"
+        imgbase_dir = "../../../../../" + "Deep learning/dataset/For IVUS/train_OLG/img/"
+        labelbase_dir = "../../../../../" + "Deep learning/dataset/For IVUS/train_OLG/label/"
 
+        #talker.training=1  # only use for the first ytime
+        #talker.writing=2  # only use for the first ytime
+        #talker.pending = 0 # only use for the first ytime
+        #talker.save_data(com_dir)
         while (1):
             generator = Generator_Contour_sheath()
 
             talker = talker.read_data(com_dir)
             # only use for the first ytime
-            # talker.training=1  # only use for the first ytime
-            # talker.writing=2  # only use for the first ytime
-            # talker.pending = 0 # only use for the first ytime
+            
             if talker.training == 1 and talker.writing == 2:  # check if 2 need writing
                 if talker.pending == 0:
                     generator.save_image_dir = imgbase_dir + "2/"

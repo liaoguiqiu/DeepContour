@@ -33,7 +33,7 @@ class myDataloader(object):
         self.GT = True
         self.save_id =0
         #Guiqiu modified for my computer
-        self.com_dir = "../../dataset/telecom/" # this dir is for the OLG
+        self.com_dir = "D:/Deep learning/dataset/telecom/" # this dir is for the OLG
          # initial lizt the 
         self.talker = Communicate()
         self.talker=self.talker.read_data(self.com_dir)
@@ -386,7 +386,7 @@ class myDataloader(object):
                 if self.GT == True:
                     Path_Index = Path_Index_list.index(Image_ID)  
                 #for layers train alll  the x and y are list
-                if  self.all_dir_list[self.folder_pointer] == "1s":
+                if  self.all_dir_list[self.folder_pointer] == "1s" or self.OLG_flag == True:
                     this_pathx = this_signal.contoursx[Path_Index]
                     this_pathy = this_signal.contoursy[Path_Index]
                     this_exist = this_pathy

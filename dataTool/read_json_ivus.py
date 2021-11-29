@@ -26,7 +26,7 @@ class Read_read_check_json_label(object):
         self.database_root = "../../dataset/ivus/"
         self.database_root = "D:/Deep learning/dataset/label data/"
 
-        sub_folder = "phantom1/"
+        sub_folder = "IVUS1/"
 
         self.image_dir = self.database_root + "img/" + sub_folder
         self.json_dir = self.database_root + "label/" + sub_folder
