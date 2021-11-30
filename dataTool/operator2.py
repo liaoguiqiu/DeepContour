@@ -212,7 +212,6 @@ class Basic_Operator2:
             randomshift= np.random.random_sample()*20-10
             newy = newy + r_vector  + randomshift
                     
-            newy = np.clip(newy,50,H-1)
         else:       
             newy = signal.resample(y, W)
             newx = np.arange(0, W)
@@ -226,6 +225,8 @@ class Basic_Operator2:
         #newy = -new_contoury*(dy2-dy1)+dy2
         #newy=new_contoury+r_vector
         #newx = np.arange(dx1, dx2)
+        newy = np.clip(newy,50,H-1)
+
         return newx,newy
     def random_shape_contour3(H_ini,W_ini,H,W,sx,sy,x,y):
         # simple version, just move up and down

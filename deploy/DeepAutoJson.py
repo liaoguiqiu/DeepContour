@@ -34,9 +34,13 @@ from time import time
 import os
 from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length
 from deploy import basic_trans
+from scipy.interpolate import interp1d
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
+def resample(x,n,kind='nearest'):
+            factor = float(x.size/n)
+            f = interp1d(np.linspace(0,1,x.size),x,kind)
+            return f(np.linspace(0,1,n))
 def draw_coordinates_color(img1,vy,color):
         if color ==0:
            painter  = [254,0,0]
@@ -97,18 +101,20 @@ def encode_as_coordinates_padding(path,h,w,H,W,rate,points = 150):
     y = path*H
     #add_3   = np.append(y[::-1],y,axis=0) # cascade
     #add_3   = np.append(add_3,y[::-1],axis=0) # cascade
-    left = int(points * r)
-    right = int(points*(1 - r))
+    left = int(W * r)
+    right = int(W*(1 - r))
 
-    d3 = signal.resample(y,  points)
+    d3 = resample(y,  W, kind='linear')
     #d3 = signal.medfilt(d3,5)
 
-    y = d3[left:right]
+    y = resample(d3,points)
     l = len(y)
 
-    x0 = np.arange(0, W+1, int((W+1) / l))
-    x= np.zeros(l)
-    x = x0[0:l]
+    #x0 = np.arange(0, W+1, int((W+1) / l))
+    x0 = np.arange(0, W)
+
+    x=  resample(x0,l)
+    #x = x0[0:l]
     x[l-1] = W-1
 
 
@@ -150,7 +156,7 @@ class  Auto_json_label(object):
         # self.database_root = "D:/Deep learning/dataset/original/new_catheter_ruler/2/"
         # self.database_root = "D:/Deep learning/dataset/original/phantom_2th_march_2021/1/"
         # self.database_root = "D:/Deep learning/dataset/original/paper_with_strong_shadow/1/"
-        self.database_root = "D:/Deep learning/dataset/original/IVUS2/"
+        self.database_root = "D:/Deep learning/dataset/original/IVUS1/"
 
         #self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
         #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
@@ -304,7 +310,7 @@ class  Auto_json_label(object):
                 else:
                     gray  =   cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
                     H,W   = gray.shape
-                    coordinates1,coordinates2  = self.predict_contour(gray,Resample_size, Resample_size,attatch_rate=self.attatch_rate,points=780 )
+                    coordinates1,coordinates2  = self.predict_contour(gray,Resample_size, Resample_size,attatch_rate=self.attatch_rate,points=40 )
                     
                     #extend = np.append(gray[:,int((1-self.attatch_rate)*W):W],gray,axis=1) # cascade
                     #extend = np.append(extend,gray[:,0:int(self.attatch_rate*W)],axis=1) # cascade

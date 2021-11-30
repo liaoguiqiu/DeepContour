@@ -97,7 +97,7 @@ class Generator_Contour_sheath(object):
         data_root = "../../dataset/ivus/"
         data_root = "D:/Deep learning/dataset/label data/"
         self.image_dir = data_root + "img/"
-        self.pkl_dir = data_root +"seg label pkl/"
+        self.pkl_dir = data_root +"seg label pkl train/"
         #self.pkl_dir = data_root +"seg label pkl train/"
 
         self.save_image_dir =data_root + "img_generate/"  # this dir just save all together
