@@ -481,6 +481,48 @@ class Basic_Operator2:
             pass
         pass
         return new,mask
+    # this new converting function will use the orginal conection between the back and tehe tissue, also need the sheath
+    def fill_patch_base_origin3_soft_edge(img1,H_new,contoury_s,contour0x,contour0y,
+                                    new_contourx,new_contoury,new,mask):
+        H,W  = img1.shape
+        contour0y = contour0y*H_new/H
+        points = len(contour0x)
+        points_new = len(new_contoury)
+        W_new  = points_new
+        # resize the patch has countour to the target contour size
+        #original_patch  =  img1[:,contour0x[0]:contour0x[points-1]]
+        #original_patch  =  cv2.resize(original_patch, (points_new,H_new), interpolation=cv2.INTER_AREA)
+        #contour0y=signal.resample(contour0y, points_new)
+        img1 = cv2.resize(img1, (W,H_new), interpolation=cv2.INTER_AREA)
+        line_it =0
+        i =0
+        #contourH = contour0y - contoury_s
+        #maxh = np.min(contourH)
+        contoury_s =  contoury_s.astype(int)
+        while(1):
+            
+            if contour0y[line_it]<=0.92* H_new:
+                source_line = img1[:,contour0x[line_it]]
+                newy   = int(new_contoury[i] )
+                iniy   =  int (contour0y[line_it]) - 3   # add 5 to give more high light bondaries 
+                shift  =  int(newy - iniy)
+                
+                # this is  the key difference of the connection
+                if shift > 0:
+                    start = contoury_s[i] + shift
+                    new[start:H_new,new_contourx[i]] = source_line[contoury_s[i]:H_new-shift]
+                    mask[start:H_new,new_contourx[i]] = 0
+                else :
+                    new[contoury_s[i]:H_new+shift,new_contourx[i]] = source_line[contoury_s[i]-shift:H_new]
+                    mask[contoury_s[i]:H_new+shift,new_contourx[i]]  = 0
+                i+=1
+                if i> (points_new-1):
+                    break
+            line_it+=1
+            if line_it > (points-1):
+               line_it =0
+
+        return new,mask
    # this one will not regard the images contour pision, just take A-line is long enough
     def fill_patch_base_origin2(img1,H_new,contour0x,contour0y,
                                     new_contourx,new_contoury,new,mask):
@@ -496,11 +538,11 @@ class Basic_Operator2:
         img1 = cv2.resize(img1, (W,H_new), interpolation=cv2.INTER_AREA)
         line_it =0
         i =0
-        contourH = H_new - contour0y
-        maxh = np.max(contourH)
+        #contourH = H_new - contour0y
+        #maxh = np.max(contourH)
         while(1):
             
-            if contourH[line_it]>=0.8* maxh:
+            if contour0y[line_it]<=0.9* H_new:
                 source_line = img1[:,contour0x[line_it]]
                 newy   = int(new_contoury[i] )
                 iniy   =  int (contour0y[line_it]) - 3   # add 5 to give more high light bondaries 
@@ -517,26 +559,7 @@ class Basic_Operator2:
             line_it+=1
             if line_it > (points-1):
                line_it =0
-        #new  = np.zeros((H_new,W_new))
-        #for i in range(points_new):
-        #    #line_it = int( np.random.random_sample()*points)
-        #    #line_it = np.clip(line_it,0,points-1) 
-        #    line_it = i
-        #    source_line = img1[:,line_it]
-        #    #new[:,i] = ba.warp_padding_line1(source_line, contour0y[line_it],new_contoury[i])
-        #    #new[:,i] = Basic_Operator .warp_padding_line2(source_line, contour0y[i],new_contoury[i])
-        #    #random select a source
-        #    newy   = int(new_contoury[i] )
-        #    iniy   =  int (contour0y[line_it]) - 3   # add 5 to give more high light bondaries 
-        #    shift  =  int(newy - iniy)
-        #    if shift > 0:
-        #        new[newy:H_new,new_contourx[i]] = source_line[iniy:H_new-shift]
-        #        mask[newy:H_new,new_contourx[i]] = 0
-        #    else :
-        #        new[newy:H_new+shift,new_contourx[i]] = source_line[iniy:H_new ]
-        #        mask[newy:H_new+shift,new_contourx[i]]  = 0
 
- 
         return new,mask
     # deal with non full connected path, transfer these blank area  
     def fill_patch_base_origin(img1,H_new,contour0x,contour0y,

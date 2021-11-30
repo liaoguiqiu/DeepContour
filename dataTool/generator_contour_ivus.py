@@ -444,9 +444,15 @@ class Generator_Contour_sheath(object):
                     new_contourx, new_contoury = Basic_Operator2.random_shape_contour_ivus(H, W, H_new, W_new, sheath_x,
                                                                                            sheath_y, contourx[1],
                                                                                            contoury[1])
-                    New_img, mask = Basic_Operator2.fill_patch_base_origin2(img1, H_new, contourx[1], contoury[1],
-                                                                            new_contourx, new_contoury, New_img, mask)
+                    Dice = int( np.random.random_sample()*10)
+                    if (Dice%2 == 0):# sharp edge
+                        New_img, mask = Basic_Operator2.fill_patch_base_origin2(img1, H_new, contourx[1], contoury[1],
+                                                                                new_contourx, new_contoury, New_img, mask)
+                    else: # soft edge:
+                        New_img, mask = Basic_Operator2.fill_patch_base_origin3_soft_edge(img1, H_new, contoury[0],contourx[1], contoury[1],
+                                                                                new_contourx, new_contoury, New_img, mask)
 
+                        
                     if self.cv_display == True:
                         cv2.imshow('mask', New_img.astype(np.uint8))
 
