@@ -34,7 +34,14 @@ class Communicate(object):
 
     def read_data(self, dir):
         saved_path = dir + 'protocol.pkl'
-        self = pickle.load(open(saved_path, 'rb'), encoding='iso-8859-1')
+        try:
+            self = pickle.load(open(saved_path, 'rb'), encoding='iso-8859-1')
+        except:
+            print("this is the first time of the generator")
+            self.training=1  # only use for the first ytime
+            self.writing=2  # only use for the first ytime
+            self.pending = 0 # only use for the first ytime
+            self.save_data(dir)
         return self
 
     def save_data(self, dir):
@@ -100,11 +107,14 @@ class Generator_Contour_sheath(object):
         self.pkl_dir = data_root +"seg label pkl train/"
         #self.pkl_dir = data_root +"seg label pkl train/"
 
+        # for normal generator
         self.save_image_dir =data_root + "img_generate/"  # this dir just save all together
         self.save_image_dir_devi = data_root  + "img_genetate_devi/"  # this dir devide the generated images
         self.save_pkl_dir = data_root   + "pkl_generate/"
 
-
+        # for OLG on line generator
+        self.com_dir = "D:/Deep learning/dataset/telecom/"
+        self.OLG_dir = "../../../../../" + "Deep learning/dataset/For IVUS/train_OLG/"
 
         # self.origin_data =self.origin_data.read_data(self.pkl_dir)
         # self.origin_data = []
@@ -393,7 +403,7 @@ class Generator_Contour_sheath(object):
             # number_i +=1
             file_len = len(self.origin_data.img_num)
 
-            repeat = int(50 / file_len)  # repeat to balance
+            repeat = int(2 / file_len)  # repeat to balance
             if repeat < 1:
                 repeat = 1
 
@@ -510,7 +520,7 @@ if __name__ == '__main__':
     generator = Generator_Contour_sheath()
     if generator.OLG_flag == True:
         talker = Communicate()
-        com_dir = "D:/Deep learning/dataset/telecom/"
+        com_dir = generator.com_dir
 
         talker = talker.read_data(com_dir)
         # initialize the protocol
@@ -521,8 +531,8 @@ if __name__ == '__main__':
         # generator.save_img_dir = "../../../../../"  + "Deep learning/dataset/"
         # generator.save_contour_dir = "../../"     + "saved_stastics_coutour_generated/"
 
-        imgbase_dir = "../../../../../" + "Deep learning/dataset/For IVUS/train_OLG/img/"
-        labelbase_dir = "../../../../../" + "Deep learning/dataset/For IVUS/train_OLG/label/"
+        imgbase_dir =  generator.OLG_dir +  "img/"
+        labelbase_dir =  generator.OLG_dir + "label/"
 
         #talker.training=1  # only use for the first ytime
         #talker.writing=2  # only use for the first ytime

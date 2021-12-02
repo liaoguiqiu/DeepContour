@@ -190,7 +190,7 @@ class  Auto_json_label(object):
         self.CE_Nets= Model_creator.creat_nets()   # one is for the contour cordinates
         
         # for the detection just use the Gnets
-        self.CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
+        self.CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_1.pth'))
         self.CE_Nets.netG.cuda()
         self.CE_Nets.netE.cuda()
 

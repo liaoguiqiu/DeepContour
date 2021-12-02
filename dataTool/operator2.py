@@ -502,7 +502,7 @@ class Basic_Operator2:
         contoury_s =  contoury_s.astype(int)
         while(1):
             
-            if contour0y[line_it]<=0.92* H_new:
+            if contour0y[line_it]<=(H_new-10):
                 source_line = img1[:,contour0x[line_it]]
                 newy   = int(new_contoury[i] )
                 iniy   =  int (contour0y[line_it]) - 3   # add 5 to give more high light bondaries 
@@ -543,7 +543,7 @@ class Basic_Operator2:
         #maxh = np.max(contourH)
         while(1):
             
-            if contour0y[line_it]<=0.9* H_new:
+            if contour0y[line_it]<= (H_new-10):
                 source_line = img1[:,contour0x[line_it]]
                 newy   = int(new_contoury[i] )
                 iniy   =  int (contour0y[line_it]) - 3   # add 5 to give more high light bondaries 
