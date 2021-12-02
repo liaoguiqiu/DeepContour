@@ -114,7 +114,7 @@ class Generator_Contour_sheath(object):
 
         # for OLG on line generator
         self.com_dir = "D:/Deep learning/dataset/telecom/"
-        self.OLG_dir = "../../../../../" + "Deep learning/dataset/For IVUS/train_OLG/"
+        self.OLG_dir = "D:/Deep learning/dataset/For IVUS/train_OLG/"
 
         # self.origin_data =self.origin_data.read_data(self.pkl_dir)
         # self.origin_data = []

@@ -6,6 +6,7 @@ from analy import MY_ANALYSIS
 from dataTool import generator_contour 
 
 from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
+from  dataTool.generator_contour_ivus import  Generator_Contour_sheath
 
 from analy import Save_signal_enum
 from scipy import signal 
@@ -33,7 +34,7 @@ class myDataloader(object):
         self.GT = True
         self.save_id =0
         #Guiqiu modified for my computer
-        self.com_dir = "D:/Deep learning/dataset/telecom/" # this dir is for the OLG
+        self.com_dir =  Generator_Contour_sheath().com_dir # this dir is for the OLG
          # initial lizt the 
         self.talker = Communicate()
         self.talker=self.talker.read_data(self.com_dir)
@@ -51,9 +52,11 @@ class myDataloader(object):
         self.dataroot = root + "train/img/"
         self.signalroot =root + "train/label/"
         if self.OLG_flag == True:
-           self.dataroot = root + "train_OLG/img/"
-           self.signalroot =root + "train_OLG/label/" 
-
+           #self.dataroot = root + "train_OLG/img/"
+           #self.signalroot =root + "train_OLG/label/" 
+           self.dataroot = Generator_Contour_sheath().OLG_dir+ "img/"
+           self.signalroot =Generator_Contour_sheath().OLG_dir+"label/" 
+           
 
         if validation  == True :
             self.OLG_flag = False
