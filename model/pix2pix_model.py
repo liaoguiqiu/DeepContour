@@ -6,7 +6,7 @@ import rendering
 from dataset_ivus import Resample_size 
 import numpy as np
 from databufferExcel import EXCEL_saver
-Convert_Unet_to_layer = True # the flag for convert the unet to laer
+Convert_Unet_to_layer = False # the flag for convert the unet to laer
 class Pix2PixModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
 
