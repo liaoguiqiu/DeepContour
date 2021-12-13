@@ -217,12 +217,17 @@ class Read_read_check_json_label(object):
                                     # Add 1 to the A-lines where there is contour as there is no overlap
                                     contours_exist[current_label][path_xl] = 1
                                     contours_y[current_label][path_xl] = path_yl
-
+                                    # Guiqiu : do a final check if the coutour is near the imager height
+                                    contours_exist[current_label] = contours_exist[current_label] * (contours_y[current_label] < (0.95*H ))
                             else:
                                 # Add 1 to the A-lines where there is contour
                                 contours_exist[current_label][path_xl] = 1
                                 # contours_x[current_label] = path_xl
                                 contours_y[current_label][path_xl] = path_yl
+                                # Guiqiu : do a final check if the coutour is near the imager height
+
+                                contours_exist[current_label] = contours_exist[current_label] * (contours_y[current_label] < (0.95*H ))
+
 
                         pass
 
