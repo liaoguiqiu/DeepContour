@@ -41,7 +41,6 @@
     <Compile Include="dataTool\operator2.py" />
     <Compile Include="dataTool\read_Jsonpy.py" />
     <Compile Include="dataTool\read_json_ivus.py" />
-    <Compile Include="dataTool\read_json_ivus_fake.py" />
     <Compile Include="dataTool\tSNE.py" />
     <Compile Include="dataTool\tSNE_exa.py" />
     <Compile Include="deploy\basic_trans.py" />

@@ -115,10 +115,9 @@ class Generator_Contour_sheath(object):
         # for OLG on line generator
         self.com_dir = "D:/Deep learning/dataset/telecom/"
         self.OLG_dir = "D:/Deep learning/dataset/For IVUS/train_OLG/"
-
+        self.contour_saver = Save_Contour_pkl()
         # self.origin_data =self.origin_data.read_data(self.pkl_dir)
-        # self.origin_data = []
-
+        self. image_type = ".jpg"
         if not os.path.exists(self.save_image_dir):
             os.makedirs(self.save_image_dir)
 
@@ -173,17 +172,17 @@ class Generator_Contour_sheath(object):
 
         # check or create this path
 
-    def append_new_name_contour(self, number, this_contoursx, this_contoursy, dir):
-        # buffer
-        self.img_num.append(number)
-        self.contoursx.append(this_contoursx)
-        self.contoursy.append(this_contoursy)
+    #def append_new_name_contour(self, number, this_contoursx, this_contoursy, dir):
+    #    # buffer
+    #    self.img_num.append(number)
+    #    self.contoursx.append(this_contoursx)
+    #    self.contoursy.append(this_contoursy)
 
-        # save the data
-        save_path = dir  # + "seg label pkl/"
-        with open(save_path + 'contours.pkl', 'wb') as f:
-            pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
-        pass
+    #    # save the data
+    #    save_path = dir  # + "seg label pkl/"
+    #    with open(save_path + 'contours.pkl', 'wb') as f:
+    #        pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
+    #    pass
 
     def check(self):
         saved_path = self.save_pkl_dir
@@ -191,7 +190,7 @@ class Generator_Contour_sheath(object):
         file_len = len(data.img_num)
         for num in range(file_len):
             name = data.img_num[num]
-            img_path = self.save_image_dir + str(name) + image_type
+            img_path = self.save_image_dir + str(name) + self.image_type
             img_or = cv2.imread(img_path)
             img1 = cv2.cvtColor(img_or, cv2.COLOR_BGR2GRAY)
             H, W = img1.shape
@@ -395,6 +394,7 @@ class Generator_Contour_sheath(object):
              
             imagelist = os.listdir(self.image_dir + subfold + '/' )
             _,image_type  = os.path.splitext(imagelist[0]) # first image of this folder  
+            self. image_type = image_type 
             # change the dir firstly before read
             # saved_stastics.all_statics_dir = os.path.join(self.signalroot, subfold, 'contour.pkl')
             this_contour_dir = self.pkl_dir + subfold + '/'  # for both linux and window
@@ -492,15 +492,23 @@ class Generator_Contour_sheath(object):
                     cv2.imshow('all', display.astype(np.uint8))
 
                     cv2.waitKey(10)
-                    new_cx = [None] * 2
+                    new_cx = [None] * 2  # initialized as just two bondaries
                     new_cy = [None] * 2
+                    new_ex = [None] * 2 # also have the exitence 
+
                     new_cx[0] = sheath_x
                     new_cy[0] = sheath_y
                     new_cx[1] = new_contourx
                     new_cy[1] = new_contoury
+                    new_ex[0] = sheath_y < (0.95*H_new)
+                    new_ex[1] = new_contoury < (0.95*H_new)
+                     
 
                     print(str(name))
-                    self.append_new_name_contour(img_id, new_cx, new_cy, self.save_pkl_dir)
+                    #self.append_new_name_contour(img_id, new_cx, new_cy, self.save_pkl_dir)
+                    self.contour_saver.  append_new_name_contour(img_id, new_cx, new_cy, new_ex , self.save_pkl_dir) # replace iwth existence 
+
+                     
                     # save them altogether 
                     cv2.imwrite(self.save_image_dir + str(img_id) + image_type, combin)
                     cv2.imwrite(self.save_image_dir_devi + subfold + '/' + str(img_id_devi) + image_type,
