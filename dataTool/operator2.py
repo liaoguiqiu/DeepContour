@@ -377,7 +377,7 @@ class Basic_Operator2:
         
         return newx,newy
     #draw color contour 
-    def random_shape_contour_ivus(H_ini,W_ini,H,W,sx,sy,x,y):
+    def random_shape_contour_ivus(H_ini,W_ini,H,W,sx,sy,x,y ):
         # simple version, just move up and down
         dc1 =np.random.random_sample()*100
         leny = len(y)
@@ -395,8 +395,7 @@ class Basic_Operator2:
             newy[i]  = np.clip(newy[i] , sy[newx[i]]+1,H-1) # allow it to merge int o 1 pix
 
 
-            
-
+        
         #width  = 30% - % 50
         newy = np.clip(newy,0,H-1)
         return newx,newy

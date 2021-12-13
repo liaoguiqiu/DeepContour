@@ -392,7 +392,7 @@ class myDataloader(object):
                 if  self.all_dir_list[self.folder_pointer] == "1s" or self.OLG_flag == True:
                     this_pathx = this_signal.contoursx[Path_Index]
                     this_pathy = this_signal.contoursy[Path_Index]
-                    this_exist = this_pathy
+                    this_exist = this_signal.contours_exist[Path_Index]
                 else:
                     this_pathx = np.array(list(this_signal.contoursx[Path_Index].values())[0:self.obj_num])
                     this_pathy = np.array(list(this_signal.contoursy[Path_Index].values())[0:self.obj_num])

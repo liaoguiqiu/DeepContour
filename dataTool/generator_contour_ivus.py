@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import pickle
 from dataTool.operater import Basic_Operator
 from dataTool.operator2 import Basic_Operator2
+import scipy.signal as signal
 
 
 # the generator and distribution monitoring
@@ -426,7 +427,7 @@ class Generator_Contour_sheath(object):
                     
                     contourx = np.array(list(self.origin_data.contoursx[num].values())[0:2])
                     contoury = np.array(list(self.origin_data.contoursy[num].values())[0:2])
-
+                    existence = np.array(list(self.origin_data.contours_exist[num].values())[0:2])
                     # draw this original contour 
                     display = Basic_Operator.draw_coordinates_color(img_or, contourx[0], contoury[0],
                                                                     1)  # draw the sheath
@@ -450,19 +451,24 @@ class Generator_Contour_sheath(object):
                     if self.cv_display == True:
                         cv2.imshow('shealth', New_img.astype(np.uint8))
 
-                    # generate the signal
-                    new_contourx, new_contoury = Basic_Operator2.random_shape_contour_ivus(H, W, H_new, W_new, sheath_x,
+                   
+                    if (np.sum (existence[1])>0.05*W): # only fill in when exist
+                         # generate the signal
+                        new_contourx, new_contoury = Basic_Operator2.random_shape_contour_ivus(H, W, H_new, W_new, sheath_x,
                                                                                            sheath_y, contourx[1],
-                                                                                           contoury[1])
-                    Dice = int( np.random.random_sample()*10)
-                    if (Dice%2 == 0):# sharp edge
-                        New_img, mask = Basic_Operator2.fill_patch_base_origin2(img1, H_new, contourx[1], contoury[1],
-                                                                                new_contourx, new_contoury, New_img, mask)
-                    else: # soft edge:
-                        New_img, mask = Basic_Operator2.fill_patch_base_origin3_soft_edge(img1, H_new, contoury[0],contourx[1], contoury[1],
-                                                                                new_contourx, new_contoury, New_img, mask)
+                                                                                           contoury[1] )
+                        Dice = int( np.random.random_sample()*10)
+                        if (Dice%2 == 0):# sharp edge
+                            New_img, mask = Basic_Operator2.fill_patch_base_origin2(img1, H_new, contourx[1], contoury[1],
+                                                                                    new_contourx, new_contoury, New_img, mask)
+                        else: # soft edge:
+                            New_img, mask = Basic_Operator2.fill_patch_base_origin3_soft_edge(img1, H_new, contoury[0],contourx[1], contoury[1],
+                                                                                    new_contourx, new_contoury, New_img, mask)
+                    else: #non exist
+                       new_contoury =  contoury[1]
+         
+                       new_contourx = contourx[1]
 
-                        
                     if self.cv_display == True:
                         cv2.imshow('mask', New_img.astype(np.uint8))
 
