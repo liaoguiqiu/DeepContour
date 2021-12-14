@@ -323,7 +323,7 @@ class Pix2LineModel(BaseModel):
         """Calculate GAN and L1 loss for the generator"""
         # First, G(A) should fake the discriminator
         self.optimizer_E.zero_grad()        # set G's gradients to zero
-        #self.set_requires_grad(self.netG, False)       
+        self.set_requires_grad(self.netG, False)       
 
         self.set_requires_grad(self.netE, True)       
         # use BEC for the existence vectors
@@ -417,16 +417,16 @@ class Pix2LineModel(BaseModel):
         #
         # self.backward_G_3()                   # calculate graidents for G
 
-        self.backward_G()                   # calculate graidents for G
-        #self.backward_E()                   # calculate graidents for E
+        #self.backward_G()                   # calculate graidents for G
+        self.backward_E()                   # calculate graidents for E
 
 
-        self.displayloss0 = self.loss_G. data.mean()
-        self.displayloss1 = self.loss_G. data.mean()
-        self.displayloss2 = self.loss_G. data.mean()
-        self.displayloss3 = self.loss_G. data.mean()
+        self.displayloss0 = self.lossEa. data.mean()
+        self.displayloss1 = self.lossEa. data.mean()
+        self.displayloss2 = self.lossEa. data.mean()
+        self.displayloss3 = self.lossEa. data.mean()
 
-        self.displaylossE0 = self.loss_G. data.mean()
+        self.displaylossE0 = self.lossEa. data.mean()
       
         #if self.  bw_cnt %2 ==0:
         #   self.backward_G()                   # calculate graidents for G
