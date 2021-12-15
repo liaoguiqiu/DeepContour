@@ -12,10 +12,13 @@ import scipy.signal as signal
 import pandas as pd
 from collections import OrderedDict
 from generator_contour_ivus import Save_Contour_pkl
-Train_validation_split = True # flag for devide the data 
-Train_validation_devi = 3 # all data are equally devided by thsi number
-Test_fold = 0   # use the 0 st for training, the other for validation 
-Delete_outsider_flag =False
+
+Train_validation_split = True  # flag for devide the data
+Train_validation_devi = 3  # all data are equally devided by thsi number
+Test_fold = 0  # use the 0 st for training, the other for validation
+Delete_outsider_flag = False
+
+
 class Read_read_check_json_label(object):
     def __init__(self):
         # self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
@@ -24,16 +27,19 @@ class Read_read_check_json_label(object):
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE-center/"
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
         self.database_root = "../../dataset/ivus/"
-        self.database_root = "D:/Deep learning/dataset/label data/"
+        # self.database_root = "D:/Deep learning/dataset/label data/"
 
-        sub_folder = "animal2/"
+#<<<<<<< HEAD:DeepContour/dataTool/read_json_ivus.py
+#        sub_folder = "animal2/"
+#=======
+        sub_folder = "2_PD8/"
+#>>>>>>> b8bb1d19b916df000a1ab2c21c7474cf6fa38b44:dataTool/read_json_ivus.py
 
         self.image_dir = self.database_root + "img/" + sub_folder
         self.json_dir = self.database_root + "label/" + sub_folder
         self.save_dir = self.database_root + "seg label pkl/" + sub_folder
         self.save_dir_train = self.database_root + "seg label pkl train/" + sub_folder
         self.save_dir_test = self.database_root + "seg label pkl test/" + sub_folder
-
 
         self.img_num = 0
 
@@ -50,7 +56,6 @@ class Read_read_check_json_label(object):
         self.saver = Save_Contour_pkl()
         self.saver_train = Save_Contour_pkl()
         self.saver_test = Save_Contour_pkl()
-
 
         self.display_flag = True
 
@@ -90,8 +95,8 @@ class Read_read_check_json_label(object):
     def check_one_folder(self):
         # check the image type:
         imagelist = os.listdir(self.image_dir)
-        _,b_i  = os.path.splitext(imagelist[0]) # first image of this folder 
-        within_folder_i = 0 
+        _, b_i = os.path.splitext(imagelist[0])  # first image of this folder
+        within_folder_i = 0
         for i in os.listdir(self.json_dir):
             # for i in os.listdir("E:\\estimagine\\vs_project\\PythonApplication_data_au\\pic\\"):
             # separate the name of json
@@ -101,8 +106,8 @@ class Read_read_check_json_label(object):
                 # with ZipFile(self.image_dir, 'r') as zipObj:
                 #     listOfFiles = zipObj.namelist()
                 # TODO: Extract image ext automatically
-                #img_path = self.image_dir + a + ".tif"
-                img_path = self.image_dir + a + b_i 
+                # img_path = self.image_dir + a + ".tif"
+                img_path = self.image_dir + a + b_i
                 img1 = cv2.imread(img_path)
                 if img1 is None:
                     print('No img with path: {0}'.format(img_path))
@@ -181,7 +186,7 @@ class Read_read_check_json_label(object):
                             # remember to add resacle later TODO: what is this resacle? ask Guiqiu
                             path_yl = signal.resample(path_yl, W)
                             path_xl = np.arange(0, W)
-                        
+
                         #### Fill OrderedDict for the three vectors depending on the label
                         # Note: Labels with no data (from the self.labels_lists) remain empty
 
@@ -229,6 +234,11 @@ class Read_read_check_json_label(object):
                                 contours_exist[current_label] = contours_exist[current_label] * (contours_y[current_label] < (0.95*H ))
 
 
+                            # Check if contour is close to the image height and set existence contour to 0
+                            # to handle when there is no back-scattering but the manual label was put close to H
+                            contour_y_close_h = np.where(contours_y[current_label] >= 0.96 * H)[0]
+                            contours_exist[current_label][contour_y_close_h] = 0
+
                         pass
 
                     if self.display_flag:  # for loop for display out of previous loop in case of overlap of contours
@@ -245,22 +255,22 @@ class Read_read_check_json_label(object):
                     self.saver.append_new_name_contour(self.img_num, contours_x, contours_y, contours_exist,
                                                        self.save_dir)
 
-                    if Train_validation_split == True: 
-                       if within_folder_i%Train_validation_devi == Test_fold:
-                           self.saver_test.append_new_name_contour(self.img_num, contours_x, contours_y, contours_exist,
-                                                       self.save_dir_test)
-                       else:
-                           self.saver_train.append_new_name_contour(self.img_num, contours_x, contours_y, contours_exist,
-                                                       self.save_dir_train)
-
+                    if Train_validation_split:
+                        if within_folder_i % Train_validation_devi == Test_fold:
+                            self.saver_test.append_new_name_contour(self.img_num, contours_x, contours_y,
+                                                                    contours_exist,
+                                                                    self.save_dir_test)
+                        else:
+                            self.saver_train.append_new_name_contour(self.img_num, contours_x, contours_y,
+                                                                     contours_exist,
+                                                                     self.save_dir_train)
 
                     cv2.imshow('Image with highlighted contours', img1)
                     print(str(a))
                     cv2.waitKey(10)
-                    within_folder_i +=1 # this index is used to determine the train validation split 
+                    within_folder_i += 1  # this index is used to determine the train validation split
+
 
 if __name__ == '__main__':
-
     converter = Read_read_check_json_label()
     converter.check_one_folder()  # convert json files into pkl files
-     
