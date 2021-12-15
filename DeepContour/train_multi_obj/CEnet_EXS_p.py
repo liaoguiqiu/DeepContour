@@ -42,8 +42,8 @@ if Visdom_flag == True:
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 
 # pth_save_dir = "C:/Workdir/Develop/atlas_collab/out/sheathCGAN_coordinates3/"
-pth_save_dir = "../../out/sheathCGAN_coordinates3/"
-backup_dir = "../../out/backup/"
+pth_save_dir = "../../../out/sheathCGAN_coordinates3/"
+backup_dir = "../../../out/backup/"
 
 #pth_save_dir = "../out/deep_layers/"
 

@@ -108,7 +108,6 @@ class Pix2LineModel(BaseModel):
             self.optimizers.append(self.optimizer_G)
             self.optimizers.append(self.optimizer_E)
             self.optimizers.append(self.optimizer_D)
-
         self.validation_init()
         self.bw_cnt =0
         self.displayloss1=0
@@ -118,7 +117,7 @@ class Pix2LineModel(BaseModel):
         self.loss_G_L2 =torch.tensor(0,dtype=torch.float)
         self.loss_G_L3 =torch.tensor(0,dtype=torch.float)
         self.metrics_saver = EXCEL_saver(8) # 8 values
-         
+        self.switcher = 0  # used to switch gradient between different part of the nets
 
     def validation_init(self):
         self.L1 = 0
@@ -323,7 +322,7 @@ class Pix2LineModel(BaseModel):
         """Calculate GAN and L1 loss for the generator"""
         # First, G(A) should fake the discriminator
         self.optimizer_E.zero_grad()        # set G's gradients to zero
-        self.set_requires_grad(self.netG, False)       
+        #self.set_requires_grad(self.netG, False)       
 
         self.set_requires_grad(self.netE, True)       
         # use BEC for the existence vectors
@@ -416,17 +415,21 @@ class Pix2LineModel(BaseModel):
         # self.backward_G_2()                   # calculate graidents for G
         #
         # self.backward_G_3()                   # calculate graidents for G
+        if (self.switcher==0):
+            self.backward_G()                   # calculate graidents for G
+        else:
+            self.backward_E()                   # calculate graidents for E
 
-        #self.backward_G()                   # calculate graidents for G
-        self.backward_E()                   # calculate graidents for E
+        self.switcher += 1
+        if (self.switcher>=2):
+            self.switcher = 0
 
+        self.displayloss0 = self.loss_G. data.mean()
+        self.displayloss1 = self.loss_G. data.mean()
+        self.displayloss2 = self.loss_G. data.mean()
+        self.displayloss3 = self.loss_G. data.mean()
 
-        self.displayloss0 = self.lossEa. data.mean()
-        self.displayloss1 = self.lossEa. data.mean()
-        self.displayloss2 = self.lossEa. data.mean()
-        self.displayloss3 = self.lossEa. data.mean()
-
-        self.displaylossE0 = self.lossEa. data.mean()
+        self.displaylossE0 = self.loss_G. data.mean()
       
         #if self.  bw_cnt %2 ==0:
         #   self.backward_G()                   # calculate graidents for G
