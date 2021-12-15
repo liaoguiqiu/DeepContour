@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<LabelMeLabelConverter> <!-- Note: It is assumed that the center of the circular images used is in (h/2 w/2) of the image data -->
+
+	<LabelData conversionType="Polar" target="Dir"> <!-- (convert to) conversionType: Polar, Cartesian 		target: Dir, SingleImg -->
+
+		<!-- Used when target="Dir"--> 
+		<SourceDir>C:/Users/u0132260/Documents/Data/CRAS 2022/PVA phantom/main_5V/labels_json</SourceDir>
+		<OutputDir>C:/Users/u0132260/Documents/Data/CRAS 2022/PVA phantom/main_5V/labels_json_rect</OutputDir>
+
+		<!-- Used when target="SingleImg"-->
+		<SourceImg>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_02_02 IVUS 2/Labels_PD8P8EQH/image0933.json</SourceImg><!-- Include directory and image label file name -->
+		<OutputImg sameDir="false"> <!-- if sameDir ("true", "false") is false, fileDirPath will be use to save under a directory named conversionType-->
+			<fileDirPath>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_02_02 IVUS 2/Labels_PD8P8EQH_rect_converted</fileDirPath>
+		</OutputImg>
+
+	</LabelData>
+
+	<ImageData> <!-- the output image data for which the label is being converted -->
+
+		<ImagesDir> <!-- in the case of converting an entire directory of labels. -->
+			<Ext>png</Ext> <!-- ext refers to the images extension: jpg, tif, png, etc -->
+			<Path>C:/Users/u0132260/Documents/Data/CRAS 2022/PVA phantom/main_5V/main_5V_images_rect</Path> <!-- path to directory to convert -->
+		</ImagesDir>
+
+		<SingleImg>  <!-- in the case of converting one label from a single image -->
+			<!-- path to image.ext (inclusive) to convert. ext = e.g. tif, jpg, png -->
+			<filePath>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_02_02 IVUS 2/TIFF_PD8P8EQH_rect/image0933.tif</filePath> 
+		</SingleImg>
+
+	</ImageData>
+
+	<Display state="true"/> <!-- true, false -->
+	<!-- To display, the paths in ImageData is used.-->
+
+</LabelMeLabelConverter>
