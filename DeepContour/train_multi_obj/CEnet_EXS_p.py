@@ -28,9 +28,9 @@ from deploy.basic_trans import Basic_oper
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = False  # the flag of using the visdom or not
-OLG_flag = False    # flag of training with on line generating or not
+OLG_flag = True    # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
-validation_flag = True  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
+validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not 
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler 
 Continue_flag = True  # if not true, it start from scratch again
@@ -242,9 +242,9 @@ CE_Nets.netE.apply(weights_init)
 
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
-    CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_1.pth'))
-    CE_Nets.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_1.pth'))
-    CE_Nets.netE.load_state_dict(torch.load(pth_save_dir+'cGANE_epoch_1.pth'))
+    CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_2.pth'))
+    CE_Nets.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_2.pth'))
+    CE_Nets.netE.load_state_dict(torch.load(pth_save_dir+'cGANE_epoch_2.pth'))
     #CE_Nets.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
 
 print(CE_Nets.netD)

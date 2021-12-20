@@ -128,7 +128,41 @@ def encode_as_coordinates_padding(path,h,w,H,W,rate,points = 150):
     array[:,1] = y.astype(int)
     coordinates = array.tolist()
     return coordinates
+def encode_as_coordinates_padding_exv(path,exv,h,w,H,W,rate,points = 150):
 
+
+    r = rate/(2*rate+1) # the rate is calculated from original padding rate
+    mask = exv <0.5
+    y = path*H* mask + (1-mask)*H
+    #add_3   = np.append(y[::-1],y,axis=0) # cascade
+    #add_3   = np.append(add_3,y[::-1],axis=0) # cascade
+    left = int(W * r)
+    right = int(W*(1 - r))
+
+    d3 = resample(y,  W, kind='linear')
+    #d3 = signal.medfilt(d3,5)
+
+    y = resample(d3,points)
+    l = len(y)
+
+    #x0 = np.arange(0, W+1, int((W+1) / l))
+    x0 = np.arange(0, W)
+
+    x=  resample(x0,l)
+    #x = x0[0:l]
+    x[l-1] = W-1
+
+
+    # add_3   = np.append(x[::-1],x,axis=0) # cascade
+    # add_3   = np.append(add_3,x[::-1],axis=0) # cascade
+    # d3 = signal.resample(add_3, 3*l)
+
+    # x=d3[l:2*l]
+    array = np.zeros((l,2))
+    array[:,0] = x.astype(int)
+    array[:,1] = y.astype(int)
+    coordinates = array.tolist()
+    return coordinates
 
 
 class  Auto_json_label(object):
@@ -139,7 +173,7 @@ class  Auto_json_label(object):
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE-center/"
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
         # check the cuda device 
-        pth_save_dir = "../../out/sheathCGAN_coordinates3/"
+        pth_save_dir = "../../../out/sheathCGAN_coordinates3/"
         # the portion of attated image to 2     sides
         self.attatch_rate  = 0.00
 
@@ -156,7 +190,7 @@ class  Auto_json_label(object):
         # self.database_root = "D:/Deep learning/dataset/original/new_catheter_ruler/2/"
         # self.database_root = "D:/Deep learning/dataset/original/phantom_2th_march_2021/1/"
         # self.database_root = "D:/Deep learning/dataset/original/paper_with_strong_shadow/1/"
-        self.database_root = "D:/Deep learning/dataset/original/IVUS1/"
+        self.database_root = "D:/Deep learning/dataset/original/animal_tissue/2/"
 
         #self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
         #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
@@ -190,8 +224,10 @@ class  Auto_json_label(object):
         self.CE_Nets= Model_creator.creat_nets()   # one is for the contour cordinates
         
         # for the detection just use the Gnets
-        self.CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_1.pth'))
+        self.CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_2.pth'))
         self.CE_Nets.netG.cuda()
+
+        self.CE_Nets.netE.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_2.pth'))
         self.CE_Nets.netE.cuda()
 
     def downsample_folder(self):#this is to down sample the image in one folder
@@ -271,8 +307,13 @@ class  Auto_json_label(object):
         self.CE_Nets.set_GE_input(inputV) 
         self.CE_Nets.forward() # predict the path 
         pathes  =  self.CE_Nets.out_pathes0 [0].cpu().detach().numpy()
-        img_draw =  draw_coordinates_color(img_piece.astype(np.uint8),pathes[0]*H_s,0) 
-        img_draw =  draw_coordinates_color(img_draw,pathes[1]*H_s,1) 
+        existences = self.CE_Nets.out_exis_v0 [0].cpu().detach().numpy() #self.out_exis_v0
+        mask = existences<0.5
+        draw_path0= pathes[0]*H_s * mask[0] + (1-mask[0])* H_s
+        draw_path1= pathes[1]*H_s * mask[1] + (1-mask[1])* H_s
+
+        img_draw =  draw_coordinates_color(img_piece.astype(np.uint8),draw_path0,0) 
+        img_draw =  draw_coordinates_color(img_draw,draw_path1,1) 
         cv2.imshow('predicit_auto json',img_draw.astype(np.uint8)) 
         cv2.waitKey(1)
         
@@ -281,12 +322,18 @@ class  Auto_json_label(object):
         #pathes = pathes*H/Resample_size
         #coordinates1 = encode_path_as_coordinates(pathes[0],Resample_size,Resample_size,H,W)
         #coordinates2 = encode_path_as_coordinates(pathes[1],Resample_size,Resample_size,H,W)
-        coordinates1 = encode_as_coordinates_padding(pathes[0],H_s,W_s,H,W,
-                                                        attatch_rate,points )
-        coordinates2 = encode_as_coordinates_padding(pathes[1],H_s,W_s,H,W,
+        #coordinates1 = encode_as_coordinates_padding(pathes[0],H_s,W_s,H,W,
+        #                                                attatch_rate,points )
+
+        #coordinates2 = encode_as_coordinates_padding(pathes[1],H_s,W_s,H,W,
+        #                                                attatch_rate,points )
+        coordinates1 = encode_as_coordinates_padding_exv(pathes[0],existences[0],H_s,W_s,H,W,
                                                         attatch_rate,points )
 
-     
+        coordinates2 = encode_as_coordinates_padding_exv(pathes[1],existences[1],H_s,W_s,H,W,
+                                                        attatch_rate,points )
+
+     #encode_as_coordinates_padding_exv
 
         return coordinates1,coordinates2
 
