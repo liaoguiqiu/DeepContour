@@ -190,7 +190,7 @@ class  Auto_json_label(object):
         # self.database_root = "D:/Deep learning/dataset/original/new_catheter_ruler/2/"
         # self.database_root = "D:/Deep learning/dataset/original/phantom_2th_march_2021/1/"
         # self.database_root = "D:/Deep learning/dataset/original/paper_with_strong_shadow/1/"
-        self.database_root = "D:/Deep learning/dataset/original/animal_tissue/2/"
+        self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
 
         #self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
         #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"

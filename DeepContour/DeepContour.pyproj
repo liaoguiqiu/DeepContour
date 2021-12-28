@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{96589756-6b6f-4001-9c57-3efe305f57e2}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>deploy\DeepAutoJson.py</StartupFile>
+    <StartupFile>train_multi_obj\CEnet_EXS_p.py</StartupFile>
     <SearchPath>dataTool;deploy;model</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>

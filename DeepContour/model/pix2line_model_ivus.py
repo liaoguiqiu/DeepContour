@@ -235,20 +235,15 @@ class Pix2LineModel(BaseModel):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         start_time = time()
         #self.out_pathes = self.netG(self.input_G) # coordinates encoding
-        f1,self.out_pathes1,self.path_long1 = self.netG.side_branch1 (self.input_G) # coordinates encoding
-        
-        f2,self.out_pathes2,self.path_long2 = self.netG.side_branch2 (self.input_G) # coordinates encoding
-        f3,self.out_pathes3,self.path_long3 = self.netG.side_branch3 (self.input_G) # coordinates encoding
-        self.out_pathes0 =self.netG.fuse_forward(f1,f2,f3)
+        self.out_pathes0, self.out_pathes1,self.out_pathes2,self.out_pathes3 = self.netG(self.input_G)
+        self.out_pathes=[self.out_pathes0, self.out_pathes1,self.out_pathes2,self.out_pathes3]
+         
         test_time_point = time()
         print (" all test point time is [%f] " % ( test_time_point - start_time))
-        self.out_pathes = [self.out_pathes0,self.out_pathes1,self.out_pathes2,self.out_pathes3]
 
         # use the same fusion method to predict the 
-        f_e1,self.out_exis_v1,self.exis_long1 = self.netE.side_branch1 (self.input_E) # coordinates encoding     
-        f_e2,self.out_exis_v2,self.exis_long2 = self.netE.side_branch2 (self.input_E) # coordinates encoding
-        f_e3,self.out_exis_v3,self.exis_long3 = self.netE.side_branch3 (self.input_E) # coordinates encoding
-        self.out_exis_v0 =self.netE.fuse_forward(f_e1,f_e2,f_e3)
+        self.out_exis_v0, self.out_exis_v1,self.out_exis_v2,self.out_exis_v3 = self.netE(self.input_E)
+         
         self.out_exis_vs = [self.out_exis_v0,self.out_exis_v1,self.out_exis_v2,self.out_exis_v3]
 
         self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes0,Resample_size)
