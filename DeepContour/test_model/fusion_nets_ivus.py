@@ -238,7 +238,7 @@ class _2layerFusionNets_(nn.Module):
     def __init__(self,classfy = False):
         super(_2layerFusionNets_, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
-        backboneDepth = 100
+        backboneDepth = 10
         self.backbone =  baseM.conv_keep_all(Input_c,backboneDepth)
         self.side_branch1  =  _2LayerScale1(backboneDepth)
          

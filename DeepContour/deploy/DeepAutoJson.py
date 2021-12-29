@@ -177,7 +177,9 @@ class  Auto_json_label(object):
         # the portion of attated image to 2     sides
         self.attatch_rate  = 0.00
 
-        jason_tmp_dir  =  "D:/Deep learning/dataset/original/animal_tissue/1/label/100.json"
+        #jason_tmp_dir  =  "D:/Deep learning/dataset/original/animal_tissue/1/label/100.json"
+        jason_tmp_dir  =  "../config/example.json"
+
         # read th jso fie in hte start :
         with open(jason_tmp_dir) as dir:
             self.jason_tmp = JSON.load(dir)
