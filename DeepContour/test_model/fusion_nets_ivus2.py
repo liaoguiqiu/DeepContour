@@ -1,4 +1,4 @@
-#This is tht high compact version that share a lot of the layers
+# this version just share the head and the tail
 
 import test_model .layer_body_sheath_res2  as baseM 
 # the NET dbody for the sheath contour tain  upadat 5th octo 2020
@@ -13,42 +13,15 @@ import cv2
 
 Out_c = 2 # depends on the bondaried to be preicted 
 Input_c = 3  #  the gray is converted into 3 channnels image 
-class _BackBonelayer (nn.Module):
-    def __init__(self ):
-        super(_BackBonelayer, self).__init__()
-        ## depth rescaler: -1~1 -> min_deph~max_deph
-   
-        feature =16  
 
-        self.side_branch1  =  nn.ModuleList()    
-        
-        self.side_branch1.append(  baseM.conv_keep_W(Input_c,feature))# 128*256 - 64*128
-        
-        
-        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))# 32*128  - 16*128
-        feature = feature *2
-        
-       
-        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))# 8*64  - 4*64
-        feature = feature *2
-        self.depth = feature
-    def forward(self, x):
-
-        side_out =x
-        for j, name in enumerate(self.side_branch1):
-            side_out = self.side_branch1[j](side_out)
-
-      
-        
-        return side_out 
 class _2LayerScale1(nn.Module):
 #output width=((W-F+2*P )/S)+1
 
-    def __init__(self,backboneDepth,feature):
+    def __init__(self,backboneDepth):
         super(_2LayerScale1, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
    
-         
+        feature = 8
 
          
          
@@ -56,10 +29,19 @@ class _2LayerScale1(nn.Module):
         # 256*256 - 128*256
         #limit=1024
         self.side_branch1  =  nn.ModuleList()    
-          
+        self.side_branch1.append(  baseM.conv_keep_W(backboneDepth,feature))
+        # 128*256 - 64*256
+      
+
+        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))
+        feature = feature *2
+        # 64*256  - 32*256
+        #self.side_branch1.append(  conv_keep_all(feature, feature))
+        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))
+        feature = feature *2
         # 32*256  - 16*256
          
-        self.side_branch1.append(  baseM.conv_keep_W(backboneDepth,2*feature))
+        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))
         feature = feature *2
         # 16*256  - 8*256
         #self.side_branch1.append(  conv_keep_all(feature, feature))
@@ -90,11 +72,11 @@ class _2LayerScale1(nn.Module):
 class _2LayerScale2(nn.Module):
 #output width=((W-F+2*P )/S)+1
     
-    def __init__(self,backboneDepth,feature):
+    def __init__(self,backboneDepth):
         super(_2LayerScale2, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
    
-        
+        feature = 8
 
          
         #self.layer_num =Input_c
@@ -102,23 +84,32 @@ class _2LayerScale2(nn.Module):
         #limit=1024
         self.side_branch1  =  nn.ModuleList()    
         
-       
+        self.side_branch1.append(  baseM.conv_keep_W(backboneDepth,feature))# 256*256 - 128*256
+
+        
       
 
-        self.side_branch1.append(  baseM.conv_dv_2(backboneDepth,2*feature))# 128*256 - 64*128
+        self.side_branch1.append(  baseM.conv_dv_2(feature,2*feature))# 128*256 - 64*128
         feature = feature *2
         
         #self.side_branch1.append(  conv_keep_all(feature, feature))
         self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))# 64*128  - 32*128
         feature = feature *2
         
-          
+         
+        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))# 32*128  - 16*128
+        feature = feature *2
+        
         #self.side_branch1.append(  conv_keep_all(feature, feature))
         #self.side_branch1.append(  conv_keep_all(feature, feature))
 
         self.side_branch1.append(  baseM.conv_dv_2(feature,2*feature))# 16*128  - 8*64
         feature = feature *2
-           
+        
+       
+        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))# 8*64  - 4*64
+        feature = feature *2
+      
 
         self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0))) #2*64
          
@@ -138,11 +129,11 @@ class _2LayerScale2(nn.Module):
 class _2LayerScale3(nn.Module):
 #output width=((W-F+2*P )/S)+1
 
-    def __init__(self,backboneDepth,feature):
+    def __init__(self,backboneDepth):
         super(_2LayerScale3, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
    
-        
+        feature = 8
 
          
         #self.layer_num =Input_c
@@ -150,17 +141,21 @@ class _2LayerScale3(nn.Module):
         #limit=1024
         self.side_branch1  =  nn.ModuleList()    
         
+        self.side_branch1.append(  baseM.conv_dv_2(backboneDepth,feature))# 256*256 - 128*256
 
-        self.side_branch1.append(  baseM.conv_dv_2(backboneDepth,2*feature))# 256*256 - 128*256
+        
+      
+
+        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))# 128*256 - 64*128
         feature = feature *2
         
-         
-      
         #self.side_branch1.append(  conv_keep_all(feature, feature))
         self.side_branch1.append(  baseM.conv_dv_2(feature,2*feature))# 64*128  - 32*128
         feature = feature *2
         
-        
+         
+        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))# 32*128  - 16*128
+        feature = feature *2
         
         #self.side_branch1.append(  conv_keep_all(feature, feature))
         #self.side_branch1.append(  conv_keep_all(feature, feature))
@@ -168,6 +163,9 @@ class _2LayerScale3(nn.Module):
         self.side_branch1.append(  baseM.conv_dv_2(feature,2*feature))# 16*128  - 8*64
         feature = feature *2
         
+       
+        self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))# 8*64  - 4*64
+        feature = feature *2
       
 
         self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature,k=(4,1),s=(1,1),p=(0,0))) #2*64
@@ -242,13 +240,12 @@ class _2layerFusionNets_(nn.Module):
     def __init__(self,classfy = False):
         super(_2layerFusionNets_, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
-        self.backbone =  _BackBonelayer()
-        backboneDepth = self.backbone.depth
-        feature = 32
-        self.side_branch1  =  _2LayerScale1(backboneDepth,feature)
+        backboneDepth = 10
+        self.backbone =  baseM.conv_keep_all(Input_c,backboneDepth)
+        self.side_branch1  =  _2LayerScale1(backboneDepth)
          
-        self.side_branch2  =  _2LayerScale2(backboneDepth,feature)  
-        self.side_branch3  =  _2LayerScale3(backboneDepth,feature)   
+        self.side_branch2  =  _2LayerScale2(backboneDepth)  
+        self.side_branch3  =  _2LayerScale3(backboneDepth)   
         self.fusion_layer = Fusion(classfy)
         self.low_level_encoding = nn.Conv2d(512 ,Out_c,(1,3), (1,1), (0,1), bias=False)
          

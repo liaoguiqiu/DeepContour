@@ -75,6 +75,9 @@
     <Compile Include="test_model\fusion_nets_ivus.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="test_model\fusion_nets_ivus2.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="test_model\layer_body_sheath_res2.py" />
     <Compile Include="test_model\layer_GD.py" />
     <Compile Include="test_model\loss_MTL.py" />

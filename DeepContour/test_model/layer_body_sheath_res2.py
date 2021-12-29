@@ -76,10 +76,10 @@ class conv_dv_2(nn.Module):
 # Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
     
 class conv_keep_all(nn.Module):
-    def __init__ (self, indepth,outdepth,k=(3,3),s=(1,1),p=(1,1)):
+    def __init__ (self, indepth,outdepth,k=(3,3),s=(1,1),p=(1,1),resnet=False):
         super(conv_keep_all, self).__init__()
         self.conv_block = self.build_conv_block(indepth,outdepth,k,s,p)
-
+        self.resnet = resnet
     def build_conv_block(self, indepth,outdepth,k,s,p):
         module = nn.Sequential(
              #nn.ReflectionPad2d((p[1],p[1],p[0],p[0])), 
@@ -96,8 +96,10 @@ class conv_keep_all(nn.Module):
     def forward(self, x):
         #"""Forward function (with skip connections)"""
         #out = x+ self.conv_block(x)  # add skip connections
-        out =  self.conv_block(x)  # add skip connections
-
+        if self.resnet == False:
+            out =  self.conv_block(x)  # add skip connections
+        else:
+            out = x+ self.conv_block(x)
         return out
 
  
