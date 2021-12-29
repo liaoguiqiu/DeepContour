@@ -99,7 +99,7 @@ class Generator_Contour_sheath(object):
     def __init__(self):
         self.OLG_flag = True
         self.cv_display = False
-        self.dis_origin = True
+        self.dis_origin = False
         self.origin_data = Save_Contour_pkl()
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/VARY/"
         data_root = "../../dataset/ivus/"
@@ -495,7 +495,8 @@ class Generator_Contour_sheath(object):
                                                                     2)  # draw the tissue
                     display = Basic_Operator.draw_coordinates_color(RGB_imag, sheath_x, sheath_y, 1)  # draw the tissue
 
-                    cv2.imshow('all', display.astype(np.uint8))
+                    if self.dis_origin == True:
+                        cv2.imshow('all', display.astype(np.uint8))
 
                     cv2.waitKey(10)
                     new_cx = [None] * 2  # initialized as just two bondaries
