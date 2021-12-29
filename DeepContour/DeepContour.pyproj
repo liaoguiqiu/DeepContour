@@ -25,9 +25,6 @@
     <Compile Include="arg_parse.py" />
     <Compile Include="basic_operator.py" />
     <Compile Include="databufferExcel.py" />
-    <Compile Include="dataset.py" />
-    <Compile Include="dataset_full_OLG.py" />
-    <Compile Include="dataset_full_path.py" />
     <Compile Include="dataset_ivus.py" />
     <Compile Include="dataset_layers.py" />
     <Compile Include="dataset_sheath.py" />
@@ -50,11 +47,6 @@
     <Compile Include="deploy\validate.py" />
     <Compile Include="deploy\validate_full.py" />
     <Compile Include="image_trans.py" />
-    <Compile Include="layer_body.py" />
-    <Compile Include="layer_body_sheath.py" />
-    <Compile Include="layer_body_USN.py" />
-    <Compile Include="layer_generator_body.py" />
-    <Compile Include="layer_generator_train.py" />
     <Compile Include="model\base_model.py" />
     <Compile Include="model\CE_build3.py">
       <SubType>Code</SubType>
@@ -96,6 +88,9 @@
     <Compile Include="train_lumen_sheath_segmentation\contour_sheath_Unet_integer_with_D.py" />
     <Compile Include="train_lumen_sheath_segmentation\contour_sheath_Unet_one_hot_with_D.py" />
     <Compile Include="train_multi_obj\CEnet_EXS_p.py" />
+    <Compile Include="working_dir_root.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="dataTool" />

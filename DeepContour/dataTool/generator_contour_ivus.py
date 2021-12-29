@@ -13,7 +13,7 @@ import pickle
 from dataTool.operater import Basic_Operator
 from dataTool.operator2 import Basic_Operator2
 import scipy.signal as signal
-
+from working_dir_root import Dataset_root
 
 # the generator and distribution monitoring
 
@@ -103,7 +103,7 @@ class Generator_Contour_sheath(object):
         self.origin_data = Save_Contour_pkl()
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/VARY/"
         data_root = "../../dataset/ivus/"
-        data_root = "D:/Deep learning/dataset/label data/"
+        data_root = Dataset_root +"label data/"
         self.image_dir = data_root + "img/"
         self.pkl_dir = data_root +"seg label pkl train/"
         #self.pkl_dir = data_root +"seg label pkl train/"
@@ -114,8 +114,8 @@ class Generator_Contour_sheath(object):
         self.save_pkl_dir = data_root   + "pkl_generate/"
 
         # for OLG on line generator
-        self.com_dir = "D:/Deep learning/dataset/telecom/"
-        self.OLG_dir = "D:/Deep learning/dataset/For IVUS/train_OLG/"
+        self.com_dir = data_root + "telecom/"
+        self.OLG_dir = Dataset_root + "For IVUS/train_OLG/"
         self.contour_saver = Save_Contour_pkl()
         # self.origin_data =self.origin_data.read_data(self.pkl_dir)
         self. image_type = ".jpg"

@@ -7,7 +7,7 @@ from dataTool import generator_contour
 
 from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
 from  dataTool.generator_contour_ivus import  Generator_Contour_sheath
-
+from working_dir_root import Dataset_root 
 from analy import Save_signal_enum
 from scipy import signal 
 from image_trans import BaseTransform  
@@ -47,7 +47,7 @@ class myDataloader(object):
         self.talker.pending =0 # no pending so all folder can be writed
         #self.talker.writing =2 
         self.talker.save_data(self.com_dir) # save
-        root = "D:/Deep learning/dataset/For IVUS/"
+        root =Dataset_root + "For IVUS/"
 
         self.dataroot = root + "train/img/"
         self.signalroot =root + "train/label/"
