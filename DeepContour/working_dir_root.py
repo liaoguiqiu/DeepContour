@@ -5,10 +5,10 @@
 working_root = "D:/Deep learning/"
 
 #this is for marcopolo linux
-#Dataset_root = "/media/icube/DATA"
+working_root = "/media/icube/DATA/"
 
 #this is for Beatriz's computer
-#Dataset_root = "/media/icube/DATA"
+#working_root = "/media/icube/DATA/"
 
 Dataset_root =  working_root + "dataset/"
 Output_root =   working_root + "out/"
