@@ -63,7 +63,7 @@ class myDataloader(object):
 
 
 
-        self.noisyflag = False
+        self.noisyflag = True
         self.read_all_flag=0
         self.read_record =0
         self.folder_pointer = 0

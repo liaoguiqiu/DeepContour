@@ -2,7 +2,7 @@
 #PS: better keep the structure within the root the same for every computer
 
 #this is for Guiqiu Windows
-working_root = "D:/Deep learning/"
+# working_root = "D:/Deep learning/"
 
 #this is for marcopolo linux
 working_root = "/media/icube/DATA/"
