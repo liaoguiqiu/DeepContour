@@ -1,5 +1,6 @@
 #This is tht high compact version that share a lot of the layers
-
+from networks import UnetSkipConnectionBlock 
+from networks import get_norm_layer
 import test_model .layer_body_sheath_res2  as baseM 
 # the NET dbody for the sheath contour tain  upadat 5th octo 2020
 import torch
@@ -10,11 +11,29 @@ from  dataset_sheath import Path_length,Batch_size,Resample_size
 import torchvision.models
 import numpy as np
 import cv2
-
 Out_c = 2 # depends on the bondaried to be preicted 
 Input_c = 3  #  the gray is converted into 3 channnels image 
+class _BackBoneUnet(nn.Module):
+    def __init__(self,input_nc=3, output_nc=256, num_downs=8, ngf=32, norm_layer=nn.BatchNorm2d, use_dropout=False ):
+        super(_BackBoneUnet, self).__init__()
+        ## depth rescaler: -1~1 -> min_deph~max_deph
+        norm_layer = get_norm_layer(norm_type='instance')
+        unet_block = UnetSkipConnectionBlock(ngf * 8, ngf * 8, input_nc=None, submodule=None, norm_layer=norm_layer, innermost=True)  # add the innermost layer
+        for i in range(num_downs - 5):          # add intermediate layers with ngf * 8 filters
+            unet_block = UnetSkipConnectionBlock(ngf * 8, ngf * 8, input_nc=None, submodule=unet_block, norm_layer=norm_layer, use_dropout=use_dropout)
+        unet_block = UnetSkipConnectionBlock(ngf * 4, ngf * 8, input_nc=None, submodule=unet_block, norm_layer=norm_layer)
+        unet_block = UnetSkipConnectionBlock(ngf * 2, ngf * 4, input_nc=None, submodule=unet_block, norm_layer=norm_layer)
+        unet_block = UnetSkipConnectionBlock(ngf, ngf * 2, input_nc=None, submodule=unet_block, norm_layer=norm_layer)
+        # here this is modifiy to be a feature extracter
+        self.model = UnetSkipConnectionBlock(output_nc, ngf, input_nc=input_nc, submodule=unet_block, outermost=True, norm_layer=norm_layer)  # add the outermost layer
+        
+    def forward(self, x):
+         
+        
+        return self.model(x) 
+
 class _BackBonelayer (nn.Module):
-    def __init__(self ):
+    def __init__(self, inputd = Input_c):
         super(_BackBonelayer, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
    
@@ -22,8 +41,7 @@ class _BackBonelayer (nn.Module):
 
         self.side_branch1  =  nn.ModuleList()    
         
-        self.side_branch1.append(  baseM.conv_keep_W(Input_c,feature))# 128*256 - 64*128
-        
+        self.side_branch1.append(  baseM.conv_keep_W(inputd,feature))# 128*256 - 64*128
         
         self.side_branch1.append(  baseM.conv_keep_W(feature,2*feature))# 32*128  - 16*128
         feature = feature *2
@@ -239,10 +257,19 @@ class Fusion(nn.Module):
 class _2layerFusionNets_(nn.Module):
 #output width=((W-F+2*P )/S)+1
 
-    def __init__(self,classfy = False):
+    def __init__(self,classfy = False,UnetBack_flag = True):
         super(_2layerFusionNets_, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
-        self.backbone =  _BackBonelayer()
+        self. UnetBack_flag = UnetBack_flag
+
+        if UnetBack_flag == True:
+            unetf = 256
+            self.Unet_back = _BackBoneUnet( output_nc=unetf,use_dropout=True)
+            self.pixencoding = baseM.conv_keep_all(unetf,1,k=(1,1),s=(1,1),p=(0,0),resnet=False,final=True)
+            self.backbone =  _BackBonelayer(unetf)
+        else:
+            self.backbone =  _BackBonelayer()
+
         backboneDepth = self.backbone.depth
         feature = 32
         self.side_branch1  =  _2LayerScale1(backboneDepth,feature)
@@ -265,11 +292,17 @@ class _2layerFusionNets_(nn.Module):
         return side_out_low,side_out_long
     #    out = self.fusion_layer( side_out1,side_out2,side_out3)
        
-       
 
     #    return out 
     def forward(self, x):
-        backbone_f = self.backbone(x)
+        if self. UnetBack_flag  == True:
+            unet_f = self.Unet_back(x)
+            pix_seg = self. pixencoding(unet_f) # use the Unet features to predict a pix wise segmentation
+            backbone_f = self.backbone(unet_f)
+
+        else:
+            backbone_f = self.backbone(x)
+            pix_seg = None
         f1 = self.side_branch1 (backbone_f) # coordinates encoding
         f2 = self.side_branch2 (backbone_f) # coordinates encoding
         f3 = self.side_branch3 (backbone_f) # coordinates encoding
@@ -281,7 +314,7 @@ class _2layerFusionNets_(nn.Module):
         side_out2l,side_out2H = self.upsample_path(side_out2l)
         side_out3l,side_out3H = self.upsample_path(side_out3l)
 
-        return out,side_out1l ,side_out2l,side_out3l
+        return out,side_out1l ,side_out2l,side_out3l,pix_seg
         
         #return out,side_out,side_out2
 # mainly based on the resnet  

@@ -22,7 +22,7 @@ class conv_keep_W(nn.Module):
             #nn.Conv2d(indepth, outdepth,k, s, (0,0), bias=False),  
             nn.Conv2d(indepth, outdepth,k, s, p, bias=False),          
             
-            nn.BatchNorm2d(outdepth),
+            nn.InstanceNorm2d(outdepth),
             #nn.GroupNorm(8*int(outdepth/basic_feature),outdepth),
 
             nn.LeakyReLU(0.1,inplace=False) # after I add Iddentity afre this the inplace should be false, 
@@ -55,7 +55,7 @@ class conv_dv_2(nn.Module):
              #nn.Conv2d(indepth, outdepth,k, s,(0,0), bias=False), 
              nn.Conv2d(indepth, outdepth,k, s,p, bias=False),          
              
-             nn.BatchNorm2d(outdepth),
+             nn.InstanceNorm2d(outdepth),
              #nn.GroupNorm(8*int(outdepth/basic_feature),outdepth),
 
              nn.LeakyReLU(0.1,inplace=False)
@@ -76,21 +76,29 @@ class conv_dv_2(nn.Module):
 # Conv2d(in_channels, out_channels, kernel_size, stride=1, padding=0, dilation=1, groups=1, bias=True)
     
 class conv_keep_all(nn.Module):
-    def __init__ (self, indepth,outdepth,k=(3,3),s=(1,1),p=(1,1),resnet=False):
+    def __init__ (self, indepth,outdepth,k=(3,3),s=(1,1),p=(1,1),resnet=False,final=False):
         super(conv_keep_all, self).__init__()
-        self.conv_block = self.build_conv_block(indepth,outdepth,k,s,p)
+        self.conv_block = self.build_conv_block(indepth,outdepth,k,s,p,final)
         self.resnet = resnet
-    def build_conv_block(self, indepth,outdepth,k,s,p):
-        module = nn.Sequential(
-             #nn.ReflectionPad2d((p[1],p[1],p[0],p[0])), 
-             #nn.Conv2d(indepth, outdepth,k, s, (0,0), bias=False),          
-             nn.Conv2d(indepth, outdepth,k, s,p, bias=False),          
+    def build_conv_block(self, indepth,outdepth,k,s,p,final):
+        if final == False:
+            module = nn.Sequential(
+                 #nn.ReflectionPad2d((p[1],p[1],p[0],p[0])), 
+                 #nn.Conv2d(indepth, outdepth,k, s, (0,0), bias=False),          
+                 nn.Conv2d(indepth, outdepth,k, s,p, bias=False),          
 
-             nn.BatchNorm2d(outdepth),
-             #nn.GroupNorm(4*int(outdepth/basic_feature),outdepth),
+                 nn.InstanceNorm2d(outdepth),
+                 #nn.GroupNorm(4*int(outdepth/basic_feature),outdepth),
 
-             nn.LeakyReLU(0.1,inplace=True)
-             )
+                 nn.LeakyReLU(0.1,inplace=True)
+                 )
+        else:
+            module = nn.Sequential(
+                 #nn.ReflectionPad2d((p[1],p[1],p[0],p[0])), 
+                 #nn.Conv2d(indepth, outdepth,k, s, (0,0), bias=False),          
+                 nn.Conv2d(indepth, outdepth,k, s,p, bias=False), 
+                 #nn.Tanh()
+                 )
         return module
  
     def forward(self, x):

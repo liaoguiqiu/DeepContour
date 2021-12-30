@@ -28,13 +28,13 @@ from deploy.basic_trans import Basic_oper
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
-Visdom_flag  = True  # the flag of using the visdom or not
+Visdom_flag  = False  # the flag of using the visdom or not
 OLG_flag = False    # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
 validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler 
-Continue_flag = True  # if not true, it start from scratch again
+Continue_flag = False  # if not true, it start from scratch again
 loadmodel_index = '_1.pth'
 
 infinite_save_id =0 # use this method so that the index of the image will not start from 0 again when switch the folder    
@@ -410,7 +410,8 @@ while(1): # main infinite loop
             hot_real[:,:,2]  =  oneHot_real [2,:,:]
           
          
-            saveout  = CE_Nets.fake_B
+            #saveout  = CE_Nets.fake_B # display encoding tranform
+            saveout = CE_Nets.pix_wise # middel feature pix encoding
             show2 =  saveout[0,:,:,:].cpu().detach().numpy()*255 
 
             

@@ -118,6 +118,7 @@ class Pix2LineModel(BaseModel):
         self.loss_G_L3 =torch.tensor(0,dtype=torch.float)
         self.metrics_saver = EXCEL_saver(8) # 8 values
         self.switcher = 0  # used to switch gradient between different part of the nets
+        self.swither_G = 0 # used to optimize the back bone or not
 
     def validation_init(self):
         self.L1 = 0
@@ -235,14 +236,14 @@ class Pix2LineModel(BaseModel):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         start_time = time()
         #self.out_pathes = self.netG(self.input_G) # coordinates encoding
-        self.out_pathes0, self.out_pathes1,self.out_pathes2,self.out_pathes3 = self.netG(self.input_G)
+        self.out_pathes0, self.out_pathes1,self.out_pathes2,self.out_pathes3,self.pix_wise = self.netG(self.input_G)
         self.out_pathes=[self.out_pathes0, self.out_pathes1,self.out_pathes2,self.out_pathes3]
          
         test_time_point = time()
         print (" all test point time is [%f] " % ( test_time_point - start_time))
 
         # use the same fusion method to predict the 
-        self.out_exis_v0, self.out_exis_v1,self.out_exis_v2,self.out_exis_v3 = self.netE(self.input_E)
+        self.out_exis_v0, self.out_exis_v1,self.out_exis_v2,self.out_exis_v3,_ = self.netE(self.input_E)
          
         self.out_exis_vs = [self.out_exis_v0,self.out_exis_v1,self.out_exis_v2,self.out_exis_v3]
 
@@ -271,7 +272,14 @@ class Pix2LineModel(BaseModel):
         """Calculate GAN and L1 loss for the generator"""
         # First, G(A) should fake the discriminator
         self.optimizer_G.zero_grad()        # set G's gradients to zero
+        if self.netG.UnetBack_flag == True and self.swither_G==0:
+            self.swither_G=1
+            self.set_requires_grad(self.netG, False)
+            self.set_requires_grad(self.netG.Unet_back, True) 
+            self.set_requires_grad(self.netG.pixencoding, True) 
 
+            pix_loss = self.criterionL1 (self.pix_wise, self.real_B)
+            self.loss_G =  100 * pix_loss
         #self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
         #self.set_requires_grad(self.netG, False)  # D requires no gradients when optimizing G
         # just remain the upsample fusion parameter to optimization 
@@ -283,32 +291,30 @@ class Pix2LineModel(BaseModel):
         # self.set_requires_grad(self.netG.side_branch3.fullout, True)  # D requires no gradients when optimizing G
         # self.set_requires_grad(self.netG.fusion_layer , True)  # D requires no gradients when optimizing G
         #self.set_requires_grad(self.netE, False)  # enable backprop for D
-        
-        self.set_requires_grad(self.netG, True)
+        else:
+            self.swither_G=0
+            self.set_requires_grad(self.netG, True)
 
+            fake_AB = torch.cat((self.real_A, self.fake_B), 1)
+            pred_fake = self.netD(fake_AB)
+            self.loss_G_GAN = self.criterionGAN(pred_fake, True)
+            # Second, G(A) = B
+            #self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
 
-        fake_AB = torch.cat((self.real_A, self.fake_B), 1)
-        pred_fake = self.netD(fake_AB)
-        self.loss_G_GAN = self.criterionGAN(pred_fake, True)
-        # Second, G(A) = B
-        #self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+            #LGQ special fusion loss
+            #self.loss=self.criterionMTL.multi_loss([self.out_pathes0],self.real_pathes)
+            #self.loss=self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
+            # 3 imput , also rely on the existence vector
+            self.loss=self.criterionMTL.multi_loss_contour_exist(self.out_pathes,self.real_pathes, self.out_exis_vs) # 
 
-        #LGQ special fusion loss
-        #self.loss=self.criterionMTL.multi_loss([self.out_pathes0],self.real_pathes)
-        #self.loss=self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
-        # 3 imput , also rely on the existence vector
-        self.loss=self.criterionMTL.multi_loss_contour_exist(self.out_pathes,self.real_pathes, self.out_exis_vs) # 
-
-        
-
-        #self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] + 0.1*loss[2] + 0.2*loss[3])*self.opt.lambda_L1
-        #self.loss_G_L1 =( 1.0*loss[0]  + 0.02*loss[1] + 0.02*loss[2]+ 0.02*loss[3]+ 0.02*loss[4]+ 0.02*loss[5])*self.opt.lambda_L1
-        #self.loss_G_L1_2 = 0.5*loss[0] 
-        #self.loss_G_L1 =( 1.0*loss[0]  +   0.01*loss[1] + 0.01*loss[2] +0.01*loss[3]  )*self.opt.lambda_L1
-        # self.loss_G_L0 =( self.loss[0]    )*self.opt.lambda_L1
-        #self.loss_G_L0 = (self.loss[0])
-        # self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
-        self.loss_G =   ( 1.0*self.loss[0]  + 0.1*self.loss[1] + 0.01*self.loss[2] + 0.01*self.loss[3])
+            #self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] + 0.1*loss[2] + 0.2*loss[3])*self.opt.lambda_L1
+            #self.loss_G_L1 =( 1.0*loss[0]  + 0.02*loss[1] + 0.02*loss[2]+ 0.02*loss[3]+ 0.02*loss[4]+ 0.02*loss[5])*self.opt.lambda_L1
+            #self.loss_G_L1_2 = 0.5*loss[0] 
+            #self.loss_G_L1 =( 1.0*loss[0]  +   0.01*loss[1] + 0.01*loss[2] +0.01*loss[3]  )*self.opt.lambda_L1
+            # self.loss_G_L0 =( self.loss[0]    )*self.opt.lambda_L1
+            #self.loss_G_L0 = (self.loss[0])
+            # self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
+            self.loss_G =   ( 1.0*self.loss[0]  + 0.1*self.loss[1] + 0.01*self.loss[2] + 0.01*self.loss[3])
 
         self.loss_G.backward( )
         #self.optimizer_G.step()             # udpate G's weights

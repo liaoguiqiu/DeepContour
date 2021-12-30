@@ -37,7 +37,7 @@ Hybrid_OLG = False  # whether  mix with online generated images and real images 
 validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not 
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler 
-Continue_flag = True  # if not true, it start from scratch again
+Continue_flag = False  # if not true, it start from scratch again
 from working_dir_root import Dataset_root,Output_root
 
 if Visdom_flag == True:
