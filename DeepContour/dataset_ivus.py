@@ -3,10 +3,11 @@ import cv2
 import numpy as np
 import os
 from analy import MY_ANALYSIS
-from dataTool import generator_contour 
+# from dataTool import generator_contour
+from dataTool import generator_contour_ivus
 
-from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
-from  dataTool.generator_contour_ivus import  Generator_Contour_sheath
+# from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
+from  dataTool.generator_contour_ivus import  Generator_Contour_sheath,Communicate,Save_Contour_pkl
 from working_dir_root import Dataset_root 
 from analy import Save_signal_enum
 from scipy import signal 
@@ -18,7 +19,7 @@ from basic_operator import Basic_Operator
 from scipy.interpolate import interp1d
 # test on the deploy marcopolo
 seed(1)
-Batch_size = 4
+Batch_size = 1
 Resample_size =256 # the input and label will be resampled 
 Path_length = 256
 Augment_limitation_flag = True
@@ -87,7 +88,7 @@ class myDataloader(object):
         self.input_path = np.zeros((batch_size,self.obj_num,path_size)) # predifine the path number is 2
         self.exis_vec = np.zeros((batch_size,self.obj_num,path_size)) # predifine the existence vector number is 2
 
-        self.all_dir_list = os.listdir(self.dataroot)
+        self.all_dir_list = os.listdir(self.signalroot)
         self.folder_num = len(self.all_dir_list)
         # create the buffer list
         self.folder_list = [None]*self.folder_num
@@ -98,7 +99,7 @@ class myDataloader(object):
         number_i = 0
         # all_dir_list is subfolder list 
         #creat the image list point to the STASTICS TIS  list
-        saved_stastics = Generator_Contour()
+        saved_stastics = Generator_Contour_sheath()
         #read all the folder list
         for subfold in self.all_dir_list:
             #if(number_i==0):
@@ -109,8 +110,11 @@ class myDataloader(object):
             #change the dir firstly before read
             #saved_stastics.all_statics_dir = os.path.join(self.signalroot, subfold, 'contour.pkl')
             this_contour_dir =  self.signalroot+ subfold+'/'+ 'contours.pkl' # for both linux and window
+            this_contour_dir =  self.signalroot+ subfold+'/' # for both linux and window
 
-            self.signal[number_i]  =  self.read_data(this_contour_dir)
+            # self.signal[number_i]  =  self.read_data(this_contour_dir)
+            # self.signal[number_i]=generator_contour_ivus.Save_Contour_pkl().read_data(this_contour_dir)
+            self.signal[number_i]=  pickle.load(open(this_contour_dir + 'contours.pkl', 'rb'), encoding='iso-8859-1')
             number_i +=1
             #read the folder list finished  get the folder list and all saved path
     def noisy(self,noise_typ,image):
@@ -160,7 +164,8 @@ class myDataloader(object):
               noisy = image + image * gauss
               return np.clip(noisy,0,254)
     def read_data(self,root):
-        data = pickle.load(open(root,'rb'),encoding='iso-8859-1')
+        # loader = Save_Contour_pkl()
+        data =  pickle.load(open(root,'rb'),encoding='iso-8859-1')
         return data
     def gray_scale_augmentation(self,orig_gray) :
         random_scale = 0.3 + (1.5  - 0.3) * np.random.random_sample()

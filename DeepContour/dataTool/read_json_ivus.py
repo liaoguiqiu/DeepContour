@@ -11,8 +11,8 @@ from zipfile import ZipFile
 import scipy.signal as signal
 import pandas as pd
 from collections import OrderedDict
-from generator_contour_ivus import Save_Contour_pkl
-
+from dataTool.generator_contour_ivus import Save_Contour_pkl
+from working_dir_root import Dataset_root
 Train_validation_split = True  # flag for devide the data
 Train_validation_devi = 3  # all data are equally devided by thsi number
 Test_fold = 0  # use the 0 st for training, the other for validation
@@ -27,12 +27,14 @@ class Read_read_check_json_label(object):
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE-center/"
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
         self.database_root = "../../dataset/ivus/"
+        self.database_root = Dataset_root + "label data/"
+
         # self.database_root = "D:/Deep learning/dataset/label data/"
 
 #<<<<<<< HEAD:DeepContour/dataTool/read_json_ivus.py
         #sub_folder = "animal2/"
 #=======
-        sub_folder = "2_PD8/"
+        sub_folder = "animal2/"
 #>>>>>>> b8bb1d19b916df000a1ab2c21c7474cf6fa38b44:dataTool/read_json_ivus.py
 
         self.image_dir = self.database_root + "img/" + sub_folder

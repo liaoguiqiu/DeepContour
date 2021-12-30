@@ -11,7 +11,7 @@ from torch.autograd import Variable
 #import gan_body 
 from model import cGAN_build # the mmodel
  
-import layer_body_sheath # the model
+# import layer_body_sheath # the model
 import arg_parse
 #import imagenet
 from analy import MY_ANALYSIS
@@ -19,7 +19,7 @@ from analy import Save_signal_enum
 import cv2
 import numpy
 from image_trans import BaseTransform  
-from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate 
+# from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
 import rendering
 validation_flag = False
 

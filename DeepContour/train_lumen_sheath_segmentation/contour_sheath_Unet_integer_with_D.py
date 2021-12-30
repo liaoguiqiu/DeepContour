@@ -9,7 +9,7 @@ from torch.autograd import Variable
  
 from model import cGAN_build # the mmodel
  
-import layer_body_sheath # the model
+# import layer_body_sheath # the model
 import arg_parse
 #import imagenet
 from analy import MY_ANALYSIS
@@ -17,7 +17,9 @@ from analy import Save_signal_enum
 import cv2
 import numpy
 from image_trans import BaseTransform  
-from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate 
+# from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
+from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
+
 from dataTool.generator_contour_ivus import Generator_Contour_sheath
 import rendering
 
@@ -30,20 +32,22 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 # Switch control for the Visdom or Not
 Visdom_flag  = False  # the flag of using the visdom or not
-OLG_flag = True    # flag of training with on line generating or not
+OLG_flag = False    # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
-validation_flag = True  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
+validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not 
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler 
 Continue_flag = True  # if not true, it start from scratch again
+from working_dir_root import Dataset_root,Output_root
+
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 #infinite saving term
 infinite_save_id =0
+loadmodel_index = '_1.pth'
+pth_save_dir = Output_root + "Unet_trained/"
 
-pth_save_dir = "../out/sheathCGAN/"
-pth_save_dir = "../out/deep_layers/"
 
 if not os.path.exists(pth_save_dir):
     os.makedirs(pth_save_dir)
@@ -122,7 +126,7 @@ def weights_init(m):
 #netD = gan_body._netD_8()
 
 #Guiqiu Resnet version
-netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
+# netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
 gancreator = cGAN_build.CGAN_creator() # the Cgan for the segmentation 
 GANmodel= gancreator.creat_cgan()  #  G and D are created here 
 #netD = gan_body._netD_Resnet()
@@ -135,8 +139,10 @@ GANmodel.netD.apply(weights_init)
 GANmodel.netG.apply(weights_init)
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
-    GANmodel.netG.load_state_dict(torch.load('../out/deep_layers/cGANG_epoch_1.pth'))
-    GANmodel.netD.load_state_dict(torch.load('../out/deep_layers/cGAND_epoch_1.pth'))
+    GANmodel.netG.load_state_dict(torch.load(pth_save_dir + 'cGANG_epoch' + loadmodel_index))
+
+    GANmodel.netD.load_state_dict(torch.load(pth_save_dir + 'cGAND_epoch' + loadmodel_index))
+
 
 print(GANmodel.netD)
 print(GANmodel.netG)
@@ -156,7 +162,7 @@ fake_label = 0
 
 if opt.cuda:
     print("CUDA TRUE")
-    netD.cuda()
+    # netD.cuda()
     #netG.cuda()
     criterion.cuda()
     input, label = input.cuda(), label.cuda()
@@ -167,7 +173,7 @@ fixed_noise = Variable(fixed_noise)
 
 # setup optimizer
 #optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
+# optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
 #optimizerD = optim.SGD(netD.parameters(), lr=opt.lr,momentum= 0.9, weight_decay =2e-4 )
 
 
