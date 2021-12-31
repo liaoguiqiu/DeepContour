@@ -6,6 +6,9 @@ import rendering
 from dataset_ivus import Resample_size 
 import numpy as np
 from databufferExcel import EXCEL_saver
+from working_dir_root import Dataset_root,Output_root
+import os
+
 Convert_Unet_to_layer = False # the flag for convert the unet to laer
 class Pix2PixModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
@@ -79,7 +82,11 @@ class Pix2PixModel(BaseModel):
             self.metrics_saver = EXCEL_saver(8)
         else: 
             self.metrics_saver = EXCEL_saver(6)
+        # self.save_dir = "D:/Deep learning/out/1Excel/Unet/"
+        self.save_dir = Output_root + "/1Excel/Unet_trained/"
 
+        if not os.path.exists(self.save_dir):
+            os.makedirs(self.save_dir)
 
     def error_calculation(self): 
         #average Jaccard index J
@@ -155,8 +162,7 @@ class Pix2PixModel(BaseModel):
             vector = [self.J1, self.J2,self.J3,self.D1,self.D2,self.D3]
         vector = torch.stack(vector)
         vector= vector.cpu().detach().numpy()
-        save_dir = "D:/Deep learning/out/1Excel/Unet/"
-        self.metrics_saver.append_save(vector,save_dir)
+        self.metrics_saver.append_save(vector,self.save_dir)
 
 
     def set_input(self, realA,realB,labelv):

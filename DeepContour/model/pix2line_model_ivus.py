@@ -90,6 +90,8 @@ class Pix2LineModel(BaseModel):
 
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+            self.optimizer_G_unet = torch.optim.Adam(self.netG.Unet_back.  parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+
             self.optimizer_G_f = torch.optim.Adam(self.netG.fusion_layer.  parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_G_1 = torch.optim.Adam(self.netG.side_branch1.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_G_2 = torch.optim.Adam(self.netG.side_branch2.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
@@ -271,15 +273,27 @@ class Pix2LineModel(BaseModel):
     def backward_G(self):
         """Calculate GAN and L1 loss for the generator"""
         # First, G(A) should fake the discriminator
+        # self.swither_G = 1
         self.optimizer_G.zero_grad()        # set G's gradients to zero
-        if self.netG.UnetBack_flag == True and self.swither_G==0:
-            self.swither_G=1
-            self.set_requires_grad(self.netG, False)
-            self.set_requires_grad(self.netG.Unet_back, True) 
-            self.set_requires_grad(self.netG.pixencoding, True) 
+        self.optimizer_G_unet.zero_grad()  # udpate G's weights
+
+        if self.netG.UnetBack_flag == True and self.swither_G<=5:
+            self.swither_G+=1
+            self.set_requires_grad(self.netG, True)
+            # self.set_requires_grad(self.netG.side_branch1, False)
+            # self.set_requires_grad(self.netG.side_branch2, False)
+            # self.set_requires_grad(self.netG.side_branch3, False)
+            # self.set_requires_grad(self.netG.fusion_layer, False)
+
+
 
             pix_loss = self.criterionL1 (self.pix_wise, self.real_B)
-            self.loss_G =  100 * pix_loss
+            self.loss_pix =  100 * pix_loss
+            self.loss_pix.backward(retain_graph=True)
+            self.loss_G=-self.loss_pix
+            # self.optimizer_G.step()             # udpate G's weights
+            self.optimizer_G_unet.step()  # udpate G's weights
+            return
         #self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
         #self.set_requires_grad(self.netG, False)  # D requires no gradients when optimizing G
         # just remain the upsample fusion parameter to optimization 
@@ -292,8 +306,10 @@ class Pix2LineModel(BaseModel):
         # self.set_requires_grad(self.netG.fusion_layer , True)  # D requires no gradients when optimizing G
         #self.set_requires_grad(self.netE, False)  # enable backprop for D
         else:
-            self.swither_G=0
+            self.swither_G+=1
             self.set_requires_grad(self.netG, True)
+            # self.set_requires_grad(self.netG.Unet_back, False)
+            # self.set_requires_grad(self.netG.pixencoding, False)
 
             fake_AB = torch.cat((self.real_A, self.fake_B), 1)
             pred_fake = self.netD(fake_AB)
@@ -305,18 +321,21 @@ class Pix2LineModel(BaseModel):
             #self.loss=self.criterionMTL.multi_loss([self.out_pathes0],self.real_pathes)
             #self.loss=self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
             # 3 imput , also rely on the existence vector
-            self.loss=self.criterionMTL.multi_loss_contour_exist(self.out_pathes,self.real_pathes, self.out_exis_vs) # 
+            # self.loss=self.criterionMTL.multi_loss_contour_exist(self.out_pathes,self.real_pathes, self.out_exis_vs) #
+            self.loss=self.criterionMTL.multi_loss (self.out_pathes,self.real_pathes ) #
+
 
             #self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] + 0.1*loss[2] + 0.2*loss[3])*self.opt.lambda_L1
             #self.loss_G_L1 =( 1.0*loss[0]  + 0.02*loss[1] + 0.02*loss[2]+ 0.02*loss[3]+ 0.02*loss[4]+ 0.02*loss[5])*self.opt.lambda_L1
-            #self.loss_G_L1_2 = 0.5*loss[0] 
+            #self.loss_G_L1_2 = 0.5*loss[0]
             #self.loss_G_L1 =( 1.0*loss[0]  +   0.01*loss[1] + 0.01*loss[2] +0.01*loss[3]  )*self.opt.lambda_L1
             # self.loss_G_L0 =( self.loss[0]    )*self.opt.lambda_L1
             #self.loss_G_L0 = (self.loss[0])
             # self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
             self.loss_G =   ( 1.0*self.loss[0]  + 0.1*self.loss[1] + 0.01*self.loss[2] + 0.01*self.loss[3])
-
-        self.loss_G.backward( )
+        if self.swither_G>11:
+            self.swither_G = 0
+        self.loss_G.backward(retain_graph=True)
         #self.optimizer_G.step()             # udpate G's weights
         self.optimizer_G.step()             # udpate G's weights
     def backward_E(self):

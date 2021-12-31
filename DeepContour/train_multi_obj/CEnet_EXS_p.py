@@ -28,14 +28,14 @@ from deploy.basic_trans import Basic_oper
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
-Visdom_flag  = False  # the flag of using the visdom or not
-OLG_flag = False    # flag of training with on line generating or not
-Hybrid_OLG = False  # whether  mix with online generated images and real images for training
+Visdom_flag  = True  # the flag of using the visdom or not
+OLG_flag = True  # flag of training with on line generating or not
+Hybrid_OLG = True  # whether  mix with online generated images and real images for training
 validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler 
-Continue_flag = False  # if not true, it start from scratch again
-loadmodel_index = '_1.pth'
+Continue_flag = True  # if not true, it start from scratch again
+loadmodel_index = '_2.pth'
 
 infinite_save_id =0 # use this method so that the index of the image will not start from 0 again when switch the folder    
 
@@ -417,7 +417,7 @@ while(1): # main infinite loop
             
          
             color  = numpy.zeros((show2.shape[1],show2.shape[2],3))
-            color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2[0,:,:] 
+            color[:,:,0]  =color[:,:,1] = color[:,:,2] =numpy.clip( show2[0,:,:],1,254)
          
             #for i in range ( len(path2)):
             #    color = draw_coordinates_color(color,path2[i],i)

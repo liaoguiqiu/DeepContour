@@ -36,18 +36,19 @@ class myDataloader(object):
         self.save_id =0
         #Guiqiu modified for my computer
         self.com_dir =  Generator_Contour_sheath().com_dir # this dir is for the OLG
-         # initial lizt the 
-        self.talker = Communicate()
-        self.talker=self.talker.read_data(self.com_dir)
-        if self.talker.writing==2:
-            self.talker.training =1
-        else:
-            self.talker.training =2
+        if self.OLG_flag == True:
+             # initial lizt the
+            self.talker = Communicate()
+            self.talker=self.talker.read_data(self.com_dir)
+            if self.talker.writing==2:
+                self.talker.training =1
+            else:
+                self.talker.training =2
 
 
-        self.talker.pending =0 # no pending so all folder can be writed
-        #self.talker.writing =2 
-        self.talker.save_data(self.com_dir) # save
+            self.talker.pending =0 # no pending so all folder can be writed
+            #self.talker.writing =2
+            self.talker.save_data(self.com_dir) # save
         root =Dataset_root + "For IVUS/"
 
         self.dataroot = root + "train/img/"
@@ -101,22 +102,23 @@ class myDataloader(object):
         #creat the image list point to the STASTICS TIS  list
         saved_stastics = Generator_Contour_sheath()
         #read all the folder list
-        for subfold in self.all_dir_list:
-            #if(number_i==0):
-            this_folder_list =  os.listdir(os.path.join(self.dataroot, subfold))
-            this_folder_list2 = [ self.dataroot +subfold + "/" + pointer for pointer in this_folder_list]
-            self.folder_list[number_i] = this_folder_list2
+        if self.OLG_flag == False:
+            for subfold in self.all_dir_list:
+                #if(number_i==0):
+                this_folder_list =  os.listdir(os.path.join(self.dataroot, subfold))
+                this_folder_list2 = [ self.dataroot +subfold + "/" + pointer for pointer in this_folder_list]
+                self.folder_list[number_i] = this_folder_list2
 
-            #change the dir firstly before read
-            #saved_stastics.all_statics_dir = os.path.join(self.signalroot, subfold, 'contour.pkl')
-            this_contour_dir =  self.signalroot+ subfold+'/'+ 'contours.pkl' # for both linux and window
-            this_contour_dir =  self.signalroot+ subfold+'/' # for both linux and window
+                #change the dir firstly before read
+                #saved_stastics.all_statics_dir = os.path.join(self.signalroot, subfold, 'contour.pkl')
+                this_contour_dir =  self.signalroot+ subfold+'/'+ 'contours.pkl' # for both linux and window
+                this_contour_dir =  self.signalroot+ subfold+'/' # for both linux and window
 
-            # self.signal[number_i]  =  self.read_data(this_contour_dir)
-            # self.signal[number_i]=generator_contour_ivus.Save_Contour_pkl().read_data(this_contour_dir)
-            self.signal[number_i]=  pickle.load(open(this_contour_dir + 'contours.pkl', 'rb'), encoding='iso-8859-1')
-            number_i +=1
-            #read the folder list finished  get the folder list and all saved path
+                # self.signal[number_i]  =  self.read_data(this_contour_dir)
+                # self.signal[number_i]=generator_contour_ivus.Save_Contour_pkl().read_data(this_contour_dir)
+                self.signal[number_i]=  pickle.load(open(this_contour_dir + 'contours.pkl', 'rb'), encoding='iso-8859-1')
+                number_i +=1
+                #read the folder list finished  get the folder list and all saved path
     def noisy(self,noise_typ,image):
            if noise_typ == "none":
               return image

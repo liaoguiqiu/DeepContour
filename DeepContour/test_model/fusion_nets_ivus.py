@@ -1,6 +1,6 @@
 #This is tht high compact version that share a lot of the layers
-from networks import UnetSkipConnectionBlock 
-from networks import get_norm_layer
+from model.networks import UnetSkipConnectionBlock
+from model.networks import get_norm_layer
 import test_model .layer_body_sheath_res2  as baseM 
 # the NET dbody for the sheath contour tain  upadat 5th octo 2020
 import torch
@@ -263,7 +263,7 @@ class _2layerFusionNets_(nn.Module):
         self. UnetBack_flag = UnetBack_flag
 
         if UnetBack_flag == True:
-            unetf = 256
+            unetf = 1
             self.Unet_back = _BackBoneUnet( output_nc=unetf,use_dropout=True)
             self.pixencoding = baseM.conv_keep_all(unetf,1,k=(1,1),s=(1,1),p=(0,0),resnet=False,final=True)
             self.backbone =  _BackBonelayer(unetf)
@@ -297,7 +297,8 @@ class _2layerFusionNets_(nn.Module):
     def forward(self, x):
         if self. UnetBack_flag  == True:
             unet_f = self.Unet_back(x)
-            pix_seg = self. pixencoding(unet_f) # use the Unet features to predict a pix wise segmentation
+            # pix_seg = self. pixencoding(unet_f) # use the Unet features to predict a pix wise segmentation
+            pix_seg=unet_f # one feature backbone
             backbone_f = self.backbone(unet_f)
 
         else:

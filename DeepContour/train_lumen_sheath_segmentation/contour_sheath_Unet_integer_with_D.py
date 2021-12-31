@@ -32,12 +32,12 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 # Switch control for the Visdom or Not
 Visdom_flag  = False  # the flag of using the visdom or not
-OLG_flag = False    # flag of training with on line generating or not
-Hybrid_OLG = False  # whether  mix with online generated images and real images for training
-validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
+OLG_flag = True    # flag of training with on line generating or not
+Hybrid_OLG = True  # whether  mix with online generated images and real images for training
+validation_flag = True  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not 
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler 
-Continue_flag = False  # if not true, it start from scratch again
+Continue_flag = True  # if not true, it start from scratch again
 from working_dir_root import Dataset_root,Output_root
 
 if Visdom_flag == True:
@@ -45,7 +45,7 @@ if Visdom_flag == True:
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 #infinite saving term
 infinite_save_id =0
-loadmodel_index = '_1.pth'
+loadmodel_index = '_2.pth'
 pth_save_dir = Output_root + "Unet_trained/"
 
 
@@ -368,12 +368,12 @@ while(1):
                  
             saveout  = GANmodel.fake_B
             
-            show2 =  saveout[0,0,:,:].cpu().detach().numpy()*255 
-
+            show2 =  saveout[0,0,:,:].cpu().detach().numpy()*255
+            show2 = numpy.clip(show2,1,254)
             
             color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
-            color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
-         
+            color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2
+
            
 
             #for i in range ( len(path2)):

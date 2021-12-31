@@ -22,7 +22,7 @@ class conv_keep_W(nn.Module):
             #nn.Conv2d(indepth, outdepth,k, s, (0,0), bias=False),  
             nn.Conv2d(indepth, outdepth,k, s, p, bias=False),          
             
-            nn.InstanceNorm2d(outdepth),
+            nn.BatchNorm2d(outdepth),
             #nn.GroupNorm(8*int(outdepth/basic_feature),outdepth),
 
             nn.LeakyReLU(0.1,inplace=False) # after I add Iddentity afre this the inplace should be false, 
@@ -55,7 +55,7 @@ class conv_dv_2(nn.Module):
              #nn.Conv2d(indepth, outdepth,k, s,(0,0), bias=False), 
              nn.Conv2d(indepth, outdepth,k, s,p, bias=False),          
              
-             nn.InstanceNorm2d(outdepth),
+             nn.BatchNorm2d(outdepth),
              #nn.GroupNorm(8*int(outdepth/basic_feature),outdepth),
 
              nn.LeakyReLU(0.1,inplace=False)
