@@ -89,7 +89,14 @@ class Pix2LineModel(BaseModel):
             self.criterionMTL_BCE= MTL_loss(Loss ="L1") # multi_scale_cross entrofy for the existence 
 
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
-            self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+            self.optimizer_G = torch.optim.Adam([
+                {'params':self.netG.side_branch1.  parameters()},
+                {'params': self.netG.side_branch2.  parameters()},
+                {'params': self.netG.side_branch3.parameters()},
+                {'params': self.netG.low_level_encoding.parameters()},
+                {'params': self.netG.fusion_layer.parameters()},
+
+            ], lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_G_unet = torch.optim.Adam(self.netG.Unet_back.  parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
             self.optimizer_G_f = torch.optim.Adam(self.netG.fusion_layer.  parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
