@@ -26,7 +26,7 @@ The following steps are required in order to run CEnet:
 To run any runable scripts in this project,
 if using the visual studio (not vs code) or pycharm, it can be run directly. 
 If using vs code, please run scripts as module.
-If run in terminal of linux or anaconda prompt, run as module, using following command: python3 -m subfoler.scripts(i.e. python3 -m train_multi_obj folder.CEnet_EXS_p)
+If run in terminal of linux or anaconda prompt, run as module, using following command: python3 -m subfoler.scripts(i.e. python3 -m train_multi_obj.CEnet_EXS_p)
 
 1.  In data toolfolder:
 
