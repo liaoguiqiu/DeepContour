@@ -18,7 +18,7 @@ The following steps are required in order to run CEnet:
         [conda install packages](https://docs.anaconda.com/anaconda/user-guide/tasks/install-packages/)
 1.  Organize all the dataset from raw set following the [data set chapter of this instruction](https://docs.google.com/document/d/1mBG2aeF13Qqxt48tZfYnptq_DKhZpqHj/edit?usp=sharing&ouid=104923533845283983955&rtpof=true&sd=true)
 1.  Download [pre-trained model parameters] (https://seafile.unistra.fr/d/0160d5182a1941c68e5a/)
-1.  Change de defination of working dir in working_dir.py
+1.  Change de defination of working dir in [working_dir.py](https://gitlab.kuleuven.be/u0132260/atlas_collab_ivus/-/blob/main/DeepContour/working_dir_root.py)
 
 
  
