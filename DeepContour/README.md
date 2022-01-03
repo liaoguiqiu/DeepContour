@@ -1,4 +1,21 @@
 # DeepContour
+This package provides an implementation of the training/inference/autoannotation pipeline of AlphaFold
+v2.0. This is a model that can be either deploiyed with or without other feature extraction 
+backbones (i.e. resent/vgg/unet/segnet..). 
+ . For simplicity the bottom model after any backbone(top model) as Coordinates Encoding Networks(CEnet)
+## First time setup
+
+The following steps are required in order to run AlphaFold:
+
+1.  Install [Docker](https://www.docker.com/).
+    *   Install
+        [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html)
+        for GPU support.
+    *   Setup running
+        [Docker as a non-root user](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user).
+1.  
+1.  Download model parameters (see below).
+1.  Check that AlphaFold will be able to use a GPU by running:
 
 Coordinates encoding for the lumen segmentation of OCT and IVUS
 
