@@ -14,6 +14,7 @@ from databufferExcel import EXCEL_saver
 # computation has been modified by an inplace operation: [torch.cuda.FloatTensor [1024]] is at version 3;
 # expected version 2 instead. Hint: enable anomaly detection to find the operation that failed to compute its gradient,
 # with torch.autograd.set_detect_anomaly(True).
+from working_dir_root import Dataset_root,Output_root
 
 
 class Pix2LineModel(BaseModel):
@@ -205,7 +206,7 @@ class Pix2LineModel(BaseModel):
         vector = [self.L1,self.L2,self.J1, self.J2,self.J3,self.D1,self.D2,self.D3]
         vector = torch.stack(vector)
         vector= vector.cpu().detach().numpy()
-        save_dir = "D:/Deep learning/out/1Excel/"
+        save_dir = Output_root + "1Excel/"
         self.metrics_saver.append_save(vector,save_dir)
 
     def set_input(self, realA,pathes,exis_v,input_img):
