@@ -40,11 +40,11 @@ The following steps are required in order to run CEnet:
 
 1.  In deploy folder (this is normally used after the nets are trained): 
 
-most of these scripts are used to predict contour, specifically:
+    most of these scripts are used to predict contour, specifically:
  
 	*   DeepAutoJson.py is used to generate separated json files from the prediction result of the network.
 
-And it also has a function for downsampling the dataset for trianing and testing.
+    And it also has a function for downsampling the dataset for trianing and testing.
 1.  train_multi_obj folder 
 	*   CEnet_EXS_p.py: train the CEnet 
 1.  train_lumen_sheath_segmentation folder, other trainer scripts that used to train other models
