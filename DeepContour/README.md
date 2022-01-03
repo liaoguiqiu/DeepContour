@@ -2,10 +2,10 @@
 This package provides an implementation of the training/inference/autoannotation pipeline of AlphaFold
 v2.0. This is a model that can be either deploiyed with or without other feature extraction 
 backbones (i.e. resent/vgg/unet/segnet..). 
- . For simplicity the bottom model after any backbone(top model) as Coordinates Encoding Networks(CEnet)
+. For simplicity the bottom model after any backbone(top model) as Coordinates Encoding Networks(CEnet)
 ## First time setup
 
-The following steps are required in order to run AlphaFold:
+The following steps are required in order to run CEnet:
 
 1.  Install [Docker](https://www.docker.com/).
     *   Install
