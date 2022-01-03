@@ -1,6 +1,6 @@
 # DeepContour
-This package provides an implementation of the training/inference/autoannotation pipeline of AlphaFold
-v2.0. This is a model that can be either deploiyed with or without other feature extraction 
+This package provides an implementation of the training/inference/autoannotation pipeline of CEnet
+v2.0. This is a model that can be either deployed with or without other feature extraction 
 backbones (i.e. resent/vgg/unet/segnet..). 
 . For simplicity the bottom model after any backbone(top model) as Coordinates Encoding Networks(CEnet)
 ## First time setup
