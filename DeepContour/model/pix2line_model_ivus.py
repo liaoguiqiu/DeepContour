@@ -98,7 +98,11 @@ class Pix2LineModel(BaseModel):
                 {'params': self.netG.fusion_layer.parameters()},
 
             ], lr=opt.lr, betas=(opt.beta1, 0.999))
-            self.optimizer_G_unet = torch.optim.Adam(self.netG.Unet_back.  parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+
+            self.optimizer_G_unet = torch.optim.Adam([
+                {'params': self.netG.Unet_back.parameters()},
+                {'params': self.netG.pixencoding.parameters()},
+            ], lr=opt.lr, betas=(opt.beta1, 0.999))
 
             self.optimizer_G_f = torch.optim.Adam(self.netG.fusion_layer.  parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_G_1 = torch.optim.Adam(self.netG.side_branch1.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
