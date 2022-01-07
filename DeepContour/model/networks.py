@@ -507,8 +507,8 @@ class UnetSkipConnectionBlock(nn.Module):
             down = [downconv]
             # up = [uprelu, upconv, nn.Tanh()]
             # disable the activation
-
-            up = [uprelu, upconv]
+            f_active = nn.LeakyReLU(0.1,inplace=False)
+            up = [uprelu, upconv,upnorm,f_active]
 
             model = down + [submodule] + up
         elif innermost:

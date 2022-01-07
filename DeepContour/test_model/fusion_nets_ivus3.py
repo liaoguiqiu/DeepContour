@@ -267,8 +267,6 @@ class _2layerFusionNets_(nn.Module):
             self.Unet_back = _BackBoneUnet( output_nc=unetf,use_dropout=True)
             self.pixencoding = baseM.conv_keep_all(unetf,1,k=(1,1),s=(1,1),p=(0,0),resnet=False,final=True)
             self.backbone =  _BackBonelayer(unetf)
-            self.backbone_e =  _BackBonelayer(unetf)
-
         else:
             self.backbone =  _BackBonelayer()
 
@@ -277,13 +275,8 @@ class _2layerFusionNets_(nn.Module):
         self.side_branch1  =  _2LayerScale1(backboneDepth,feature)
          
         self.side_branch2  =  _2LayerScale2(backboneDepth,feature)  
-        self.side_branch3  =  _2LayerScale3(backboneDepth,feature)
-        self.side_branch1e = _2LayerScale1(backboneDepth, feature)
-
-        self.side_branch2e = _2LayerScale2(backboneDepth, feature)
-        self.side_branch3e = _2LayerScale3(backboneDepth, feature)
+        self.side_branch3  =  _2LayerScale3(backboneDepth,feature)   
         self.fusion_layer = Fusion(classfy)
-        self.fusion_layer_exist= Fusion(classfy) # an additional fusion layer for exv
         self.low_level_encoding = nn.Conv2d(512 ,Out_c,(1,3), (1,1), (0,1), bias=False)
          
     #def fuse_forward(self,side_out1,side_out2,side_out3):
@@ -307,8 +300,6 @@ class _2layerFusionNets_(nn.Module):
             pix_seg = self. pixencoding(unet_f) # use the Unet features to predict a pix wise segmentation
             # pix_seg=unet_f # one feature backbone
             backbone_f = self.backbone(unet_f)
-            backbone_fe = self.backbone_e(unet_f)
-
 
         else:
             backbone_f = self.backbone(x)
@@ -316,12 +307,7 @@ class _2layerFusionNets_(nn.Module):
         f1 = self.side_branch1 (backbone_f) # coordinates encoding
         f2 = self.side_branch2 (backbone_f) # coordinates encoding
         f3 = self.side_branch3 (backbone_f) # coordinates encoding
-        f1e = self.side_branch1e(backbone_fe)  # coordinates encoding
-        f2e = self.side_branch2e(backbone_fe)  # coordinates encoding
-        f3e = self.side_branch3e(backbone_fe)  # coordinates encoding
         out =  self.fusion_layer(f1,f2,f3)
-        out_exist =  self.fusion_layer_exist(f1e,f2e,f3e)
-
         side_out1l = self. low_level_encoding(f1)
         side_out2l = self. low_level_encoding(f2)
         side_out3l = self. low_level_encoding(f3)
@@ -329,7 +315,7 @@ class _2layerFusionNets_(nn.Module):
         side_out2l,side_out2H = self.upsample_path(side_out2l)
         side_out3l,side_out3H = self.upsample_path(side_out3l)
 
-        return out,side_out1l ,side_out2l,side_out3l,pix_seg,out_exist
+        return out,side_out1l ,side_out2l,side_out3l,pix_seg
         
         #return out,side_out,side_out2
 # mainly based on the resnet  

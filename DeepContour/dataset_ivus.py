@@ -27,6 +27,7 @@ Augment_add_lines = False
 Clip_mat_flag = True
 random_clip_flag = False
 Random_rotate = True
+Reverse_existence = True
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
 
 class myDataloader(object):
@@ -71,7 +72,7 @@ class myDataloader(object):
 
 
 
-        self.noisyflag = True
+        self.noisyflag = False
         if validation == True:
             self.noisyflag = False
             
@@ -460,7 +461,11 @@ class myDataloader(object):
                     
                     #self.input_path [this_pointer ,iter, :] = pathyiter
                     self.input_path [this_pointer ,iter, :] = path_piece
-                    self.exis_vec  [this_pointer ,iter, :] = existence_p
+                    if(Reverse_existence ==True):
+                        self.exis_vec  [this_pointer ,iter, :] =1- existence_p
+                    else:
+                        self.exis_vec  [this_pointer ,iter, :] = existence_p
+
                 #path_piece   = np.clip(path_piece,0,self.img_size)
                 #////------test modification code should be modified after the true data ------------////////////
                 # just force the last element of t he label to be the same as the second one
