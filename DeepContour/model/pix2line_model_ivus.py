@@ -90,7 +90,10 @@ class Pix2LineModel(BaseModel):
             self.criterionMTL_BCE= MTL_loss(Loss ="L1") # multi_scale_cross entrofy for the existence 
 
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
+
             self.optimizer_G = torch.optim.Adam([
+                {'params': self.netG.Unet_back.parameters()},
+                {'params': self.netG.backbone.parameters()},
                 {'params':self.netG.side_branch1.  parameters()},
                 {'params': self.netG.side_branch2.  parameters()},
                 {'params': self.netG.side_branch3.parameters()},
@@ -100,7 +103,7 @@ class Pix2LineModel(BaseModel):
             ], lr=opt.lr, betas=(opt.beta1, 0.999))
 
             self.optimizer_G_unet = torch.optim.Adam([
-                {'params': self.netG.Unet_back.parameters()},
+                # {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.pixencoding.parameters()},
             ], lr=opt.lr, betas=(opt.beta1, 0.999))
 
@@ -110,7 +113,17 @@ class Pix2LineModel(BaseModel):
             self.optimizer_G_3 = torch.optim.Adam(self.netG.side_branch3.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
 
             # The same optimization for the 
-            self.optimizer_E = torch.optim.Adam(self.netE.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+            # self.optimizer_G_e = torch.optim.Adam([
+            #     {'params': self.netG.fusion_layer_exist .parameters()}
+            # ], lr=opt.lr, betas=(opt.beta1, 0.999))
+            self.optimizer_G_e = torch.optim.Adam([
+                {'params': self.netG.backbone_e.parameters()},
+                {'params': self.netG.side_branch1e.parameters()},
+                {'params': self.netG.side_branch2e.parameters()},
+                {'params': self.netG.side_branch3e.parameters()},
+                {'params': self.netG.fusion_layer_exist.parameters()},
+
+            ], lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_E_f = torch.optim.Adam(self.netE.fusion_layer.  parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_E_1 = torch.optim.Adam(self.netE.side_branch1.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_E_2 = torch.optim.Adam(self.netE.side_branch2.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
@@ -120,7 +133,7 @@ class Pix2LineModel(BaseModel):
 
             self.optimizer_D = torch.optim.Adam(self.netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
-            self.optimizers.append(self.optimizer_E)
+            # self.optimizers.append(self.optimizer_E)
             self.optimizers.append(self.optimizer_D)
         self.validation_init()
         self.bw_cnt =0
@@ -250,16 +263,17 @@ class Pix2LineModel(BaseModel):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         start_time = time()
         #self.out_pathes = self.netG(self.input_G) # coordinates encoding
-        self.out_pathes0, self.out_pathes1,self.out_pathes2,self.out_pathes3,self.pix_wise = self.netG(self.input_G)
+        # this version all perdiction are in one net(shared front layer)
+        self.out_pathes0, self.out_pathes1,self.out_pathes2,self.out_pathes3,self.pix_wise,self.out_exis_v0 = self.netG(self.input_G)
         self.out_pathes=[self.out_pathes0, self.out_pathes1,self.out_pathes2,self.out_pathes3]
-         
+        self.out_exis_vs = [self.out_exis_v0,self.out_exis_v0,self.out_exis_v0,self.out_exis_v0]
+
         test_time_point = time()
         print (" all test point time is [%f] " % ( test_time_point - start_time))
 
         # use the same fusion method to predict the 
-        self.out_exis_v0, self.out_exis_v1,self.out_exis_v2,self.out_exis_v3,_ = self.netE(self.input_E)
+        # self.out_exis_v0, self.out_exis_v1,self.out_exis_v2,self.out_exis_v3,_ = self.netE(self.input_E)
          
-        self.out_exis_vs = [self.out_exis_v0,self.out_exis_v1,self.out_exis_v2,self.out_exis_v3]
 
         self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes0,Resample_size)
         self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing(self.out_pathes0,Resample_size)
@@ -285,7 +299,7 @@ class Pix2LineModel(BaseModel):
     def backward_G(self):
         """Calculate GAN and L1 loss for the generator"""
         # First, G(A) should fake the discriminator
-        # self.swither_G = 1
+        # self.swither_G = 9
         self.optimizer_G.zero_grad()        # set G's gradients to zero
         self.optimizer_G_unet.zero_grad()  # udpate G's weights
 
@@ -344,7 +358,9 @@ class Pix2LineModel(BaseModel):
             # self.loss_G_L0 =( self.loss[0]    )*self.opt.lambda_L1
             #self.loss_G_L0 = (self.loss[0])
             # self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
-            self.loss_G =   ( 1.0*self.loss[0]  + 0.1*self.loss[1] + 0.01*self.loss[2] + 0.01*self.loss[3])
+            # self.loss_G =   ( 1.0*self.loss[0]  + 0.1*self.loss[1] + 0.01*self.loss[2] + 0.01*self.loss[3])
+            self.loss_G =   ( 1.0*self.loss[0]  + 0.01*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
+
         if self.swither_G>11:
             self.swither_G = 0
         self.loss_G.backward(retain_graph=True)
@@ -353,10 +369,10 @@ class Pix2LineModel(BaseModel):
     def backward_E(self):
         """Calculate GAN and L1 loss for the generator"""
         # First, G(A) should fake the discriminator
-        self.optimizer_E.zero_grad()        # set G's gradients to zero
+        self.optimizer_G_e .zero_grad()        # set G's gradients to zero
         #self.set_requires_grad(self.netG, False)       
 
-        self.set_requires_grad(self.netE, True)       
+        self.set_requires_grad(self.netG, True)
         # use BEC for the existence vectors
         #self.loss=self.criterionMTL_BCE.multi_loss(self.out_exis_vs,self.real_exv)
         self.lossE=self.criterionMTL_BCE.multi_loss(self.out_exis_vs,self.real_exv)
@@ -369,11 +385,11 @@ class Pix2LineModel(BaseModel):
         # self.loss_G_L0 =( self.loss[0]    )*self.opt.lambda_L1
         #self.loss_G_L0 = (self.loss[0])
         # self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
-        self.lossEa =   ( 1.0*self.lossE[0]  + 0.1*self.lossE[1] + 0.01*self.lossE[2] + 0.01*self.lossE[3])
+        self.lossEa =   ( 1.0*self.lossE[0]  + 0.01*self.lossE[1] + 0.01*self.lossE[2] + 0.01*self.lossE[3])
 
         self.lossEa.backward( )
         #self.optimizer_G.step()             # udpate G's weights
-        self.optimizer_E.step()             # udpate G's weights
+        self.optimizer_G_e .step()             # udpate G's weights
       
     def backward_G_1(self):
         self.optimizer_G.zero_grad()        # set G's gradients to zero
