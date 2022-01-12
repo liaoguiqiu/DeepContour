@@ -31,7 +31,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 Visdom_flag  = False  # the flag of using the visdom or not
 OLG_flag = True  # flag of training with on line generating or not
 Hybrid_OLG = True  # whether  mix with online generated images and real images for training
-validation_flag = True  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
+validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler 
 Continue_flag = True  # if not true, it start from scratch again
@@ -369,7 +369,7 @@ while(1): # main infinite loop
             CE_Nets.forward(validation_flag)
             CE_Nets.error_calculation()
         else:
-            CE_Nets.optimize_parameters()   # calculate loss functions, get gradients, update network weights
+            CE_Nets.optimize_parameters(validation_flag)   # calculate loss functions, get gradients, update network weights
         #--------------input, Forward network,  and compare output with the label - end------------------#
 
          

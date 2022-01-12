@@ -466,8 +466,8 @@ class Pix2LineModel(BaseModel):
 
         self.optimizer_G_3.step()             # udpate G's weights
 
-    def optimize_parameters(self):
-        self.forward()                   # compute fake images: G(A) # seperatee the for
+    def optimize_parameters(self,validation_flag):
+        self.forward(validation_flag)                   # compute fake images: G(A) # seperatee the for
         # update D
         #self.set_requires_grad(self.netD, True)  # enable backprop for D
         #self.optimizer_D.zero_grad()     # set D's gradients to zero
