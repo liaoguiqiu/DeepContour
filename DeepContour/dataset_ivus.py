@@ -34,6 +34,8 @@ class myDataloader(object):
     def __init__(self, batch_size,image_size,path_size,validation= False,OLG=False):
         self.OLG_flag = OLG
         self.GT = True
+        self.noisyflag = True
+
         self.save_id =0
         #Guiqiu modified for my computer
         self.com_dir =  Generator_Contour_sheath().com_dir # this dir is for the OLG
@@ -72,7 +74,6 @@ class myDataloader(object):
 
 
 
-        self.noisyflag = False
         if validation == True:
             self.noisyflag = False
             

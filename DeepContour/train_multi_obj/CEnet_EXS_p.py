@@ -35,7 +35,7 @@ validation_flag = True  # flag to stop the gradient, and, testing mode which wil
 Display_fig_flag = True  #  display and save result or not
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler 
 Continue_flag = True  # if not true, it start from scratch again
-loadmodel_index = '_3.pth'
+loadmodel_index = '_2.pth'
 
 infinite_save_id =0 # use this method so that the index of the image will not start from 0 again when switch the folder    
 
@@ -268,8 +268,8 @@ if Continue_flag == True:
     # CE_Nets.netG.fusion_layer_exist.apply(weights_init)
 
     #CE_Nets.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
-# if validation_flag == True:
-#    CE_Nets.netG.Unet_back.  eval()
+if validation_flag == True:
+   CE_Nets.netG.Unet_back.eval()
 print(CE_Nets.netD)
 print(CE_Nets.netG)
 print(CE_Nets.netE)
@@ -366,7 +366,7 @@ while(1): # main infinite loop
         CE_Nets.set_input(realA,real_pathes,real_exv,inputv)         # unpack data from dataset and apply preprocessing
 
         if validation_flag ==True:
-            CE_Nets.forward()
+            CE_Nets.forward(validation_flag)
             CE_Nets.error_calculation()
         else:
             CE_Nets.optimize_parameters()   # calculate loss functions, get gradients, update network weights
@@ -476,7 +476,7 @@ while(1): # main infinite loop
             #display_prediction(mydata_loader,  CE_Nets.path_long3,hot)
             #display_prediction(mydata_loader,  CE_Nets.out_pathes3,hot)
             #display_prediction(read_id,mydata_loader,  CE_Nets.out_pathes0,hot,hot_real)
-            display_prediction(read_id,mydata_loader,  CE_Nets.out_pathes0,hot,hot_real)
+            display_prediction(read_id,mydata_loader,  CE_Nets.out_pathes[0],hot,hot_real)
             display_prediction_exis(read_id,mydata_loader,  CE_Nets.out_exis_v0 )
 
             infinite_save_id += 1 

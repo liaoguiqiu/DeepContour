@@ -5,7 +5,7 @@ from test_model import layer_body_sheath_res2
 from test_model import fusion_nets_ivus
 from test_model.loss_MTL import MTL_loss
 import rendering
-from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
+from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length,Reverse_existence
 from time import time
 import torch.nn as nn
 from torch.autograd import Variable
@@ -103,7 +103,7 @@ class Pix2LineModel(BaseModel):
             ], lr=opt.lr, betas=(opt.beta1, 0.999))
 
             self.optimizer_G_unet = torch.optim.Adam([
-                # {'params': self.netG.Unet_back.parameters()},
+                {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.pixencoding.parameters()},
             ], lr=opt.lr, betas=(opt.beta1, 0.999))
 
@@ -194,6 +194,14 @@ class Pix2LineModel(BaseModel):
         #self.error = 1.0*loss[0] 
         #out_pathes[fusion_predcition][batch 0, contour index,:]
         cutedge = 30
+        # if Reverse_existence == True:
+        #     exvP =    self.out_exis_v0 <0.7
+        #     exvT =    self.real_exv<0.7
+        # else:
+        #     exvP = self.out_exis_v0 > 0.7
+        #     exvT = self.real_exv > 0.7
+        # self.out_pathes[0] = self.out_pathes[0] * exvP + (~exvP) # reverse the mask
+        # self.real_pathes = self.real_pathes * exvT + (~exvT)
         self.L1 = cal_L(self.out_pathes[0][0,0,cutedge:Resample_size-cutedge],self.real_pathes[0,0,cutedge:Resample_size-cutedge]) * Resample_size
         self.L2 = cal_L(self.out_pathes[0][0,1,cutedge:Resample_size-cutedge],self.real_pathes[0,1,cutedge:Resample_size-cutedge]) * Resample_size
 
@@ -257,9 +265,17 @@ class Pix2LineModel(BaseModel):
         self.input_G  = img 
         self.input_E = img
  
+    def mask_with_exist(self):
+        if Reverse_existence == True:
+            exvP =    self.out_exis_v0 <0.7
+            exvT =    self.real_exv<0.7
+        else:
+            exvP = self.out_exis_v0 > 0.7
+            exvT = self.real_exv > 0.7
+        self.out_pathes[0] = self.out_pathes[0] * exvP + (~exvP) # reverse the mask
+        self.real_pathes = self.real_pathes * exvT + (~exvT)
 
-
-    def forward(self):
+    def forward(self,validation_flag):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         start_time = time()
         #self.out_pathes = self.netG(self.input_G) # coordinates encoding
@@ -273,10 +289,11 @@ class Pix2LineModel(BaseModel):
 
         # use the same fusion method to predict the 
         # self.out_exis_v0, self.out_exis_v1,self.out_exis_v2,self.out_exis_v3,_ = self.netE(self.input_E)
-         
+        if (validation_flag == True):
+             self.mask_with_exist()
 
-        self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes0,Resample_size)
-        self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing(self.out_pathes0,Resample_size)
+        self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes[0],Resample_size)
+        self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing(self.out_pathes[0],Resample_size)
         #self.fake_B = self.netG(self.real_A)  # G(A)
 
     def backward_D(self):
@@ -347,8 +364,7 @@ class Pix2LineModel(BaseModel):
             #self.loss=self.criterionMTL.multi_loss([self.out_pathes0],self.real_pathes)
             #self.loss=self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
             # 3 imput , also rely on the existence vector
-            # self.loss=self.criterionMTL.multi_loss_contour_exist(self.out_pathes,self.real_pathes, self.out_exis_vs) #
-            self.loss=self.criterionMTL.multi_loss (self.out_pathes,self.real_pathes ) #
+            # self.loss=self.criterionMTL.multi_loss (self.out_pathes,self.real_pathes ) #
 
 
             #self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] + 0.1*loss[2] + 0.2*loss[3])*self.opt.lambda_L1
@@ -359,7 +375,9 @@ class Pix2LineModel(BaseModel):
             #self.loss_G_L0 = (self.loss[0])
             # self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
             # self.loss_G =   ( 1.0*self.loss[0]  + 0.1*self.loss[1] + 0.01*self.loss[2] + 0.01*self.loss[3])
-            self.loss_G =   ( 1.0*self.loss[0]  + 0.01*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
+            # self.loss_G =   ( 1.0*self.loss[0]  + 0.01*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
+            self.loss =self.criterionMTL.multi_loss_contour_exist([self.out_pathes[0]],self.real_pathes, [self.out_exis_vs[0]],Reverse_existence) #
+            self.loss_G = self.loss[0]
 
         if self.swither_G>11:
             self.swither_G = 0
