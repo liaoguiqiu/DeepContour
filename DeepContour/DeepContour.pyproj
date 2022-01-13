@@ -106,5 +106,8 @@
     <Folder Include="train_lumen_sheath_segmentation" />
     <Folder Include="train_multi_obj" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="README.md" />
+  </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
 </Project>
