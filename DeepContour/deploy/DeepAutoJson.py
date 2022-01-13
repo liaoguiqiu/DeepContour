@@ -35,6 +35,7 @@ import os
 from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length
 from deploy import basic_trans
 from scipy.interpolate import interp1d
+from working_dir_root import Dataset_root,Output_root
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 def resample(x,n,kind='nearest'):
@@ -174,6 +175,9 @@ class  Auto_json_label(object):
         #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
         # check the cuda device 
         pth_save_dir = "../../../out/sheathCGAN_coordinates3/"
+        pth_save_dir = Output_root + "CEnet_trained/"
+
+        
         # the portion of attated image to 2     sides
         self.attatch_rate  = 0.00
 
@@ -192,7 +196,7 @@ class  Auto_json_label(object):
         # self.database_root = "D:/Deep learning/dataset/original/new_catheter_ruler/2/"
         # self.database_root = "D:/Deep learning/dataset/original/phantom_2th_march_2021/1/"
         # self.database_root = "D:/Deep learning/dataset/original/paper_with_strong_shadow/1/"
-        self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
+        self.database_root = Dataset_root +   "original/polyp/1/"
 
         #self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
         #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
@@ -226,11 +230,13 @@ class  Auto_json_label(object):
         self.CE_Nets= Model_creator.creat_nets()   # one is for the contour cordinates
         
         # for the detection just use the Gnets
-        self.CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_2.pth'))
+        self.CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
         self.CE_Nets.netG.cuda()
+       
+        self.CE_Nets.netG.Unet_back.eval()
 
-        self.CE_Nets.netE.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_2.pth'))
-        self.CE_Nets.netE.cuda()
+        #self.CE_Nets.netE.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
+        #self.CE_Nets.netE.cuda()
 
     def downsample_folder(self):#this is to down sample the image in one folder
         read_sequence = os.listdir(self.all_dir) # read all file name
@@ -307,7 +313,7 @@ class  Auto_json_label(object):
         inputV =  basic_trans.Basic_oper.transfer_img_to_tensor(extend,H_s,W_s)
 
         self.CE_Nets.set_GE_input(inputV) 
-        self.CE_Nets.forward() # predict the path 
+        self.CE_Nets.forward(validation_flag = True) # predict the path 
         pathes  =  self.CE_Nets.out_pathes0 [0].cpu().detach().numpy()
         existences = self.CE_Nets.out_exis_v0 [0].cpu().detach().numpy() #self.out_exis_v0
         mask = existences<0.5

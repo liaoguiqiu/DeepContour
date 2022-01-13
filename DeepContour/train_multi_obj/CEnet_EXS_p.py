@@ -31,11 +31,11 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 Visdom_flag  = False  # the flag of using the visdom or not
 OLG_flag = True  # flag of training with on line generating or not
 Hybrid_OLG = True  # whether  mix with online generated images and real images for training
-validation_flag = True  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
+validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler 
 Continue_flag = True  # if not true, it start from scratch again
-loadmodel_index = '_2.pth'
+loadmodel_index = '_5.pth'
 
 infinite_save_id =0 # use this method so that the index of the image will not start from 0 again when switch the folder    
 
@@ -254,7 +254,7 @@ if Continue_flag == True:
     # 3. load the new state dict
     CE_Nets.netG.load_state_dict(model_dict)
     # CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch'+loadmodel_index))
-    CE_Nets.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch'+loadmodel_index))
+    #CE_Nets.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch'+loadmodel_index))
     #
     # pretrained_dict = torch.load(pth_save_dir + 'cGANE_epoch' + loadmodel_index)
     # model_dict = CE_Nets.netE.state_dict()

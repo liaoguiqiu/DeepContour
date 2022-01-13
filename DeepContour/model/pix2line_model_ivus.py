@@ -268,12 +268,12 @@ class Pix2LineModel(BaseModel):
     def mask_with_exist(self):
         if Reverse_existence == True:
             exvP =    self.out_exis_v0 <0.7
-            exvT =    self.real_exv<0.7
+            #exvT =    self.real_exv<0.7
         else:
             exvP = self.out_exis_v0 > 0.7
-            exvT = self.real_exv > 0.7
+            #exvT = self.real_exv > 0.7
         self.out_pathes[0] = self.out_pathes[0] * exvP + (~exvP) # reverse the mask
-        self.real_pathes = self.real_pathes * exvT + (~exvT)
+        #self.real_pathes = self.real_pathes * exvT + (~exvT)
 
     def forward(self,validation_flag):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
