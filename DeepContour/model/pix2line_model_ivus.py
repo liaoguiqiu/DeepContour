@@ -193,7 +193,7 @@ class Pix2LineModel(BaseModel):
         #loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
         #self.error = 1.0*loss[0] 
         #out_pathes[fusion_predcition][batch 0, contour index,:]
-        cutedge = 30
+        cutedge = 1
         # if Reverse_existence == True:
         #     exvP =    self.out_exis_v0 <0.7
         #     exvT =    self.real_exv<0.7

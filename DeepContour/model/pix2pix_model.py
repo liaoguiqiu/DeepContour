@@ -130,7 +130,7 @@ class Pix2PixModel(BaseModel):
         fake_b_hot = rendering.integer2onehot  ( self.fake_B) 
         # this is the format of hot map
         #out  = torch.zeros([bz,3, H,W], dtype=torch.float)
-        cutedge = 30
+        cutedge = 1
         self.J1 = cal_J(real_b_hot[0,0,:,cutedge:Resample_size-cutedge],fake_b_hot[0,0,:,cutedge:Resample_size-cutedge])
         self.J2 = cal_J(real_b_hot[0,1,:,cutedge:Resample_size-cutedge],fake_b_hot[0,1,:,cutedge:Resample_size-cutedge])
         self.J3 = cal_J(real_b_hot[0,2,:,cutedge:Resample_size-cutedge],fake_b_hot[0,2,:,cutedge:Resample_size-cutedge])
