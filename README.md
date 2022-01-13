@@ -37,6 +37,15 @@ The following steps are required in order to run CEnet:
 		--Root/out
 
 1.  Download [pre-trained model parameters] (https://seafile.unistra.fr/d/0160d5182a1941c68e5a/)
+
+ should be pasted in the folder:
+
+		--Root/out/CEnet_trained
+
+		OR
+
+		--Root/out/unet_trained
+
 1.  Change de defination of working dir in [working_dir.py](https://gitlab.kuleuven.be/u0132260/atlas_collab_ivus/-/blob/main/DeepContour/working_dir_root.py)
 
 
