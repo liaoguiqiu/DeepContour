@@ -234,7 +234,7 @@ class  Auto_json_label(object):
         self.CE_Nets.netG.cuda()
        
         self.CE_Nets.netG.Unet_back.eval()
-
+        self.croptop = 100
         #self.CE_Nets.netE.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
         #self.CE_Nets.netE.cuda()
 
@@ -304,6 +304,7 @@ class  Auto_json_label(object):
     def predict_contour(self,gray,H_s, W_s , attatch_rate=0.1,points = 64):
         #gray  =   cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         H,W   = gray.shape
+        gray = gray[self.croptop:H,:]
         extend = np.append(gray[:,int((1-attatch_rate)*W):W],gray,axis=1) # cascade
         extend = np.append(extend,gray[:,0:int(attatch_rate*W)],axis=1) # cascade
         img_piece = cv2.cvtColor(extend, cv2.COLOR_GRAY2RGB)
@@ -315,6 +316,7 @@ class  Auto_json_label(object):
         self.CE_Nets.set_GE_input(inputV) 
         self.CE_Nets.forward(validation_flag = True) # predict the path 
         pathes  =  self.CE_Nets.out_pathes0 [0].cpu().detach().numpy()
+        pathes = pathes + self.croptop/H # shift back
         existences = self.CE_Nets.out_exis_v0 [0].cpu().detach().numpy() #self.out_exis_v0
         mask = existences<0.5
         draw_path0= pathes[0]*H_s * mask[0] + (1-mask[0])* H_s
@@ -365,6 +367,7 @@ class  Auto_json_label(object):
                 else:
                     gray  =   cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
                     H,W   = gray.shape
+                    
                     coordinates1,coordinates2  = self.predict_contour(gray,Resample_size, Resample_size,attatch_rate=self.attatch_rate,points=40 )
                     
                     #extend = np.append(gray[:,int((1-self.attatch_rate)*W):W],gray,axis=1) # cascade
