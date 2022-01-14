@@ -26,7 +26,7 @@ Augment_limitation_flag = True
 Augment_add_lines = False
 Clip_mat_flag = True
 random_clip_flag = False
-Random_rotate = True
+Random_rotate = False
 Reverse_existence = True
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
 
@@ -90,7 +90,7 @@ class myDataloader(object):
         # the number of the contour has been increased, and another vector has beeen added
         self.input_path = np.zeros((batch_size,self.obj_num,path_size)) # predifine the path number is 2
         self.exis_vec = np.zeros((batch_size,self.obj_num,path_size)) # predifine the existence vector number is 2
-
+        self.real_img_id = np.zeros(batch_size)  # for saving purpose t
         self.all_dir_list = os.listdir(self.signalroot)
         self.folder_num = len(self.all_dir_list)
         # create the buffer list
@@ -375,6 +375,7 @@ class myDataloader(object):
             else:
                 Image_ID = int(Image_ID_str)
             self.save_id= Image_ID
+            self.real_img_id[this_pointer] = Image_ID
             #start to read image and paths to fill in the input bach
             this_image_path = this_folder_list[i] # read saved path
             this_img = cv2.imread(this_image_path)
@@ -477,7 +478,7 @@ class myDataloader(object):
                     img_piece, self.input_path [this_pointer ,:, :],self.exis_vec [this_pointer ,:, :] =self.rolls(img_piece,self.input_path [this_pointer ,:, :],self.exis_vec [this_pointer ,:, :])  
     
                 #img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
-                img_piece, self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :] =  self.flips2(img_piece,self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :])
+                    img_piece, self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :] =  self.flips2(img_piece,self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :])
                 
 
 

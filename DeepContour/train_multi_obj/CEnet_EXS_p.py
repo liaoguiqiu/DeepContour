@@ -29,13 +29,13 @@ from deploy.basic_trans import Basic_oper
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = False  # the flag of using the visdom or not
-OLG_flag = True  # flag of training with on line generating or not
+OLG_flag = False  # flag of training with on line generating or not
 Hybrid_OLG = True  # whether  mix with online generated images and real images for training
-validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
+validation_flag = True  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not
-Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler 
+Save_img_flag  = True # this flag determine if the reuslt will be save  in to a foler
 Continue_flag = True  # if not true, it start from scratch again
-loadmodel_index = '_5.pth'
+loadmodel_index = '_4.pth'
 
 infinite_save_id =0 # use this method so that the index of the image will not start from 0 again when switch the folder    
 
@@ -171,13 +171,16 @@ def display_prediction(read_id,mydata_loader,save_out,hot,hot_real): # display i
     circular_color_real = Basic_oper.tranfer_frome_rec2cir2(colorhot_real) 
     cv2.imshow('color real cir',circular_color_real.astype(numpy.uint8)) 
     if  Save_img_flag == True:
-        cv2.imwrite(Output_root+"1out_img/ground_circ/"  +
+        this_save_dir = Output_root + "1out_img/ground_circ/"
+        if not os.path.exists(this_save_dir):
+            os.makedirs(this_save_dir)
+        cv2.imwrite(this_save_dir +
                         str(mydata_loader.save_id) +".jpg",circular_color_real )  
 
     for i in range ( len(save_out)):
         this_coordinate = signal.resample(save_out[i], Resample_size)
         color = draw_coordinates_color(color,this_coordinate,i)
-    colorhot = color *hot
+    colorhot = (color+50) *hot
    
 
 
@@ -195,8 +198,11 @@ def display_prediction(read_id,mydata_loader,save_out,hot,hot_real): # display i
     circular1 = Basic_oper.tranfer_frome_rec2cir2(color) 
     circular2 = Basic_oper.tranfer_frome_rec2cir2(color2)
     if  Save_img_flag == True:
-        cv2.imwrite(Output_root+"out/1out_img/Ori_seg_rec_line/"  +
-                            str(infinite_save_id) +".jpg",show4 )  
+        this_save_dir = Output_root + "1out_img/Ori_seg_rec_line/"
+        if not os.path.exists(this_save_dir):
+            os.makedirs(this_save_dir)
+        cv2.imwrite(this_save_dir  +
+                            str(mydata_loader.save_id) +".jpg",show4 )
 
 
     cv2.imshow('Deeplearning one 2',show4.astype(numpy.uint8)) 
@@ -204,7 +210,10 @@ def display_prediction(read_id,mydata_loader,save_out,hot,hot_real): # display i
     cv2.imshow('Deeplearning circ',circular1.astype(numpy.uint8)) 
     cv2.imshow('Deeplearning circ2',circular2.astype(numpy.uint8))
     if  Save_img_flag == True:
-        cv2.imwrite(Output_root+"1out_img/seg_circ/"  +
+        this_save_dir = Output_root + "1out_img/Ori_seg_rec_2/"
+        if not os.path.exists(this_save_dir):
+            os.makedirs(this_save_dir)
+        cv2.imwrite(this_save_dir  +
                         str(mydata_loader.save_id) +".jpg",circular2 )  
     cv2.imshow('Deeplearning color',color2.astype(numpy.uint8)) 
     cv2.imshow('  color real',color_real.astype(numpy.uint8)) 
@@ -455,7 +464,10 @@ while(1): # main infinite loop
 
             cv2.imshow('Original circular',circ_original.astype(numpy.uint8)) 
             if  Save_img_flag == True:
-                cv2.imwrite( Output_root+"1out_img/original_circ/"  +
+                this_save_dir = Output_root+"1out_img/original_circ/"
+                if not os.path.exists(this_save_dir):
+                    os.makedirs(this_save_dir)
+                cv2.imwrite(   this_save_dir+
                             str(mydata_loader.save_id) +".jpg",circ_original )
             #infinite_save_id
             
@@ -463,13 +475,19 @@ while(1): # main infinite loop
 
             cv2.imshow('Deeplearning one',show4.astype(numpy.uint8)) 
             if  Save_img_flag == True:
-                cv2.imwrite(Output_root+"1out_img/Ori_seg_rec/"  +
+                this_save_dir = Output_root +"1out_img/Ori_seg_rec/"
+                if not os.path.exists(this_save_dir):
+                    os.makedirs(this_save_dir)
+                cv2.imwrite(this_save_dir  +
                             str(infinite_save_id) +".jpg",show4 )
             real_label = CE_Nets.real_B
             show5 =  real_label[0,0,:,:].cpu().detach().numpy()*255 
             cv2.imshow('real',show5.astype(numpy.uint8)) 
             if  Save_img_flag == True:
-                cv2.imwrite(Output_root + "1out_img/ground_rec/"  +
+                this_save_dir = Output_root + "1out_img/ground_rec/"
+                if not os.path.exists(this_save_dir):
+                    os.makedirs(this_save_dir)
+                cv2.imwrite(this_save_dir  +
                             str(infinite_save_id) +".jpg",show5 )
 
             #display_prediction(mydata_loader,  CE_Nets.out_pathes[0],hot)

@@ -182,7 +182,7 @@ class  Auto_json_label(object):
         self.attatch_rate  = 0.00
 
         #jason_tmp_dir  =  "D:/Deep learning/dataset/original/animal_tissue/1/label/100.json"
-        jason_tmp_dir  =  "../config/example.json"
+        jason_tmp_dir  = Dataset_root+ "label data/config/example.json"
 
         # read th jso fie in hte start :
         with open(jason_tmp_dir) as dir:
@@ -230,11 +230,11 @@ class  Auto_json_label(object):
         self.CE_Nets= Model_creator.creat_nets()   # one is for the contour cordinates
         
         # for the detection just use the Gnets
-        self.CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
+        self.CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_2.pth'))
         self.CE_Nets.netG.cuda()
        
         self.CE_Nets.netG.Unet_back.eval()
-        self.croptop = 100
+        self.croptop = 0
         #self.CE_Nets.netE.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
         #self.CE_Nets.netE.cuda()
 

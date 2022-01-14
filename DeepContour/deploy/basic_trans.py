@@ -79,15 +79,16 @@ class Basic_oper(object):
          
         color  = np.append(padding,color,axis=0)
         H,W,_ = color.shape
-        value = np.sqrt(((H/4.2)**2.0)+((W/4.2)**2.0))
-        color=cv2.rotate(color,rotateCode = 2) 
+        value =  H/2
+        color2=cv2.rotate(color,rotateCode = 2)
         #value = 200
         #circular = cv2.linearPolar(new_frame, (new_frame.shape[1]/2 , new_frame.shape[0]/2), 
         #                               200, cv2.WARP_INVERSE_MAP)
-        circular = cv2.linearPolar(color,(W/2, H/2), value, cv2.WARP_INVERSE_MAP)
+        circular = np.zeros((H,W_ini,3))
+        circular = cv2.linearPolar(color2,(W/2, H/2), value, cv2.WARP_INVERSE_MAP)
 
-        circular = circular.astype(np.uint8)
+        circular2 = circular.astype(np.uint8)
         #polar_image=cv2.rotate(polar_image,rotateCode = 0) 
-        return circular
+        return circular2
 
 
