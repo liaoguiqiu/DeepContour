@@ -275,7 +275,7 @@ class Pix2LineModel(BaseModel):
         self.out_pathes[0] = self.out_pathes[0] * exvP + (~exvP) # reverse the mask
         #self.real_pathes = self.real_pathes * exvT + (~exvT)
 
-    def forward(self,validation_flag):
+    def forward(self,validation_flag,one_hot_render = True):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         start_time = time()
         #self.out_pathes = self.netG(self.input_G) # coordinates encoding
@@ -291,9 +291,9 @@ class Pix2LineModel(BaseModel):
         # self.out_exis_v0, self.out_exis_v1,self.out_exis_v2,self.out_exis_v3,_ = self.netE(self.input_E)
         if (validation_flag == True):
              self.mask_with_exist()
-
-        self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes[0],Resample_size)
-        self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing(self.out_pathes[0],Resample_size)
+        if (one_hot_render == True):
+            self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes[0],Resample_size)
+            self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing(self.out_pathes[0],Resample_size)
         #self.fake_B = self.netG(self.real_A)  # G(A)
 
     def backward_D(self):
