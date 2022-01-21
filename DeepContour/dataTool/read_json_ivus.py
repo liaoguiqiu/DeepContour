@@ -266,7 +266,10 @@ class Read_read_check_json_label(object):
                             self.saver_train.append_new_name_contour(self.img_num, contours_x, contours_y,
                                                                      contours_exist,
                                                                      self.save_dir_train)
-
+                    else:
+                        self.saver_train.append_new_name_contour(self.img_num, contours_x, contours_y,
+                                                                     contours_exist,
+                                                                     self.save_dir_train)
                     cv2.imshow('Image with highlighted contours', img1)
                     print(str(a))
                     cv2.waitKey(10)
