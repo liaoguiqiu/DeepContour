@@ -13,7 +13,7 @@ import pandas as pd
 from collections import OrderedDict
 from dataTool.generator_contour_ivus import Save_Contour_pkl
 from working_dir_root import Dataset_root
-Train_validation_split = True  # flag for devide the data
+Train_validation_split = False  # flag for devide the data
 Train_validation_devi = 3  # all data are equally devided by thsi number
 Test_fold = 0  # use the 0 st for training, the other for validation
 Delete_outsider_flag = False

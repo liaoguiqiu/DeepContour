@@ -28,4 +28,5 @@ working_root = "E:/Deep learning/"
 #working_root = "/media/icube/DATA1/"
 
 Dataset_root =  working_root + "dataset/"
+config_root =   working_root + "config/"
 Output_root =   working_root + "out/"
