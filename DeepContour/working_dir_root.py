@@ -19,10 +19,10 @@
 
 
 #this is for Guiqiu Windows
-working_root = "E:/Deep learning/"
+# working_root = "E:/Deep learning/"
 
 #this is for marcopolo linux
-#working_root = "/media/icube/DATA1/"
+working_root = "/media/icube/DATA1/"
 
 #this is for Beatriz's computer
 #working_root = "/media/icube/DATA1/"
