@@ -19,7 +19,9 @@ class Cloud_API(object):
             json_data = JSON.load(f_dir)
         # gdrive_id = '1kD2t08Df5YW9_oNyZhQgGmoTPYEH2x9o'
         self.gdrive_id  = json_data['worker cloud id']
-
+        self.upload_file_list = [self.out_dir + 'cGAND.pth',
+                            self.out_dir + 'cGANG.pth',
+                            self.json_dir ]
    #  update the json files
     def json_initial(self):
         with open(self.json_dir) as f_dir:
@@ -54,8 +56,28 @@ class Cloud_API(object):
         newJson['minimal ready'] = '0'
         with open(self.json_dir, "w") as jsonFile:
             JSON.dump(newJson, jsonFile)
-        print("local json status initialized")
+        print("local json status updated")
         pass
+    def upload_local_models(self):
+
+        file_list = self.drive.ListFile({'q': "'{}' in parents and trashed=false".format(self.gdrive_id)}).GetList()
+
+        for upload_file in self.upload_file_list:
+            # check nessesary to delete the old file
+
+            gfile = self.drive.CreateFile({'parents': [{'id': self.gdrive_id}]})
+            gfile.SetContentFile(upload_file)
+            gfile.Upload()
+            print("one new uploaded")
+            for file1 in file_list:
+                if file1['title'] == upload_file:
+                    file1.Delete()
+                    print("one old deleted")
+
+                else:
+                    pass
+        print("all uploaded")
+
     def test (self):
         # upload a list of files 
         upload_file_list = [ self.out_dir + 'cGAND_epoch_1.pth', 

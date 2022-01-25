@@ -19,7 +19,7 @@ from dataTool import generator_contour_ivus
 from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
 from dataTool.generator_contour_ivus import Generator_Contour_sheath
 from dataset_ivus  import myDataloader,Batch_size,Resample_size, Path_length
-
+from FedLearning.Cloud_API import Cloud_API
 import os
 #from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 #switch to another data loader for the IVUS, whih will have both the position and existence vector
@@ -35,9 +35,12 @@ validation_flag = False  # flag to stop the gradient, and, testing mode which wi
 Display_fig_flag = True  #  display and save result or not
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler
 Continue_flag = True  # if not true, it start from scratch again
+Federated_learning_flag = True
 loadmodel_index = '_4.pth'
 
 infinite_save_id =0 # use this method so that the index of the image will not start from 0 again when switch the folder    
+if Federated_learning_flag == True:
+    cloud_local_infer = Cloud_API()
 
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
@@ -274,9 +277,17 @@ while(1): # main infinite loop
     #--------------  save the current trained model after going through a folder  ------------------#
     torch.save(CE_Nets.netG.state_dict(), pth_save_dir+ "cGANG_epoch_"+str(epoch)+".pth")
     torch.save(CE_Nets.netE.state_dict(), pth_save_dir+ "cGANE_epoch_"+str(epoch)+".pth")
-
     torch.save(CE_Nets.netD.state_dict(), pth_save_dir+ "cGAND_epoch_"+str(epoch)+".pth")
-    torch.save(CE_Nets.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
+    if Federated_learning_flag == True:
+        # save the latest model as the same name
+        torch.save(CE_Nets.netG.state_dict(), pth_save_dir + "cGANG" +   ".pth")
+        torch.save(CE_Nets.netE.state_dict(), pth_save_dir + "cGANE" +   ".pth")
+        torch.save(CE_Nets.netD.state_dict(), pth_save_dir + "cGAND" +   ".pth")
+        # API iterference
+        cloud_local_infer.json_update_after_epo()
+        cloud_local_infer.upload_local_models()
+
+    # torch.save(CE_Nets.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
      
     if epoch >=5: # just save 5 newest historical models  
         epoch =0
