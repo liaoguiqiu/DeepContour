@@ -97,6 +97,17 @@ CE_Nets= Model_creator.creat_nets()   # one is for the contour cordinates
 CE_Nets.netD.apply(weights_init)
 CE_Nets.netG.apply(weights_init)
 CE_Nets.netE.apply(weights_init)
+def reset_model_para(model,name='cGANG'):
+    pretrained_dict = torch.load(pth_save_dir + name + '.pth')
+    model_dict = model.state_dict()
+
+    # 1. filter out unnecessary keys
+    pretrained_dict_trim = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+    # 2. overwrite entries in the existing state dict
+    model_dict.update(pretrained_dict_trim)
+    # 3. load the new state dict
+    model.load_state_dict(model_dict)
+    return model
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
     #ensure loaded module exist
@@ -161,7 +172,22 @@ while(1): # main infinite loop
     if mydata_loader1.read_all_flag2 == 1 and validation_flag ==True:
         break
 
-    while(1): # loop for going through data set 
+    while(1): # loop for going through data set
+        if Federated_learning_flag == True:
+            cloud_local_infer.load_json()
+
+            if (cloud_local_infer.json_data['stage'] == "waiting_fed_update"):
+                cloud_local_infer.check_fed_cloud()
+
+                pass
+            cloud_local_infer.load_json()
+            # stage =
+            if ( cloud_local_infer.json_data['stage']=="downloaded_new_model"):
+                CE_Nets.netG =reset_model_para(CE_Nets.netG,name='cGANG')
+                CE_Nets.netD =reset_model_para(CE_Nets.netD,name='cGAND')
+                cloud_local_infer.json_data['stage'] = 'already_load_fed_model'
+                cloud_local_infer.write_json()
+
         #-------------- load data and convert to GPU tensor format------------------#
         iteration_num +=1
         read_id+=1
@@ -285,7 +311,9 @@ while(1): # main infinite loop
         torch.save(CE_Nets.netD.state_dict(), pth_save_dir + "cGAND" +   ".pth")
         # API iterference
         cloud_local_infer.json_update_after_epo()
-        cloud_local_infer.upload_local_models()
+        cloud_local_infer.upload_local_files(cloud_local_infer.upload_model_list)
+        cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
+
 
     # torch.save(CE_Nets.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
      

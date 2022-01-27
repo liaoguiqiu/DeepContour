@@ -2,7 +2,7 @@ from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 from working_dir_root import config_root,Output_root
 import json as JSON
-
+import  os
 class Cloud_API(object):
     def __init__(self ):
         self.credential_dir = config_root + "client_secrets.json" 
@@ -16,13 +16,51 @@ class Cloud_API(object):
         self.out_dir  = Output_root + "CEnet_trained/"
         self.json_dir = self.out_dir + 'telecom/local_training_status.json' # load json file for drive/cloud and local information
         with open(self.json_dir) as f_dir:
-            json_data = JSON.load(f_dir)
+            self.json_data = JSON.load(f_dir)
         # gdrive_id = '1kD2t08Df5YW9_oNyZhQgGmoTPYEH2x9o'
-        self.gdrive_id  = json_data['worker cloud id']
+        self.gdrive_id  = self.json_data['worker cloud id']
+
+
         self.upload_file_list = [self.out_dir + 'cGAND.pth',
                             self.out_dir + 'cGANG.pth',
                             self.json_dir ]
+        self.upload_model_list =  [self.out_dir + 'cGAND.pth',
+                            self.out_dir + 'cGANG.pth']
+        self.upload_json_list =  [ self.json_dir]
    #  update the json files
+    def load_json(self):
+        with open(self.json_dir) as f_dir:
+            self.json_data = JSON.load(f_dir)
+            # self.ready_worker_cnt =  self.fed_json_data['ready machine number']
+    def write_json(self):
+        with open(self.json_dir, "w") as jsonFile:
+            JSON.dump(self.json_data, jsonFile)
+    def check_fed_cloud(self):
+        this_gdrive_id = self.json_data["federated cloud id"]
+        this_file_list = self.drive.ListFile(
+            {'q': "'{}' in parents and trashed=false".format(this_gdrive_id)}).GetList()
+        for j, file in enumerate(sorted(this_file_list, key=lambda x: x['title']), start=1):
+            if file['fileExtension'] == 'json':
+                print('Downloading {} file from GDrive ({}/{})'.format(file['title'], j, len(this_file_list)))
+                this_json_dir = self.out_dir + "telecom/federated_learning_status.json"
+                file.GetContentFile(this_json_dir)
+                # load this work's json states
+                with open(this_json_dir) as f_dir:
+                    self.fed_json_data = JSON.load(f_dir)
+
+        if self.fed_json_data['federated update']=='1':
+            for j, file in enumerate(sorted(this_file_list, key=lambda x: x['title']), start=1):
+                if file['fileExtension'] == 'pth':
+                    _, original_name = os.path.split(file['title'])
+                    print('Downloading {} file from GDrive ({}/{})'.format(file['title'], j, len(this_file_list)))
+                    file.GetContentFile(self.out_dir +   original_name)
+
+            pass
+            self.json_data['stage'] = 'downloaded_new_model'
+            self.write_json()
+            print("local json status updated")
+
+        print("fed json status updated")
     def json_initial(self):
         with open(self.json_dir) as f_dir:
             json_data = JSON.load(f_dir)
@@ -58,11 +96,11 @@ class Cloud_API(object):
             JSON.dump(newJson, jsonFile)
         print("local json status updated")
         pass
-    def upload_local_models(self):
+    def upload_local_files(self,upload_file_list):
 
         file_list = self.drive.ListFile({'q': "'{}' in parents and trashed=false".format(self.gdrive_id)}).GetList()
 
-        for upload_file in self.upload_file_list:
+        for upload_file in upload_file_list:
             # check nessesary to delete the old file
 
             gfile = self.drive.CreateFile({'parents': [{'id': self.gdrive_id}]})
@@ -80,30 +118,7 @@ class Cloud_API(object):
 
     def test (self):
         # upload a list of files 
-        upload_file_list = [ self.out_dir + 'cGAND_epoch_1.pth', 
-                              self.out_dir + 'cGANG_epoch_1.pth',
-                             self.out_dir + 'telecom/local_training_status.json']
-        file_list = self.drive.ListFile({'q': "'{}' in parents and trashed=false".format(self.gdrive_id)}).GetList()
-
-        for upload_file in upload_file_list:
-            # check nessesary to delete the old file 
-            for file1 in file_list:
-                if file1['title'] == upload_file:
-                    file1.Delete()  
-                else:                   
-                    pass
-            gfile = self.drive.CreateFile({'parents': [{'id': self.gdrive_id}]})
-            gfile.SetContentFile(upload_file)
-            gfile.Upload()
-	        
-        #  list all files from the specific folder in the google drive
-        file_list = self.drive.ListFile({'q': "'{}' in parents and trashed=false".format(self.gdrive_id)}).GetList()
-        for file in file_list:
-	        print('title: %s, id: %s' % (file['title'], file['id']))
-        # Download the files from Google Drive
-        for i, file in enumerate(sorted(file_list, key = lambda x: x['title']), start=1):
-	        print('Downloading {} file from GDrive ({}/{})'.format(file['title'], i, len(file_list)))
-	        file.GetContentFile(file['title'])
+       return
 
 if __name__ == '__main__':
 
