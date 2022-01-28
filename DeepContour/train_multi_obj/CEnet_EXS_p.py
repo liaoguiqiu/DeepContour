@@ -296,7 +296,7 @@ while(1): # main infinite loop
                 cloud_local_infer.load_json()
                 cloud_local_infer.check_fed_json()
                 if (cloud_local_infer.fed_json_data['stage'] == "fed_new_round" and cloud_local_infer.json_data[
-                    'stage'] != "local_new_round"):
+                    'stage'] != "local_new_round"  and cloud_local_infer.json_data['stage'] != "waiting_fed_update"):
                     cloud_local_infer.json_update_after_newround()
                     cloud_local_infer.write_json()
                     cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
@@ -306,11 +306,9 @@ while(1): # main infinite loop
 
                 if (cloud_local_infer.fed_json_data['stage'] == 'upload_waiting_remote_update'):
                     cloud_local_infer.load_fed_model()
-                    cloud_local_infer.json_data['stage'] = "downloaded_new_model"
-                    pass
-                cloud_local_infer.load_json()
+
                 # stage =
-                if (cloud_local_infer.json_data['stage'] == "downloaded_new_model"):
+
                     CE_Nets.netG = reset_model_para(CE_Nets.netG, name='cGANG')
                     CE_Nets.netD = reset_model_para(CE_Nets.netD, name='cGAND')
                     cloud_local_infer.json_data['stage'] = 'already_load_fed_model'
@@ -326,7 +324,7 @@ while(1): # main infinite loop
     if Federated_learning_flag == True:
         cloud_local_infer.load_json()
         cloud_local_infer.check_fed_json()
-        if(cloud_local_infer.fed_json_data['stage']=="fed_new_round" and cloud_local_infer.json_data['stage'] != "local_new_round"):
+        if(cloud_local_infer.fed_json_data['stage']=="fed_new_round" and cloud_local_infer.json_data['stage'] != "local_new_round" and cloud_local_infer.json_data['stage'] != "waiting_fed_update"):
             cloud_local_infer.json_data['stage'] = "local_new_round"
             cloud_local_infer.json_update_after_newround()
             cloud_local_infer.write_json()
@@ -350,12 +348,10 @@ while(1): # main infinite loop
         if (cloud_local_infer.fed_json_data['stage'] == 'upload_waiting_remote_update'):
             cloud_local_infer.load_fed_model()
 
-            pass
-        cloud_local_infer.load_json()
-        # stage =
-        if ( cloud_local_infer.json_data['stage']=="downloaded_new_model"):
-            CE_Nets.netG =reset_model_para(CE_Nets.netG,name='cGANG')
-            CE_Nets.netD =reset_model_para(CE_Nets.netD,name='cGAND')
+            # stage =
+
+            CE_Nets.netG = reset_model_para(CE_Nets.netG, name='cGANG')
+            CE_Nets.netD = reset_model_para(CE_Nets.netD, name='cGAND')
             cloud_local_infer.json_data['stage'] = 'already_load_fed_model'
             cloud_local_infer.write_json()
         cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
