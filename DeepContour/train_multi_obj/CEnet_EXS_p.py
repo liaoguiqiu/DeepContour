@@ -297,6 +297,7 @@ while(1): # main infinite loop
         cloud_local_infer.check_fed_json()
         if(cloud_local_infer.fed_json_data['stage']=="fed_new_round"):
             cloud_local_infer.json_data['stage'] = "local_new_round"
+            cloud_local_infer.json_update_after_newround()
             cloud_local_infer.write_json()
             cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
 
@@ -326,7 +327,7 @@ while(1): # main infinite loop
             CE_Nets.netD =reset_model_para(CE_Nets.netD,name='cGAND')
             cloud_local_infer.json_data['stage'] = 'already_load_fed_model'
             cloud_local_infer.write_json()
-            cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
+        cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
     # torch.save(CE_Nets.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
      
     if epoch >=5: # just save 5 newest historical models  

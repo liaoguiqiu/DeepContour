@@ -186,7 +186,7 @@ class Cloud_Federated_Handler(object):
         while(1):
             self.load_fed_json()
             self.check_status_from_works()
-            if (self.ready_worker_cnt >= self.num_worker and self.fed_json_data['federated update'] == '0' and self.fed_json_data['stage']!='upload_waiting_remote_update' ):
+            if (self.ready_worker_cnt >= self.num_worker and self.fed_json_data['federated update'] == '0' and self.fed_json_data['stage']!='upload_waiting_remote_update' and self.fed_json_data['stage'] == 'fed_new_round' ):
                  self.load_all_local_models()
                  self.fed_average()
                  self.upload_local_files(self.upload_model_list)
@@ -204,6 +204,8 @@ class Cloud_Federated_Handler(object):
                     print("fed json status updated")
                     self.upload_local_files(self.upload_json_list)
                     pass
+            self.upload_local_files(self.upload_json_list)
+
 
 if __name__ == '__main__':
 
