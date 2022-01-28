@@ -291,7 +291,7 @@ while(1): # main infinite loop
             if cv2.waitKey(1) & 0xFF == ord('q'):
                break
             #-------------- A variety of visualization - end (this part is a little messy..)  ------------------#
-        if read_id % 5==0:
+        if read_id % 100==0:
             if Federated_learning_flag == True:
                 cloud_local_infer.load_json()
                 cloud_local_infer.check_fed_json()

@@ -170,7 +170,8 @@ class Cloud_Federated_Handler(object):
         for i in np.arange(num_worker):
             worker_id = i +1
             this_gdrive_id = self.fed_json_data["worker cloud id"][str(i+1)]
-
+            this_json_worker_dir = self.federated_dir + "telecom/worker" + str(
+                worker_id) + ".json"
             while True:
                 try:
                     this_file_list = self.drive.ListFile(
