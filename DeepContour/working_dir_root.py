@@ -19,7 +19,7 @@
 
 
 #this is for Guiqiu Windows
-# working_root = "E:/Deep learning/"
+#working_root = "E:/Deep learning/"
 
 #this is for marcopolo linux
 working_root = "/media/icube/DATA1/deeplearning/"

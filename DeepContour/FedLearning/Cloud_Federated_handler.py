@@ -5,6 +5,7 @@ import torch.utils.data
 from torch.autograd import Variable
 from model import CE_build3 # the mmodel
 from Cloud_API import Cloud_API
+import pydrive
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 from working_dir_root import config_root,Output_root
@@ -129,13 +130,23 @@ class Cloud_Federated_Handler(object):
 
 
 
-    def load_model_local_worker(self,this_gdrive_id,this_file_list,worker_id):
+    def load_model_local_worker(self,this_gdrive_id,worker_id):
         # get all the pth file from this worker
-        for j, file in enumerate(sorted(this_file_list, key=lambda x: x['title']), start=1):
-            if file['fileExtension'] == 'pth':
-                _, original_name = os.path.split(file['title'])
-                print('Downloading {} file from GDrive ({}/{})'.format(file['title'], j, len(this_file_list)))
-                file.GetContentFile(self.federated_dir + str(worker_id) + original_name)
+
+        while True:
+            try:
+                this_file_list = self.drive.ListFile(
+                    {'q': "'{}' in parents and trashed=false".format(this_gdrive_id)}).GetList()
+                for j, file in enumerate(sorted(this_file_list, key=lambda x: x['title']), start=1):
+                    if file['fileExtension'] == 'pth':
+                        _, original_name = os.path.split(file['title'])
+                        print('Downloading {} file from GDrive ({}/{})'.format(file['title'], j,
+                                                                               len(this_file_list)))
+                        file.GetContentFile(self.federated_dir + str(worker_id) + original_name)
+                break
+            except pydrive.files.ApiRequestError:
+                print("Oops!  That was no model load..")
+
         pass
         return
     def load_all_local_models(self):
@@ -145,9 +156,8 @@ class Cloud_Federated_Handler(object):
             for i in np.arange(num_worker):
                 worker_id = i + 1
                 this_gdrive_id = self.fed_json_data["worker cloud id"][str(i + 1)]
-                this_file_list = self.drive.ListFile(
-                    {'q': "'{}' in parents and trashed=false".format(this_gdrive_id)}).GetList()
-                self.load_model_local_worker(this_gdrive_id, this_file_list, worker_id)
+
+                self.load_model_local_worker(this_gdrive_id, worker_id)
                 pass
             print("all model loaded")
             # update this model when it is ready
@@ -160,19 +170,30 @@ class Cloud_Federated_Handler(object):
         for i in np.arange(num_worker):
             worker_id = i +1
             this_gdrive_id = self.fed_json_data["worker cloud id"][str(i+1)]
-            this_file_list = self.drive.ListFile({'q': "'{}' in parents and trashed=false".format(this_gdrive_id)}).GetList()
-            for j, file in enumerate(sorted(this_file_list, key=lambda x: x['title']), start=1):
-                if file['fileExtension'] =='json':
-                    print('Downloading {} file from GDrive ({}/{})'.format(file['title'], j, len(this_file_list)))
-                    this_json_worker_dir = self.federated_dir + "telecom/worker" + str(worker_id)+".json"
-                    file.GetContentFile(this_json_worker_dir)
+
+            while True:
+                try:
+                    this_file_list = self.drive.ListFile(
+                        {'q': "'{}' in parents and trashed=false".format(this_gdrive_id)}).GetList()
+                    for j, file in enumerate(sorted(this_file_list, key=lambda x: x['title']), start=1):
+                        if file['fileExtension'] == 'json':
+                            print('Downloading {} file from GDrive ({}/{})'.format(file['title'], j,
+                                                                                   len(this_file_list)))
+                            this_json_worker_dir = self.federated_dir + "telecom/worker" + str(
+                                worker_id) + ".json"
+                            file.GetContentFile(this_json_worker_dir)
+                    break
+                except pydrive.files.ApiRequestError:
+                    print("Oops!  That was no josn load..")
+
+
                     #load this work's json states
-                    with open(this_json_worker_dir) as f_dir:
-                        this_worker_json_data = JSON.load(f_dir)
-                    if (int(this_worker_json_data['minimal ready'])>0):
-                        self.ready_worker_cnt +=1
-                    if (this_worker_json_data['stage'] =='already_load_fed_model' ):
-                        self.loaded_worker_cnt+=1
+            with open(this_json_worker_dir) as f_dir:
+                this_worker_json_data = JSON.load(f_dir)
+            if (int(this_worker_json_data['minimal ready'])>0):
+                self.ready_worker_cnt +=1
+            if (this_worker_json_data['stage'] =='already_load_fed_model' ):
+                self.loaded_worker_cnt+=1
 
         self.fed_json_data['ready machine number'] = str(self.ready_worker_cnt)
         with open(self.fed_json_dir, "w") as jsonFile:

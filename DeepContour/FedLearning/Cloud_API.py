@@ -3,6 +3,7 @@ from pydrive.drive import GoogleDrive
 from working_dir_root import config_root,Output_root
 import json as JSON
 import  os
+import pydrive
 class Cloud_API(object):
     def __init__(self ):
         self.credential_dir = config_root + "client_secrets.json" 
@@ -39,14 +40,23 @@ class Cloud_API(object):
         # self.load_json()
         self.check_fed_json()
         this_gdrive_id = self.json_data["federated cloud id"]
-        this_file_list = self.drive.ListFile(
-            {'q': "'{}' in parents and trashed=false".format(this_gdrive_id)}).GetList()
+
         if self.fed_json_data['federated update']=='1':
-            for j, file in enumerate(sorted(this_file_list, key=lambda x: x['title']), start=1):
-                if file['fileExtension'] == 'pth':
-                    _, original_name = os.path.split(file['title'])
-                    print('Downloading {} file from GDrive ({}/{})'.format(file['title'], j, len(this_file_list)))
-                    file.GetContentFile(self.out_dir +   original_name)
+
+            while True:
+                try:
+                    this_file_list = self.drive.ListFile(
+                        {'q': "'{}' in parents and trashed=false".format(this_gdrive_id)}).GetList()
+                    for j, file in enumerate(sorted(this_file_list, key=lambda x: x['title']), start=1):
+                        if file['fileExtension'] == 'pth':
+                            _, original_name = os.path.split(file['title'])
+                            print('Downloading {} file from GDrive ({}/{})'.format(file['title'], j,
+                                                                                   len(this_file_list)))
+                            file.GetContentFile(self.out_dir +   original_name)
+                    break
+                except pydrive.files.ApiRequestError:
+                    print("Oops!  That was no json load..")
+
 
             pass
             self.json_data['stage'] = 'downloaded_new_model'
@@ -54,16 +64,25 @@ class Cloud_API(object):
         return
     def check_fed_json(self):
         this_gdrive_id = self.json_data["federated cloud id"]
-        this_file_list = self.drive.ListFile(
-            {'q': "'{}' in parents and trashed=false".format(this_gdrive_id)}).GetList()
-        for j, file in enumerate(sorted(this_file_list, key=lambda x: x['title']), start=1):
-            if file['fileExtension'] == 'json':
-                print('Downloading {} file from GDrive ({}/{})'.format(file['title'], j, len(this_file_list)))
-                this_json_dir = self.out_dir + "telecom/federated_learning_status.json"
-                file.GetContentFile(this_json_dir)
-                # load this work's json states
-                with open(this_json_dir) as f_dir:
-                    self.fed_json_data = JSON.load(f_dir)
+
+
+        while True:
+            try:
+                this_file_list = self.drive.ListFile(
+                    {'q': "'{}' in parents and trashed=false".format(this_gdrive_id)}).GetList()
+                for j, file in enumerate(sorted(this_file_list, key=lambda x: x['title']), start=1):
+                    if file['fileExtension'] == 'json':
+                        print('Downloading {} file from GDrive ({}/{})'.format(file['title'], j,
+                                                                               len(this_file_list)))
+                        this_json_dir = self.out_dir + "telecom/federated_learning_status.json"
+                        file.GetContentFile(this_json_dir)
+                break
+            except pydrive.files.ApiRequestError:
+                print("Oops!  That was no json load..")
+
+        # load this work's json states
+        with open(this_json_dir) as f_dir:
+            self.fed_json_data = JSON.load(f_dir)
 
 
 

@@ -32,7 +32,7 @@ Visdom_flag  = False  # the flag of using the visdom or not
 OLG_flag = False  # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
 validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
-Display_fig_flag = True  #  display and save result or not
+Display_fig_flag = False  #  display and save result or not
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler
 Continue_flag = True  # if not true, it start from scratch again
 Federated_learning_flag = True
@@ -295,7 +295,7 @@ while(1): # main infinite loop
     if Federated_learning_flag == True:
         cloud_local_infer.load_json()
         cloud_local_infer.check_fed_json()
-        if(cloud_local_infer.fed_json_data['stage']=="fed_new_round"):
+        if(cloud_local_infer.fed_json_data['stage']=="fed_new_round" and cloud_local_infer.json_data['stage'] != "local_new_round"):
             cloud_local_infer.json_data['stage'] = "local_new_round"
             cloud_local_infer.json_update_after_newround()
             cloud_local_infer.write_json()
