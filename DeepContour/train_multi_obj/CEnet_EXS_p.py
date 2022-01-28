@@ -36,7 +36,7 @@ Display_fig_flag = True  #  display and save result or not
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler
 Continue_flag = True  # if not true, it start from scratch again
 Federated_learning_flag = True
-loadmodel_index = '_4.pth'
+loadmodel_index = '_1.pth'
 
 infinite_save_id =0 # use this method so that the index of the image will not start from 0 again when switch the folder    
 if Federated_learning_flag == True:
@@ -304,9 +304,9 @@ while(1): # main infinite loop
         if Federated_learning_flag == True:
             cloud_local_infer.load_json()
 
-            if (cloud_local_infer.json_data['stage'] == "waiting_fed_update"):
+            if (cloud_local_infer.fed_json_data['stage'] == 'upload_waiting_remote_update'):
                 cloud_local_infer.load_fed_model()
-
+                cloud_local_infer.json_data['stage'] = "downloaded_new_model"
                 pass
             cloud_local_infer.load_json()
             # stage =
@@ -347,7 +347,7 @@ while(1): # main infinite loop
     if Federated_learning_flag == True:
         cloud_local_infer.load_json()
 
-        if (cloud_local_infer.json_data['stage'] == "waiting_fed_update"):
+        if (cloud_local_infer.fed_json_data['stage'] == 'upload_waiting_remote_update'):
             cloud_local_infer.load_fed_model()
 
             pass
