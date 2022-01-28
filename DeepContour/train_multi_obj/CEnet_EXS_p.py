@@ -291,31 +291,31 @@ while(1): # main infinite loop
             if cv2.waitKey(1) & 0xFF == ord('q'):
                break
             #-------------- A variety of visualization - end (this part is a little messy..)  ------------------#
-        if Federated_learning_flag == True:
-            cloud_local_infer.load_json()
-            cloud_local_infer.check_fed_json()
-            if (cloud_local_infer.fed_json_data['stage'] == "fed_new_round" and cloud_local_infer.json_data[
-                'stage'] != "local_new_round"):
-                cloud_local_infer.json_data['stage'] = "local_new_round"
-                cloud_local_infer.json_update_after_newround()
-                cloud_local_infer.write_json()
-                cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
-                # check to update
-        if Federated_learning_flag == True:
-            cloud_local_infer.load_json()
+        if read_id % 5==0:
+            if Federated_learning_flag == True:
+                cloud_local_infer.load_json()
+                cloud_local_infer.check_fed_json()
+                if (cloud_local_infer.fed_json_data['stage'] == "fed_new_round" and cloud_local_infer.json_data[
+                    'stage'] != "local_new_round"):
+                    cloud_local_infer.json_update_after_newround()
+                    cloud_local_infer.write_json()
+                    cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
+                    # check to update
+            if Federated_learning_flag == True:
+                cloud_local_infer.load_json()
 
-            if (cloud_local_infer.fed_json_data['stage'] == 'upload_waiting_remote_update'):
-                cloud_local_infer.load_fed_model()
-                cloud_local_infer.json_data['stage'] = "downloaded_new_model"
-                pass
-            cloud_local_infer.load_json()
-            # stage =
-            if (cloud_local_infer.json_data['stage'] == "downloaded_new_model"):
-                CE_Nets.netG = reset_model_para(CE_Nets.netG, name='cGANG')
-                CE_Nets.netD = reset_model_para(CE_Nets.netD, name='cGAND')
-                cloud_local_infer.json_data['stage'] = 'already_load_fed_model'
-                cloud_local_infer.write_json()
-            cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
+                if (cloud_local_infer.fed_json_data['stage'] == 'upload_waiting_remote_update'):
+                    cloud_local_infer.load_fed_model()
+                    cloud_local_infer.json_data['stage'] = "downloaded_new_model"
+                    pass
+                cloud_local_infer.load_json()
+                # stage =
+                if (cloud_local_infer.json_data['stage'] == "downloaded_new_model"):
+                    CE_Nets.netG = reset_model_para(CE_Nets.netG, name='cGANG')
+                    CE_Nets.netD = reset_model_para(CE_Nets.netD, name='cGAND')
+                    cloud_local_infer.json_data['stage'] = 'already_load_fed_model'
+                    cloud_local_infer.write_json()
+                cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
     # do checkpointing
 
     #--------------  save the current trained model after going through a folder  ------------------#
