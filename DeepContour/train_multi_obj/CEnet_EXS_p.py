@@ -135,6 +135,13 @@ if Continue_flag == True:
     # CE_Nets.netG.fusion_layer_exist.apply(weights_init)
 
     #CE_Nets.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
+
+if Federated_learning_flag == True: # reload 
+    CE_Nets.netG = reset_model_para(CE_Nets.netG, name='cGANG')
+    CE_Nets.netD = reset_model_para(CE_Nets.netD, name='cGAND')
+
+
+
 if validation_flag == True:
    CE_Nets.netG.Unet_back.eval()
 print(CE_Nets.netD)
