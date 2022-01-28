@@ -5,6 +5,7 @@ import torch.utils.data
 from torch.autograd import Variable
 from model import CE_build3 # the mmodel
 from FedLearning. Cloud_API import Cloud_API
+import oauth2client
 import pydrive
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
@@ -144,7 +145,7 @@ class Cloud_Federated_Handler(object):
                                                                                len(this_file_list)))
                         file.GetContentFile(self.federated_dir + str(worker_id) + original_name)
                 break
-            except pydrive.files.ApiRequestError:
+            except (pydrive.files.ApiRequestError,oauth2client.client.HttpAccessTokenRefreshError):
                 print("Oops!  That was no model load..")
 
         pass
@@ -184,7 +185,7 @@ class Cloud_Federated_Handler(object):
                                 worker_id) + ".json"
                             file.GetContentFile(this_json_worker_dir)
                     break
-                except pydrive.files.ApiRequestError:
+                except (pydrive.files.ApiRequestError,oauth2client.client.HttpAccessTokenRefreshError):
                     print("Oops!  That was no josn load..")
 
 

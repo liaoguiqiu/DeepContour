@@ -4,6 +4,7 @@ from working_dir_root import config_root,Output_root
 import json as JSON
 import  os
 import pydrive
+import  oauth2client
 class Cloud_API(object):
     def __init__(self ):
         self.credential_dir = config_root + "client_secrets.json" 
@@ -54,7 +55,7 @@ class Cloud_API(object):
                                                                                    len(this_file_list)))
                             file.GetContentFile(self.out_dir +   original_name)
                     break
-                except pydrive.files.ApiRequestError:
+                except (pydrive.files.ApiRequestError,oauth2client.client.HttpAccessTokenRefreshError):
                     print("Oops!  That was no json load..")
 
 
@@ -77,7 +78,7 @@ class Cloud_API(object):
                         this_json_dir = self.out_dir + "telecom/federated_learning_status.json"
                         file.GetContentFile(this_json_dir)
                 break
-            except pydrive.files.ApiRequestError:
+            except (pydrive.files.ApiRequestError,oauth2client.client.HttpAccessTokenRefreshError):
                 print("Oops!  That was no json load..")
 
         # load this work's json states
