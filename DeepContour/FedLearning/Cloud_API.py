@@ -103,29 +103,29 @@ class Cloud_API(object):
         return
     def json_update_after_epo(self):
         with open(self.json_dir) as f_dir:
-            json_data = JSON.load(f_dir)
-        newJson = json_data
+            self. json_data = JSON.load(f_dir)
+
         # this count will be clear after
-        ready_cnt = int(json_data['minimal ready']) + 1
-        newJson['minimal ready']= str(ready_cnt)
-        update_cnt = int(json_data['last local update']) + 1
-        newJson['last local update']=  str(update_cnt)
+        ready_cnt = int(self. json_data['minimal ready']) + 1
+        self. json_data['minimal ready']= str(ready_cnt)
+        update_cnt = int(self. json_data['last local update']) + 1
+        self. json_data['last local update']=  str(update_cnt)
 
         with open(self.json_dir, "w") as jsonFile:
-            JSON.dump(newJson, jsonFile)
+            JSON.dump(self. json_data, jsonFile)
         print("local json status initialized")
         pass
     def json_update_after_newround(self):
         with open(self.json_dir) as f_dir:
-            json_data = JSON.load(f_dir)
-        newJson = json_data
+            self. json_data = JSON.load(f_dir)
+
         # this count will be clear after update
-        newJson['minimal ready'] = '0'
-        newJson['federated loaded'] = '0'
+        self. json_data['minimal ready'] = '0'
+        self. json_data['federated loaded'] = '0'
 
         with open(self.json_dir, "w") as jsonFile:
-            JSON.dump(newJson, jsonFile)
-        print("local json status updated")
+            JSON.dump(self. json_data, jsonFile)
+        print("local json status updated new round")
         pass
     def upload_local_files(self,upload_file_list):
 

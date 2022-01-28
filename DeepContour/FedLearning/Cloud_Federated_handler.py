@@ -220,6 +220,8 @@ class Cloud_Federated_Handler(object):
                 if (self.loaded_worker_cnt>=self.num_worker):
                     # go back to inital stage
                     self.fed_json_data['federated update'] = '0'
+                    self.fed_json_data['ready machine number'] = '0'
+
                     self.fed_json_data['stage'] = 'fed_new_round'
                     self.write_fed_json()
                     print("fed json status updated")
