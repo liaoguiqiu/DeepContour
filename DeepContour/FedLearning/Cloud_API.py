@@ -35,7 +35,24 @@ class Cloud_API(object):
     def write_json(self):
         with open(self.json_dir, "w") as jsonFile:
             JSON.dump(self.json_data, jsonFile)
-    def check_fed_cloud(self):
+    def load_fed_model(self):
+        # self.load_json()
+        self.check_fed_json()
+        this_gdrive_id = self.json_data["federated cloud id"]
+        this_file_list = self.drive.ListFile(
+            {'q': "'{}' in parents and trashed=false".format(this_gdrive_id)}).GetList()
+        if self.fed_json_data['federated update']=='1':
+            for j, file in enumerate(sorted(this_file_list, key=lambda x: x['title']), start=1):
+                if file['fileExtension'] == 'pth':
+                    _, original_name = os.path.split(file['title'])
+                    print('Downloading {} file from GDrive ({}/{})'.format(file['title'], j, len(this_file_list)))
+                    file.GetContentFile(self.out_dir +   original_name)
+
+            pass
+            self.json_data['stage'] = 'downloaded_new_model'
+            self.write_json()
+        return
+    def check_fed_json(self):
         this_gdrive_id = self.json_data["federated cloud id"]
         this_file_list = self.drive.ListFile(
             {'q': "'{}' in parents and trashed=false".format(this_gdrive_id)}).GetList()
@@ -48,17 +65,8 @@ class Cloud_API(object):
                 with open(this_json_dir) as f_dir:
                     self.fed_json_data = JSON.load(f_dir)
 
-        if self.fed_json_data['federated update']=='1':
-            for j, file in enumerate(sorted(this_file_list, key=lambda x: x['title']), start=1):
-                if file['fileExtension'] == 'pth':
-                    _, original_name = os.path.split(file['title'])
-                    print('Downloading {} file from GDrive ({}/{})'.format(file['title'], j, len(this_file_list)))
-                    file.GetContentFile(self.out_dir +   original_name)
 
-            pass
-            self.json_data['stage'] = 'downloaded_new_model'
-            self.write_json()
-            print("local json status updated")
+
 
         print("fed json status updated")
     def json_initial(self):
@@ -67,6 +75,8 @@ class Cloud_API(object):
         newJson = json_data
         newJson['minimal ready']='0'
         newJson['last local update']='0'
+        newJson['federated loaded'] = '0'
+
         # shape  = data["shapes"]
         with open(self.json_dir, "w") as jsonFile:
             JSON.dump(newJson, jsonFile)
@@ -86,12 +96,14 @@ class Cloud_API(object):
             JSON.dump(newJson, jsonFile)
         print("local json status initialized")
         pass
-    def json_update_after_download(self):
+    def json_update_after_newround(self):
         with open(self.json_dir) as f_dir:
             json_data = JSON.load(f_dir)
         newJson = json_data
         # this count will be clear after update
         newJson['minimal ready'] = '0'
+        newJson['federated loaded'] = '0'
+
         with open(self.json_dir, "w") as jsonFile:
             JSON.dump(newJson, jsonFile)
         print("local json status updated")

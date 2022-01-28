@@ -173,20 +173,7 @@ while(1): # main infinite loop
         break
 
     while(1): # loop for going through data set
-        if Federated_learning_flag == True:
-            cloud_local_infer.load_json()
 
-            if (cloud_local_infer.json_data['stage'] == "waiting_fed_update"):
-                cloud_local_infer.check_fed_cloud()
-
-                pass
-            cloud_local_infer.load_json()
-            # stage =
-            if ( cloud_local_infer.json_data['stage']=="downloaded_new_model"):
-                CE_Nets.netG =reset_model_para(CE_Nets.netG,name='cGANG')
-                CE_Nets.netD =reset_model_para(CE_Nets.netD,name='cGAND')
-                cloud_local_infer.json_data['stage'] = 'already_load_fed_model'
-                cloud_local_infer.write_json()
 
         #-------------- load data and convert to GPU tensor format------------------#
         iteration_num +=1
@@ -304,17 +291,42 @@ while(1): # main infinite loop
     torch.save(CE_Nets.netG.state_dict(), pth_save_dir+ "cGANG_epoch_"+str(epoch)+".pth")
     torch.save(CE_Nets.netE.state_dict(), pth_save_dir+ "cGANE_epoch_"+str(epoch)+".pth")
     torch.save(CE_Nets.netD.state_dict(), pth_save_dir+ "cGAND_epoch_"+str(epoch)+".pth")
+    # check to upload
     if Federated_learning_flag == True:
-        # save the latest model as the same name
-        torch.save(CE_Nets.netG.state_dict(), pth_save_dir + "cGANG" +   ".pth")
-        torch.save(CE_Nets.netE.state_dict(), pth_save_dir + "cGANE" +   ".pth")
-        torch.save(CE_Nets.netD.state_dict(), pth_save_dir + "cGAND" +   ".pth")
-        # API iterference
-        cloud_local_infer.json_update_after_epo()
-        cloud_local_infer.upload_local_files(cloud_local_infer.upload_model_list)
-        cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
+        cloud_local_infer.load_json()
+        cloud_local_infer.check_fed_json()
+        if(cloud_local_infer.fed_json_data['stage']=="fed_new_round"):
+            cloud_local_infer.json_data['stage'] = "local_new_round"
+            cloud_local_infer.write_json()
+            cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
 
+        if (cloud_local_infer.json_data['stage'] == "local_new_round" or cloud_local_infer.json_data['stage'] == "waiting_fed_update"):
+            # save the latest model as the same name
+            torch.save(CE_Nets.netG.state_dict(), pth_save_dir + "cGANG" +   ".pth")
+            torch.save(CE_Nets.netE.state_dict(), pth_save_dir + "cGANE" +   ".pth")
+            torch.save(CE_Nets.netD.state_dict(), pth_save_dir + "cGAND" +   ".pth")
+            # API iterference
+            cloud_local_infer.json_update_after_epo()
+            cloud_local_infer.upload_local_files(cloud_local_infer.upload_model_list)
+            cloud_local_infer.json_data['stage'] = "waiting_fed_update"
+            cloud_local_infer.write_json()
+            cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
+    #check to update
+    if Federated_learning_flag == True:
+        cloud_local_infer.load_json()
 
+        if (cloud_local_infer.json_data['stage'] == "waiting_fed_update"):
+            cloud_local_infer.load_fed_model()
+
+            pass
+        cloud_local_infer.load_json()
+        # stage =
+        if ( cloud_local_infer.json_data['stage']=="downloaded_new_model"):
+            CE_Nets.netG =reset_model_para(CE_Nets.netG,name='cGANG')
+            CE_Nets.netD =reset_model_para(CE_Nets.netD,name='cGAND')
+            cloud_local_infer.json_data['stage'] = 'already_load_fed_model'
+            cloud_local_infer.write_json()
+            cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
     # torch.save(CE_Nets.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
      
     if epoch >=5: # just save 5 newest historical models  

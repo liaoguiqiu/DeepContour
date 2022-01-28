@@ -28,7 +28,8 @@ class Cloud_Federated_Handler(object):
         with open(self.fed_json_dir) as f_dir:
             self.fed_json_data = JSON.load(f_dir)
         self.num_worker = int(self.fed_json_data["machine number"])
-        self.model_list = [None]*2
+        self.model_list = [None]*self.num_worker
+        self.workerJsonlist = [None]*self.num_worker
         # creat a list of models depending on workers
         for i in np.arange(self.num_worker):
             self.model_list[i] = Model_creator.creat_nets()
@@ -50,7 +51,10 @@ class Cloud_Federated_Handler(object):
             self.fed_json_data = JSON.load(f_dir)
             # self.ready_worker_cnt =  self.fed_json_data['ready machine number']
         self.update_flag  = self.fed_json_data['federated update']
-
+    def write_fed_json(self):
+        with open(self.fed_json_dir, "w") as jsonFile:
+            JSON.dump(self.fed_json_data, jsonFile)
+        print("fed json status updated")
     def fed_average(self):
         num_worker = int(self.fed_json_data["machine number"])
 
@@ -137,7 +141,7 @@ class Cloud_Federated_Handler(object):
     def load_all_local_models(self):
         num_worker = int(self.fed_json_data["machine number"])
         # load model whe every one is ready
-        if (self.ready_worker_cnt == num_worker):
+        if (self.ready_worker_cnt >= num_worker):
             for i in np.arange(num_worker):
                 worker_id = i + 1
                 this_gdrive_id = self.fed_json_data["worker cloud id"][str(i + 1)]
@@ -152,6 +156,7 @@ class Cloud_Federated_Handler(object):
     def check_status_from_works(self):
         num_worker =int( self.fed_json_data["machine number"])
         self.ready_worker_cnt = 0
+        self.loaded_worker_cnt =0
         for i in np.arange(num_worker):
             worker_id = i +1
             this_gdrive_id = self.fed_json_data["worker cloud id"][str(i+1)]
@@ -166,6 +171,8 @@ class Cloud_Federated_Handler(object):
                         this_worker_json_data = JSON.load(f_dir)
                     if (int(this_worker_json_data['minimal ready'])>0):
                         self.ready_worker_cnt +=1
+                    if (this_worker_json_data['stage'] =='already_load_fed_model' ):
+                        self.loaded_worker_cnt+=1
 
         self.fed_json_data['ready machine number'] = str(self.ready_worker_cnt)
         with open(self.fed_json_dir, "w") as jsonFile:
@@ -179,16 +186,24 @@ class Cloud_Federated_Handler(object):
         while(1):
             self.load_fed_json()
             self.check_status_from_works()
-            if (self.ready_worker_cnt == self.num_worker and self.fed_json_data['federated update'] == '0'):
+            if (self.ready_worker_cnt >= self.num_worker and self.fed_json_data['federated update'] == '0' and self.fed_json_data['stage']!='upload_waiting_remote_update' ):
                  self.load_all_local_models()
                  self.fed_average()
                  self.upload_local_files(self.upload_model_list)
                  self.fed_json_data['federated update'] = '1'
-                 with open(self.fed_json_dir, "w") as jsonFile:
-                     JSON.dump(self.fed_json_data, jsonFile)
+                 self.fed_json_data['stage'] = 'upload_waiting_remote_update'
+                 self.write_fed_json()
                  print("fed json status updated")
                  self.upload_local_files(self.upload_json_list)
-
+            if ( self.fed_json_data['stage'] == 'upload_waiting_remote_update'):
+                if (self.loaded_worker_cnt>=self.num_worker):
+                    # go back to inital stage
+                    self.fed_json_data['federated update'] = '0'
+                    self.fed_json_data['stage'] = 'fed_new_round'
+                    self.write_fed_json()
+                    print("fed json status updated")
+                    self.upload_local_files(self.upload_json_list)
+                    pass
 
 if __name__ == '__main__':
 
