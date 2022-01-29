@@ -130,24 +130,31 @@ class Cloud_API(object):
         print("local json status updated new round")
         pass
     def upload_local_files(self,upload_file_list):
+        while True:
+            try:
+                file_list = self.drive.ListFile(
+                    {'q': "'{}' in parents and trashed=false".format(self.gdrive_id)}).GetList()
 
-        file_list = self.drive.ListFile({'q': "'{}' in parents and trashed=false".format(self.gdrive_id)}).GetList()
+                for upload_file in upload_file_list:
+                    # check nessesary to delete the old file
 
-        for upload_file in upload_file_list:
-            # check nessesary to delete the old file
+                    gfile = self.drive.CreateFile({'parents': [{'id': self.gdrive_id}]})
+                    gfile.SetContentFile(upload_file)
+                    gfile.Upload()
+                    print("one new uploaded")
+                    for file1 in file_list:
+                        if file1['title'] == upload_file:
+                            file1.Delete()
+                            print("one old deleted")
 
-            gfile = self.drive.CreateFile({'parents': [{'id': self.gdrive_id}]})
-            gfile.SetContentFile(upload_file)
-            gfile.Upload()
-            print("one new uploaded")
-            for file1 in file_list:
-                if file1['title'] == upload_file:
-                    file1.Delete()
-                    print("one old deleted")
+                        else:
+                            pass
+                print("all uploaded")
+                break
+            except (pydrive.files.ApiRequestError,oauth2client.client.HttpAccessTokenRefreshError):
+                print("Oops!  That was no model load..")
+        return
 
-                else:
-                    pass
-        print("all uploaded")
 
     def test (self):
         # upload a list of files 
