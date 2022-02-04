@@ -20,6 +20,7 @@ from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl,Commun
 from dataTool.generator_contour_ivus import Generator_Contour_sheath
 from dataset_ivus  import myDataloader,Batch_size,Resample_size, Path_length
 from FedLearning.Cloud_API import Cloud_API
+from train_multi_obj.local2cloud import Local2Cloud
 import os
 #from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 #switch to another data loader for the IVUS, whih will have both the position and existence vector
@@ -44,8 +45,7 @@ loadmodel_index = '_1.pth'
 
 
 infinite_save_id =0 # use this method so that the index of the image will not start from 0 again when switch the folder    
-if Federated_learning_flag == True:
-    cloud_local_infer = Cloud_API()
+
 
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
@@ -53,7 +53,8 @@ if Visdom_flag == True:
 
 # pth_save_dir = "C:/Workdir/Develop/atlas_collab/out/sheathCGAN_coordinates3/"
 pth_save_dir = Output_root + "CEnet_trained/"
- 
+if Federated_learning_flag == True:
+    cloud_interaction = Local2Cloud(pth_save_dir)
 
 #pth_save_dir = "../out/deep_layers/"
 
@@ -102,17 +103,7 @@ CE_Nets= Model_creator.creat_nets()   # one is for the contour cordinates
 CE_Nets.netD.apply(weights_init)
 CE_Nets.netG.apply(weights_init)
 CE_Nets.netE.apply(weights_init)
-def reset_model_para(model,name='cGANG'):
-    pretrained_dict = torch.load(pth_save_dir + name + '.pth')
-    model_dict = model.state_dict()
 
-    # 1. filter out unnecessary keys
-    pretrained_dict_trim = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-    # 2. overwrite entries in the existing state dict
-    model_dict.update(pretrained_dict_trim)
-    # 3. load the new state dict
-    model.load_state_dict(model_dict)
-    return model
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
     #ensure loaded module exist
@@ -142,8 +133,8 @@ if Continue_flag == True:
     #CE_Nets.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
 
 if Using_fed_model_flag == True: # reload
-    CE_Nets.netG = reset_model_para(CE_Nets.netG, name='cGANG')
-    CE_Nets.netD = reset_model_para(CE_Nets.netD, name='cGAND')
+    CE_Nets.netG = cloud_interaction.reset_model_para(CE_Nets.netG, name='cGANG')
+    CE_Nets.netD = cloud_interaction.reset_model_para(CE_Nets.netD, name='cGAND')
 if validation_flag ==True:
     Federated_learning_flag =False
 
@@ -299,27 +290,7 @@ while(1): # main infinite loop
             #-------------- A variety of visualization - end (this part is a little messy..)  ------------------#
         if read_id % 100==0:
             if Federated_learning_flag == True:
-                cloud_local_infer.load_json()
-                cloud_local_infer.check_fed_json()
-                if (cloud_local_infer.fed_json_data['stage'] == "fed_new_round" and cloud_local_infer.json_data[
-                    'stage'] != "local_new_round"  and cloud_local_infer.json_data['stage'] != "waiting_fed_update"):
-                    cloud_local_infer.json_update_after_newround()
-                    cloud_local_infer.write_json()
-                    cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
-                    # check to update
-            if Federated_learning_flag == True:
-                cloud_local_infer.load_json()
-
-                if (cloud_local_infer.fed_json_data['stage'] == 'upload_waiting_remote_update'):
-                    cloud_local_infer.load_fed_model()
-
-                # stage =
-
-                    CE_Nets.netG = reset_model_para(CE_Nets.netG, name='cGANG')
-                    CE_Nets.netD = reset_model_para(CE_Nets.netD, name='cGAND')
-                    cloud_local_infer.json_data['stage'] = 'already_load_fed_model'
-                    cloud_local_infer.write_json()
-                cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
+                CE_Nets=cloud_interaction.check_load_global_cloud(CE_Nets)
     # do checkpointing
 
     #--------------  save the current trained model after going through a folder  ------------------#
@@ -328,39 +299,9 @@ while(1): # main infinite loop
     torch.save(CE_Nets.netD.state_dict(), pth_save_dir+ "cGAND_epoch_"+str(epoch)+".pth")
     # check to upload
     if Federated_learning_flag == True:
-        cloud_local_infer.load_json()
-        cloud_local_infer.check_fed_json()
-        if(cloud_local_infer.fed_json_data['stage']=="fed_new_round" and cloud_local_infer.json_data['stage'] != "local_new_round" and cloud_local_infer.json_data['stage'] != "waiting_fed_update"):
-            cloud_local_infer.json_data['stage'] = "local_new_round"
-            cloud_local_infer.json_update_after_newround()
-            cloud_local_infer.write_json()
-            cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
-
-        if (cloud_local_infer.json_data['stage'] == "local_new_round" or cloud_local_infer.json_data['stage'] == "waiting_fed_update"):
-            # save the latest model as the same name
-            torch.save(CE_Nets.netG.state_dict(), pth_save_dir + "cGANG" +   ".pth")
-            torch.save(CE_Nets.netE.state_dict(), pth_save_dir + "cGANE" +   ".pth")
-            torch.save(CE_Nets.netD.state_dict(), pth_save_dir + "cGAND" +   ".pth")
-            # API iterference
-            cloud_local_infer.json_update_after_epo()
-            cloud_local_infer.upload_local_files(cloud_local_infer.upload_model_list)
-            cloud_local_infer.json_data['stage'] = "waiting_fed_update"
-            cloud_local_infer.write_json()
-            cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
+        cloud_interaction.save_local_cloud(CE_Nets)
     #check to update
-    if Federated_learning_flag == True:
-        cloud_local_infer.load_json()
 
-        if (cloud_local_infer.fed_json_data['stage'] == 'upload_waiting_remote_update'):
-            cloud_local_infer.load_fed_model()
-
-            # stage =
-
-            CE_Nets.netG = reset_model_para(CE_Nets.netG, name='cGANG')
-            CE_Nets.netD = reset_model_para(CE_Nets.netD, name='cGAND')
-            cloud_local_infer.json_data['stage'] = 'already_load_fed_model'
-            cloud_local_infer.write_json()
-        cloud_local_infer.upload_local_files(cloud_local_infer.upload_json_list)
     # torch.save(CE_Nets.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
      
     if epoch >=5: # just save 5 newest historical models  
