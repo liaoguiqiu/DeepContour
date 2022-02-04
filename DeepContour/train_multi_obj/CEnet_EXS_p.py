@@ -35,8 +35,13 @@ validation_flag = False  # flag to stop the gradient, and, testing mode which wi
 Display_fig_flag = True  #  display and save result or not
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler
 Continue_flag = True  # if not true, it start from scratch again
-Federated_learning_flag = True
+Federated_learning_flag = True # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
+Using_fed_model_flag = True # True: Fed model, false: local model
 loadmodel_index = '_1.pth'
+
+
+
+
 
 infinite_save_id =0 # use this method so that the index of the image will not start from 0 again when switch the folder    
 if Federated_learning_flag == True:
@@ -136,10 +141,11 @@ if Continue_flag == True:
 
     #CE_Nets.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
 
-if Federated_learning_flag == True: # reload
+if Using_fed_model_flag == True: # reload
     CE_Nets.netG = reset_model_para(CE_Nets.netG, name='cGANG')
     CE_Nets.netD = reset_model_para(CE_Nets.netD, name='cGAND')
-
+if validation_flag ==True:
+    Federated_learning_flag =False
 
 
 if validation_flag == True:

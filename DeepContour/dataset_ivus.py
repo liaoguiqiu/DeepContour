@@ -26,7 +26,7 @@ Augment_limitation_flag = True
 Augment_add_lines = False
 Clip_mat_flag = True
 random_clip_flag = False
-Random_rotate = False
+Random_rotate = True
 Reverse_existence = True
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
 
@@ -65,6 +65,7 @@ class myDataloader(object):
 
         if validation  == True :
             self.OLG_flag = False
+            Random_rotate = False
             self.dataroot = root + "test/img/"
             self.signalroot =root + "test/label/" 
         else: 
