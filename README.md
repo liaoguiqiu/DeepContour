@@ -54,6 +54,7 @@ The following steps are required in order to run CEnet:
 
 		--Root/out/unet_trained
 
+
 1.  Json file for cloud based federated learning
 
 a interation file containing the key to access your local folder is  uploaded to here, download [local to loud corresponding comunication json file here ] (https://drive.google.com/drive/folders/1IhIrjm-shSpv_YH1MVgQeU-bBMJ9YLXF)
