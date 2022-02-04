@@ -55,7 +55,7 @@ The following steps are required in order to run CEnet:
 		--Root/out/unet_trained
 
 
-1. For cloud based federated learning, a interation file containing the key to access your local folder is  uploaded to here, download [local to loud corresponding comunication json file here ] (https://drive.google.com/drive/folders/1IhIrjm-shSpv_YH1MVgQeU-bBMJ9YLXF)
+1.  For cloud based federated learning, a interation file containing the key to access your local folder is  uploaded to here, download [local to loud corresponding comunication json file here ] (https://drive.google.com/drive/folders/1IhIrjm-shSpv_YH1MVgQeU-bBMJ9YLXF)
 If the name is  "/media/icube/DATA1/deeplearning/out/CEnet_trained/telecom/local_training_status.json", rename it as "local_training_status.json"
 
  should be pasted in the folder:
