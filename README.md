@@ -60,7 +60,7 @@ The following steps are required in order to run CEnet:
 
 
 
-1.  Json file for cloud based federated learning
+5.  Json file for cloud based federated learning
 
 a interation file containing the key to access your local folder is  uploaded to here, download [local to loud corresponding comunication json file here ] (https://drive.google.com/drive/folders/1IhIrjm-shSpv_YH1MVgQeU-bBMJ9YLXF)
 If the name is  "/media/icube/DATA1/deeplearning/out/CEnet_trained/telecom/local_training_status.json", rename it as "local_training_status.json"
@@ -68,8 +68,10 @@ If the name is  "/media/icube/DATA1/deeplearning/out/CEnet_trained/telecom/local
  should be pasted in the folder:
 
 		----Root/out/CEnet_trained/telecom
-Train CE-net as [" chapter6-fed learning" of this instruction](https://docs.google.com/document/d/1mBG2aeF13Qqxt48tZfYnptq_DKhZpqHj/edit?usp=sharing&ouid=104923533845283983955&rtpof=true&sd=true)	 
- 
+Train CE-net as [" chapter6-fed learning" of this instruction](https://docs.google.com/document/d/1mBG2aeF13Qqxt48tZfYnptq_DKhZpqHj/edit?usp=sharing&ouid=104923533845283983955&rtpof=true&sd=true)
+
+
+
 ## Key useful tools/python scripts
 To run any runable scripts in this project,
 if using the visual studio (not vs code) or pycharm, it can be run directly. 
