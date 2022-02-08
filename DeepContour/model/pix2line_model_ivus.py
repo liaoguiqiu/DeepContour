@@ -3,7 +3,7 @@ from model.base_model import BaseModel
 import model.networks as  networks
 from test_model import layer_body_sheath_res2
 from test_model import fusion_nets_ivus
-from test_model.loss_MTL import MTL_loss
+from test_model.loss_MTL import MTL_loss,DiceLoss
 import rendering
 from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length,Reverse_existence
 from time import time
@@ -83,7 +83,11 @@ class Pix2LineModel(BaseModel):
         if self.isTrain:
             # define loss functions
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
-            self.criterionL1 = torch.nn.L1Loss()
+            # self.criterionL1 = torch.nn.L1Loss()
+            # self.criterionL1 = torch.nn.BCELoss()
+            self.criterionL1 = torch.nn.CrossEntropyLoss()
+            self.criterionL1 = DiceLoss()
+
             # LGQ add another loss for G
             self.criterionMTL= MTL_loss(Loss ="L1") # default loss =  L1", that is used  for the Coordinates position
             # LGQ add another loss for G
@@ -91,17 +95,25 @@ class Pix2LineModel(BaseModel):
 
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
 
+            # self.optimizer_G = torch.optim.Adam([
+            #     {'params': self.netG.Unet_back.parameters()},
+            #     {'params': self.netG.backbone.parameters()},
+            #     {'params':self.netG.side_branch1.  parameters()},
+            #     {'params': self.netG.side_branch2.  parameters()},
+            #     {'params': self.netG.side_branch3.parameters()},
+            #     {'params': self.netG.low_level_encoding.parameters()},
+            #     {'params': self.netG.fusion_layer.parameters()},
+            #
+            # ], lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_G = torch.optim.Adam([
-                {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.backbone.parameters()},
-                {'params':self.netG.side_branch1.  parameters()},
-                {'params': self.netG.side_branch2.  parameters()},
+                {'params': self.netG.side_branch1.parameters()},
+                {'params': self.netG.side_branch2.parameters()},
                 {'params': self.netG.side_branch3.parameters()},
                 {'params': self.netG.low_level_encoding.parameters()},
                 {'params': self.netG.fusion_layer.parameters()},
 
             ], lr=opt.lr, betas=(opt.beta1, 0.999))
-
             self.optimizer_G_unet = torch.optim.Adam([
                 {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.pixencoding.parameters()},
@@ -143,6 +155,8 @@ class Pix2LineModel(BaseModel):
         self.loss_G_L1 =torch.tensor(0,dtype=torch.float)
         self.loss_G_L2 =torch.tensor(0,dtype=torch.float)
         self.loss_G_L3 =torch.tensor(0,dtype=torch.float)
+        self.loss_pix = torch.tensor(0,dtype=torch.float)
+        self.loss_G = torch.tensor(0,dtype=torch.float)
         self.metrics_saver = EXCEL_saver(8) # 8 values
         self.switcher = 0  # used to switch gradient between different part of the nets
         self.swither_G = 0 # used to optimize the back bone or not
@@ -253,7 +267,10 @@ class Pix2LineModel(BaseModel):
         self.real_A = realA.to(self.device)
 
         #self.real_B = realB.to(self.device)
-        self.real_B=rendering.layers_visualized_integer_encodeing(pathes,Resample_size)
+        # self.real_B=rendering.layers_visualized_integer_encodeing(pathes,Resample_size) # this way render it as semantic map
+        # self.real_B=rendering.boundary_visualized_integer_encodeing(pathes,Resample_size) # this is a way to encode it as boundary (very spars)
+        self.real_B=rendering.boundary_visualized_onehot_encodeing(pathes,Resample_size) # this is a way to encode it as boundary (very spars)
+
         self.real_B_one_hot=rendering.layers_visualized_OneHot_encodeing(pathes,Resample_size)
 
         # LGQ add real path as creterioa for G
@@ -292,7 +309,9 @@ class Pix2LineModel(BaseModel):
         if (validation_flag == True):
              self.mask_with_exist()
         if (one_hot_render == True):
-            self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes[0],Resample_size)
+            # self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes[0],Resample_size) # encode as semantic map
+            self.fake_B=  rendering.boundary_visualized_integer_encodeing(self.out_pathes[0],Resample_size) # encode as boundary
+
             self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing(self.out_pathes[0],Resample_size)
         #self.fake_B = self.netG(self.real_A)  # G(A)
 
@@ -329,11 +348,14 @@ class Pix2LineModel(BaseModel):
             # self.set_requires_grad(self.netG.fusion_layer, False)
 
 
+            pix_loss = self.criterionL1 (self.pix_wise  , self.real_B)
 
-            pix_loss = self.criterionL1 (self.pix_wise, self.real_B)
-            self.loss_pix =  100 * pix_loss
+            # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
+            # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
+
+            self.loss_pix =  1* pix_loss
             self.loss_pix.backward(retain_graph=True)
-            self.loss_G=-self.loss_pix
+            # self.loss_G=-self.loss_pix
             # self.optimizer_G.step()             # udpate G's weights
             self.optimizer_G_unet.step()  # udpate G's weights
             return
@@ -491,7 +513,7 @@ class Pix2LineModel(BaseModel):
             self.switcher = 0
 
         self.displayloss0 = self.loss_G. data.mean()
-        self.displayloss1 = self.loss_G. data.mean()
+        self.displayloss1 = self.loss_pix. data.mean()
         self.displayloss2 = self.loss_G. data.mean()
         self.displayloss3 = self.loss_G. data.mean()
 

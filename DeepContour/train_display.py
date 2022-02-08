@@ -46,6 +46,7 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
 
     # saveout  = CE_Nets.fake_B # display encoding tranform
     saveout = CE_Nets.pix_wise  # middel feature pix encoding
+    saveout = rendering.onehot2integer(saveout)
     show2 = saveout[0, :, :, :].cpu().detach().numpy() * 255
 
     color = numpy.zeros((show2.shape[1], show2.shape[2], 3))
@@ -76,6 +77,7 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
         cv2.imwrite(this_save_dir +
                     str(infinite_save_id) + ".jpg", show4)
     real_label = CE_Nets.real_B
+    real_label = rendering.onehot2integer(real_label)
     show5 = real_label[0, 0, :, :].cpu().detach().numpy() * 255
     cv2.imshow('real', show5.astype(numpy.uint8))
     if Save_img_flag == True:

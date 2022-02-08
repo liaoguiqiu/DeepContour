@@ -64,13 +64,13 @@ class Read_read_check_json_label(object):
         self.labels_lists = {
             'catheter': ['1', 'catheter', 'test'],
             'lumen': ['2', 'vessel', 'lumen'],
-            'wire': ['guide-wire', 'guidewire'],
-            'media': ['vessel (media)', 'vessel(media)', 'media'],
-            'branch': ['vessel(side-branch)', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
+            'wire': ['3','guide-wire', 'guidewire'],
+            'media': ['4','vessel (media)', 'vessel(media)', 'media'],
+            'branch': ['5','vessel(side-branch)', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
                        'side-branch', 'sidebranch', 'bifurcation'],
-            'stent': ['stent'],
-            'plaque': ['plaque'],
-            'calcium': ['calcification', 'calcium'],
+            'stent': ['6','stent'],
+            'plaque': ['7','plaque'],
+            'calcium': ['8','calcification', 'calcium'],
         }
 
         # BGR because of OpenCV

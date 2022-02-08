@@ -81,6 +81,7 @@ class Pix2LineModel(BaseModel):
             # define loss functions
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
             self.criterionL1 = torch.nn.L1Loss()
+
             # LGQ add another loss for G
             self.criterionMTL= MTL_loss()
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
