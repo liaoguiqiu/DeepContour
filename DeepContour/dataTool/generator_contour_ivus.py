@@ -102,7 +102,7 @@ class Generator_Contour_sheath(object):
         self.dis_origin = False
         self.origin_data = Save_Contour_pkl()
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/VARY/"
-        data_root = "../../dataset/ivus/"
+        # data_root = "../../dataset/ivus/"
         data_root = Dataset_root +"label data/"
         self.image_dir = data_root + "img/"
         self.pkl_dir = data_root +"seg label pkl train/"

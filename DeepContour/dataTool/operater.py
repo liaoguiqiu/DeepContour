@@ -193,8 +193,18 @@ class Basic_Operator:
                     #path0l[path0x[j]]
                     dy = np.clip(vy[j],2,H-2)
                     dx = np.clip(vx[j],2,W-2)
-                    img1[int(dy)+1,dx,:]=img1[int(dy)-1,dx,:]=img1[int(dy),dx,:]=painter
+                    img1[dy.astype(int)+1,dx,:]=img1[dy.astype(int)-1,dx,:]=img1[dy.astype(int),dx,:]=painter
             return img1
+
+    def draw_coordinates_color_multi(img1,vx,vy,color):
+            H,W,_ = img1.shape
+            for j in range (len(vx)):
+                    #path0l[path0x[j]]
+                    dy = np.clip(vy[j],2,H-2)
+                    dx = np.clip(vx[j],2,W-2)
+                    img1[int(dy)+1,dx,:]=img1[int(dy)-1,dx,:]=img1[int(dy),dx,:]=color
+            return img1
+
     def gray2rgb(img):
         new=np.zeros((img.shape[0],img.shape[1],3))
         new[:,:,0]  = img

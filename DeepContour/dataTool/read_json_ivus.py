@@ -34,7 +34,7 @@ class Read_read_check_json_label(object):
 #<<<<<<< HEAD:DeepContour/dataTool/read_json_ivus.py
         #sub_folder = "animal2/"
 #=======
-        sub_folder = "polyp/"
+        sub_folder = "case5_PDG/"
 #>>>>>>> b8bb1d19b916df000a1ab2c21c7474cf6fa38b44:dataTool/read_json_ivus.py
 
         self.image_dir = self.database_root + "img/" + sub_folder
@@ -72,6 +72,8 @@ class Read_read_check_json_label(object):
             'plaque': ['7','plaque'],
             'calcium': ['8','calcification', 'calcium'],
         }
+
+        self.disease_labels = ['plaque', 'calcium']
 
         # BGR because of OpenCV
         self.color_list = [[75, 25, 230], [75, 180, 60], [25, 225, 255], [200, 130, 0], [48, 130, 245],
@@ -143,6 +145,11 @@ class Read_read_check_json_label(object):
                     contours_exist = OrderedDict({key: np.zeros(W, dtype=int) for key in self.labels_lists.keys()})
 
                     for idx in range(num_labels):
+
+                        if [key for key, value in self.labels_lists.items() if shape[idx]['label'] in value][0] \
+                                in self.disease_labels:
+                            continue  # skip to next iteration
+
                         coordinates = np.array(shape[idx]['points'])
 
                         # delete the coordinates outside the image boundaries
@@ -161,7 +168,12 @@ class Read_read_check_json_label(object):
                         path_y = coordinates[:, 1]
 
                         num_points = len(path_x)
-                        path_w = int(path_x[num_points - 1] - path_x[0])
+                        if int(path_x[num_points - 1] - path_x[0]) == 0:
+                            path_w = 1  # when we have points too close to each other/same integer (short vectors)
+                            # TODO: consider disease labels as they can cause this and they are not short vectors
+                            #  (skipping now)
+                        else:
+                            path_w = int(path_x[num_points - 1] - path_x[0])
 
                         # sometimes the contour is in a reversed direction
                         if path_w < 0:

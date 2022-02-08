@@ -25,7 +25,7 @@
 working_root = "/media/icube/DATA1/deeplearning/"
 
 #this is for Beatriz's computer
-#working_root = "/media/icube/DATA1/"
+working_root = "C:/Workdir/Develop/atlas_collab_ivus/"
 
 Dataset_root =  working_root + "dataset/"
 config_root =   working_root + "config/"
