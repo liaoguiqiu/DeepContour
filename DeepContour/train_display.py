@@ -96,15 +96,19 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
     return
 # 3 functions to drae the results in real time
 def draw_coordinates_color(img1 ,vy ,color):
-
-    if color ==0:
-        painter  = [254 ,0 ,0]
-    elif color ==1:
-        painter  = [0 ,254 ,0]
-    elif color ==2:
-        painter  = [0 ,0 ,254]
-    else :
-        painter  = [0 ,0 ,0]
+    color_list = [[75, 25, 230], [75, 180, 60], [25, 225, 255], [200, 130, 0], [48, 130, 245],
+                  [180, 30, 145], [240, 240, 70], [230, 50, 240], [60, 245, 210], [212, 190, 250],
+                  [128, 128, 0], [255, 190, 220], [40, 110, 170], [200, 250, 255], [0, 0, 128],
+                  [195, 255, 170], [0, 128, 128], [180, 215, 255], [128, 0, 0]]
+    painter = color_list[color]
+    # if color ==0:
+    #     painter  = [254 ,0 ,0]
+    # elif color ==1:
+    #     painter  = [0 ,254 ,0]
+    # elif color ==2:
+    #     painter  = [0 ,0 ,254]
+    # else :
+    #     painter  = [0 ,0 ,0]
         # path0  = signal.resample(path0, W)
     H ,W ,_ = img1.shape
     for j in range (W):
