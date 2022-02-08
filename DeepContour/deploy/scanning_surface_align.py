@@ -1,3 +1,4 @@
+
 # update 4:38 2nd OCt 2020
 # this is to modify/opy a exiting Json file to generate the contour of the theatht 
 #!!! this auto json is to generate json for images without label file , this willl generate a lot of json file 
@@ -36,6 +37,7 @@ from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length
 from deploy import basic_trans
 from scipy.interpolate import interp1d
 from working_dir_root import Dataset_root,Output_root
+from deploy.basic_trans import Basic_oper
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 def resample(x,n,kind='nearest'):
@@ -129,7 +131,7 @@ def encode_as_coordinates_padding(path,h,w,H,W,rate,points = 150):
     array[:,1] = y.astype(int)
     coordinates = array.tolist()
     return coordinates
-def encode_as_coordinates_padding_exv(path,exv,h,w,H,W,rate,points = 150):
+def encode_as_original_y_padding_exv(path,exv,h,w,H,W,rate,points = 150):
 
 
     r = rate/(2*rate+1) # the rate is calculated from original padding rate
@@ -144,28 +146,9 @@ def encode_as_coordinates_padding_exv(path,exv,h,w,H,W,rate,points = 150):
     #d3 = signal.medfilt(d3,5)
     #add cutt
     #y = resample(d3,points)
-    y = resample(d3[left:right],points) # cut from the left to the right
-
-    l = len(y)
-
-    #x0 = np.arange(0, W+1, int((W+1) / l))
-    x0 = np.arange(0, W)
-
-    x=  resample(x0,l)
-    #x = x0[0:l]
-    x[l-1] = W-1
-
-
-    # add_3   = np.append(x[::-1],x,axis=0) # cascade
-    # add_3   = np.append(add_3,x[::-1],axis=0) # cascade
-    # d3 = signal.resample(add_3, 3*l)
-
-    # x=d3[l:2*l]
-    array = np.zeros((l,2))
-    array[:,0] = x.astype(int)
-    array[:,1] = y.astype(int)
-    coordinates = array.tolist()
-    return coordinates
+    y = resample(d3[left:right],W) # cut from the left to the right
+     
+    return y
 
 
 class  Auto_json_label(object):
@@ -199,10 +182,35 @@ class  Auto_json_label(object):
         # self.database_root = "D:/Deep learning/dataset/original/phantom_2th_march_2021/1/"
         # self.database_root = "D:/Deep learning/dataset/original/paper_with_strong_shadow/1/"
         self.database_root = Dataset_root +   "original/phantom_feed_back/"
+        self.database_root = "E:/database/feed back experiment/"
+        self.operatedir =   self.database_root + "resize/no fd syn with a video/"
 
         #self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
         #self.database_root = "D:/Deep learning/dataset/original/IVOCT/1/"
-
+        base_dir =  os.path.basename(os.path.normpath(self.operatedir))
+        self.save_correct_orien_dir =  self.database_root + "correct/"  + base_dir + "/"+"correct_orien/"
+        self.save_align_surf_dir =   self.database_root + "correct/"  + base_dir + "/" + "align_surf/"
+        self.save_correct_orien_cir_dir =  self.database_root + "correct/"  + base_dir + "/"+"correct_orien_cir/"
+        self.save_align_surf_cir_dir =   self.database_root + "correct/"  + base_dir + "/" + "align_surf_cir/"
+       
+        self.refH = 300 # manuall set
+        self.refW = 0
+        try:
+            os.stat(self.save_correct_orien_dir)
+        except:
+            os.makedirs(self.save_correct_orien_dir)
+        try:
+            os.stat(self.save_correct_orien_cir_dir)
+        except:
+            os.makedirs(self.save_correct_orien_cir_dir)
+        try:
+            os.stat(self.save_align_surf_dir )
+        except:
+            os.makedirs(self.save_align_surf_dir )
+        try:
+            os.stat(self.save_align_surf_cir_dir)
+        except:
+            os.makedirs(self.save_align_surf_cir_dir )
 
         self.f_downsample_factor = 30
         self.all_dir = self.database_root + "pic_all/"
@@ -303,7 +311,7 @@ class  Auto_json_label(object):
 
         new_p = pathes[:,int(rate*l):int((1-rate)*l)]
        
-    def predict_contour(self,gray,H_s, W_s , attatch_rate=0.1,points = 64):
+    def predict_tissue_contour(self,gray,H_s, W_s , attatch_rate=0.1,points = 64):
         #gray  =   cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         H,W   = gray.shape
         gray = gray[self.croptop:H,:]
@@ -339,28 +347,33 @@ class  Auto_json_label(object):
 
         #coordinates2 = encode_as_coordinates_padding(pathes[1],H_s,W_s,H,W,
         #                                                attatch_rate,points )
-        coordinates1 = encode_as_coordinates_padding_exv(pathes[0],existences[0],H_s,W_s,H,W,
-                                                        attatch_rate,points )
+        #coordinates1 = encode_as_coordinates_padding_exv(pathes[0],existences[0],H_s,W_s,H,W,
+                                                        #attatch_rate,points )
 
-        coordinates2 = encode_as_coordinates_padding_exv(pathes[1],existences[1],H_s,W_s,H,W,
+        Y = encode_as_original_y_padding_exv(pathes[1],existences[1],H_s,W_s,H,W,
                                                         attatch_rate,points )
 
      #encode_as_coordinates_padding_exv
 
-        return coordinates1,coordinates2
+        return Y
 
     def check_one_folder (self):
-        imagelist = os.listdir(self.image_dir   )
+        imagelist = os.listdir(self.operatedir)
         _,image_type  = os.path.splitext(imagelist[0]) # first image of this folder 
         #for i in os.listdir(self.image_dir): # star from the image folder
-        for i in os.listdir(self.image_dir): # star from the image folder
+        #for i in os.listdir(self.operatedir): # star from the image folder
+        folder_l = len(os.listdir(self.operatedir))
+        for i in  range(folder_l):
+
 
     #for i in os.listdir("E:\\estimagine\\vs_project\\PythonApplication_data_au\\pic\\"):
         # separath  the name of json 
-            a, b = os.path.splitext(i)
+            a=i
+            #a, b = os.path.splitext(i)
+            flag = True
             # if it is a img it will have corresponding image 
-            if b == image_type :
-                img_path = self.image_dir + a + image_type
+            if flag == True :
+                img_path = self.operatedir + str(a) + image_type
                 #jason_path  = self.json_dir + a + ".json"
                 img1 = cv2.imread(img_path)
                 
@@ -370,8 +383,31 @@ class  Auto_json_label(object):
                     gray  =   cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
                     H,W   = gray.shape
                     
-                    coordinates1,coordinates2  = self.predict_contour(gray,Resample_size, Resample_size,attatch_rate=self.attatch_rate,points=40 )
+                    # modified to only predict the tissue contour
+                    Y = self.predict_tissue_contour(gray,Resample_size, Resample_size,attatch_rate=self.attatch_rate,points=40 )
+                    max_idex = np.argmin(Y)
+                    #if a==0:
+                    #    self.shiftW_l = shiftW
+                    #    used_shift_W = shiftW
+                    #else:
+                    #    used_shift_W = shiftW*0.2 + self.shiftW_l*0.8
+                    #    self.shiftW_l = shiftW
+                    shiftW = (self.refW - max_idex)
+                    Align_orin = np.roll(gray, int( shiftW) , axis = 1)
+                    cv2.imwrite(self.save_correct_orien_dir  + str(a) + image_type,Align_orin )
+
+                    shiftH = (self.refH - Y[max_idex])      
+                    Align_sur = np.roll(Align_orin, int( shiftH) , axis = 0)
+                    cv2.imwrite(self.save_align_surf_dir  + str(a) + image_type,Align_sur )
+
+                   
+
                     
+
+                    Align_orin_cir = Basic_oper.tranfer_frome_rec2cir2(Align_orin) 
+                    cv2.imwrite(self.save_correct_orien_cir_dir  + str(a) + image_type,Align_orin_cir )
+                    Align_sur_cir = Basic_oper.tranfer_frome_rec2cir2(Align_sur) 
+                    cv2.imwrite(self.save_align_surf_cir_dir  + str(a) + image_type,Align_sur_cir )
                     #extend = np.append(gray[:,int((1-self.attatch_rate)*W):W],gray,axis=1) # cascade
                     #extend = np.append(extend,gray[:,0:int(self.attatch_rate*W)],axis=1) # cascade
 
@@ -390,52 +426,10 @@ class  Auto_json_label(object):
                     #coordinates2 = encode_as_coordinates_padding(pathes[1],Resample_size,Resample_size,H,W,
                     #                                             self.attatch_rate,points = 100)
                     # thsi json dir will be used to save  the generated json
-                    save_json_dir = self.json_save_dir + a + ".json"
-                    #copy the temp json
-                    #with open(json_dir) as dir:
-                    #        this_json= JSON.load(dir)
-                    this_json = self.jason_tmp
-                    this_coodinates = self.coordinates0
-                    this_shape = self.shapeTmp
-                    shape_temp = self.shapeTmp
+                     
                     # the start should be choose larger than 50 , here it is 100
                     #sheath_contour  = self.seger.seg_process(img1,100)
-                    for iter  in range(2): #  2 contours here : iter is tje contoru index
-                        if  shape_temp[iter]["label"]  =="1" or shape_temp[iter]["label"]  =="catheter":
-                            this_coodinates = shape_temp[iter]["points"] # remember add finding corred label 1!!!
-                            this_coodinates = coordinates1
-                            #co_len = len (this_coodinates) 
-                            #for iter2 in range (co_len):
-                            #    this_px  = this_coodinates[iter2][0] 
-                            #    this_coodinates[iter2][1] = sheath_contour[int(this_px)]
-                            shape_temp[iter] ["points"] = this_coodinates   #modify the shape temp
-                        else : 
-                            this_coodinates = shape_temp[iter]["points"] # remember add finding corred label 1!!!
-                            this_coodinates = coordinates2
-                            #co_len = len (this_coodinates) 
-                            #for iter2 in range (co_len):
-                            #    this_px  = this_coodinates[iter2][0] 
-                            #    this_coodinates[iter2][1] = sheath_contour[int(this_px)]
-                            shape_temp[iter] ["points"] = this_coodinates   #modify the shape temp
-                            #for iter2 in range (len(this_shape)):
-                            #    if  shape_temp[iter]["label"] == this_shape[iter2]["label"]:
-                            #        shape_temp[iter] ["points"] = this_shape[iter2] ["points"]
-
-                    # modify the imag name and the height and width next time
-
                     
-                    #for iter in range (self.co_len):
-                    #    this_px  = this_coodinates[iter][0] 
-                    #    this_coodinates[iter][1] = sheath_contour[int(this_px)]
-
-                    this_json ["shapes"]   = shape_temp
-                    this_json ["imageHeight"] = H
-                    this_json ["imageWidth"] = W
-                    this_json ["imagePath"] = a+ image_type
-                    this_json [ "imageData"]  = encodeImageForJson(img1)
-                    #shape  = data["shapes"]
-                    with open(save_json_dir, "w") as jsonFile:
-                        JSON.dump(this_json, jsonFile)
                     print (a )
 
                     #num_line  = len(shape)

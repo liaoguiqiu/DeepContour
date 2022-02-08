@@ -5,7 +5,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{96589756-6b6f-4001-9c57-3efe305f57e2}</ProjectGuid>
     <ProjectHome />
-    <StartupFile>deploy\DeepAutoJson.py</StartupFile>
+    <StartupFile>FedLearning\Cloud_API.py</StartupFile>
     <SearchPath>dataTool;deploy;model</SearchPath>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
@@ -44,8 +44,14 @@
     <Compile Include="deploy\correct_ruler_reference.py" />
     <Compile Include="deploy\DeepAutoJson.py" />
     <Compile Include="deploy\find_shadow.py" />
+    <Compile Include="deploy\scanning_surface_align.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="deploy\validate.py" />
     <Compile Include="deploy\validate_full.py" />
+    <Compile Include="FedLearning\Cloud_API.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="image_trans.py" />
     <Compile Include="model\base_model.py" />
     <Compile Include="model\CE_build3.py">
@@ -100,6 +106,7 @@
     <Folder Include="deploy" />
     <Folder Include="model" />
     <Folder Include="model\options" />
+    <Folder Include="FedLearning\" />
     <Folder Include="test_model" />
     <Folder Include="train_4_layers_segmentation" />
     <Folder Include="train_lumen_segmentation" />

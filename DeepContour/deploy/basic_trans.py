@@ -73,12 +73,26 @@ class Basic_oper(object):
         circular = circular.astype(np.uint8)
         #polar_image=cv2.rotate(polar_image,rotateCode = 0) 
         return circular
-    def tranfer_frome_rec2cir2(color, padding_H =1):
-        H,W_ini,_ = color.shape
-        padding = np.zeros((padding_H,W_ini,3))
+    def tranfer_frome_rec2cir2(color, padding_H =1, res = 500):
+        color = cv2.resize(color, (res,res), interpolation=cv2.INTER_AREA)
+        
+
+        if color.ndim ==3:
+            
+            H,W_ini,_ = color.shape
+            H,W,_ = color.shape
+            padding = np.zeros((padding_H,W_ini,3))
+
+            color  = np.append(padding,color,axis=0)
+
+        else:
+            H,W_ini  = color.shape
+            H,W = color.shape
+            padding = np.zeros((padding_H,W_ini))
+
+            color  = np.append(padding,color,axis=0)
+
          
-        color  = np.append(padding,color,axis=0)
-        H,W,_ = color.shape
         value =  H/2
         color2=cv2.rotate(color,rotateCode = 2)
         #value = 200

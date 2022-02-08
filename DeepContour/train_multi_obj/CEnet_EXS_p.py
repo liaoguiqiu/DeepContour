@@ -7,7 +7,7 @@ import torch.utils.data
 from torch.autograd import Variable
 from model import CE_build3 # the mmodel
 
- 
+from train_display import *
 # the model
 import arg_parse
 import cv2
@@ -19,7 +19,8 @@ from dataTool import generator_contour_ivus
 from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
 from dataTool.generator_contour_ivus import Generator_Contour_sheath
 from dataset_ivus  import myDataloader,Batch_size,Resample_size, Path_length
-
+from FedLearning.Cloud_API import Cloud_API
+from train_multi_obj.local2cloud import Local2Cloud
 import os
 #from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 #switch to another data loader for the IVUS, whih will have both the position and existence vector
@@ -28,16 +29,23 @@ from deploy.basic_trans import Basic_oper
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
-Visdom_flag  = False  # the flag of using the visdom or not
+Visdom_flag  = True  # the flag of using the visdom or not
 OLG_flag = False  # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
 validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not
-Save_img_flag  = True # this flag determine if the reuslt will be save  in to a foler
-Continue_flag = False  # if not true, it start from scratch again
-loadmodel_index = '_4.pth'
+Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler
+Continue_flag = True  # if not true, it start from scratch again
+Federated_learning_flag = False # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
+Using_fed_model_flag = False # True: Fed model, false: local model
+loadmodel_index = '_5.pth'
+
+
+
+
 
 infinite_save_id =0 # use this method so that the index of the image will not start from 0 again when switch the folder    
+
 
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
@@ -45,7 +53,8 @@ if Visdom_flag == True:
 
 # pth_save_dir = "C:/Workdir/Develop/atlas_collab/out/sheathCGAN_coordinates3/"
 pth_save_dir = Output_root + "CEnet_trained/"
- 
+if Federated_learning_flag == True:
+    cloud_interaction = Local2Cloud(pth_save_dir)
 
 #pth_save_dir = "../out/deep_layers/"
 
@@ -61,162 +70,6 @@ def weights_init(m):
         m.weight.data.normal_(1.0, 0.02)
         m.bias.data.fill_(0)      
     pass
-# 3 functions to drae the results in real time
-def draw_coordinates_color(img1,vy,color):
-        
-        if color ==0:
-           painter  = [254,0,0]
-        elif color ==1:
-           painter  = [0,254,0]
-        elif color ==2:
-           painter  = [0,0,254]
-        else :
-           painter  = [0,0,0]
-                    #path0  = signal.resample(path0, W)
-        H,W,_ = img1.shape
-        for j in range (W):
-                #path0l[path0x[j]]
-                dy = numpy.clip(vy[j],2,H-2)
-            
-
-                img1[int(dy)+1,j,:]=img1[int(dy),j,:]=painter
-                img1[int(dy)-1,j,:]=img1[int(dy)-2,j,:]=painter
-
-                #img1[int(dy)+1,dx,:]=img1[int(dy)-1,dx,:]=img1[int(dy),dx,:]=painter
-
-
-        return img1
-def draw_coordinates_color_s(img1,vy0,vy1):
-        
-         
-        H,W,_ = img1.shape
-        for j in range (W):
-                #path0l[path0x[j]]
-                dy1 = numpy.clip(vy1[j],2,H-2)
-                dy0 = numpy.clip(vy0[j],2,H-2)
-
-                
-                if (dy1 == H-2 ):
-
-                    img1[int(dy1)+1,j,:]=img1[int(dy1),j,:]=[0,254,254]
-                    img1[int(dy1)-1,j,:]=img1[int(dy1)-2,j,:]=[0,254,254]
-                if (abs(dy0-dy1)<= 5 ):
-
-                    img1[int(dy1)+1,j,:]=img1[int(dy1),j,:]=[254,0,254]
-                    img1[int(dy1)-1,j,:]=img1[int(dy1)-2,j,:]=[254,0,254]
-                #img1[int(dy)+1,dx,:]=img1[int(dy)-1,dx,:]=img1[int(dy),dx,:]=painter
-
-
-        return img1
-def display_prediction_exis(read_id,mydata_loader,save_out): # display in coordinates form 
-    gray2 =   (mydata_loader.input_image[0,0,:,:] *104)+104
-    show1 = gray2.astype(float)
-    path2 = mydata_loader.exis_vec[0,:] * Resample_size
-    #path2  = signal.resample(path2, Resample_size)
-    path2 = numpy.clip(path2,0,Resample_size-1)
-    color1 = numpy.zeros((show1.shape[0],show1.shape[1],3))
-    color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 
-
-    for i in range ( len(path2)):
-        color1 = draw_coordinates_color(color1,path2[i],i)
-                             
-            
-    show2 =  gray2.astype(float)
-    save_out = save_out.cpu().detach().numpy()
-
-    save_out  = save_out[0,:] *(Resample_size)
-    #save_out  = signal.resample(save_out, Resample_size)
-    save_out = numpy.clip(save_out,0,Resample_size-1)
-    color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
-    color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
-     
-     
-
-    for i in range ( len(save_out)):
-        this_coordinate = signal.resample(save_out[i], Resample_size)
-        color = draw_coordinates_color(color,this_coordinate,i)
-     
-    #show3 = numpy.append(show1,show2,axis=1) # cascade
-    show4 = numpy.append(color1,color,axis=1) # cascade
- 
-     
-
-
-    cv2.imshow('Deeplearning exitence 2',show4.astype(numpy.uint8)) 
-def display_prediction(read_id,mydata_loader,save_out,hot,hot_real): # display in coordinates form 
-    gray2 =   (mydata_loader.input_image[0,0,:,:] *104)+104
-    show1 = gray2.astype(float)
-    path2 = mydata_loader.input_path[0,:] 
-    #path2  = signal.resample(path2, Resample_size)
-    path2 = numpy.clip(path2,0,Resample_size-1)
-    color1 = numpy.zeros((show1.shape[0],show1.shape[1],3))
-    color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 
-
-    for i in range ( len(path2)):
-        color1 = draw_coordinates_color(color1,path2[i],i)
-                             
-            
-    show2 =  gray2.astype(float)
-    save_out = save_out.cpu().detach().numpy()
-
-    save_out  = save_out[0,:] *(Resample_size)
-    #save_out  = signal.resample(save_out, Resample_size)
-    save_out = numpy.clip(save_out,0,Resample_size-1)
-    color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
-    color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
-    colorhot_real = (color+50 )*hot_real 
-    sheath_real  = signal.resample(path2[0], Resample_size)
-    tissue_real  = signal.resample(path2[1], Resample_size)
-    colorhot_real = draw_coordinates_color_s(colorhot_real,sheath_real,tissue_real)
-    circular_color_real = Basic_oper.tranfer_frome_rec2cir2(colorhot_real) 
-    cv2.imshow('color real cir',circular_color_real.astype(numpy.uint8)) 
-    if  Save_img_flag == True:
-        this_save_dir = Output_root + "1out_img/ground_circ/"
-        if not os.path.exists(this_save_dir):
-            os.makedirs(this_save_dir)
-        cv2.imwrite(this_save_dir +
-                        str(mydata_loader.save_id) +".jpg",circular_color_real )  
-
-    for i in range ( len(save_out)):
-        this_coordinate = signal.resample(save_out[i], Resample_size)
-        color = draw_coordinates_color(color,this_coordinate,i)
-    colorhot = (color+50) *hot
-   
-
-
-             
-    sheath = signal.resample(save_out[0], Resample_size)
-    tissue = signal.resample(save_out[1], Resample_size)
-   
-    color = draw_coordinates_color_s(color,sheath,tissue)
-    color2 = draw_coordinates_color_s(colorhot,sheath,tissue)
-
-    color_real  =  draw_coordinates_color_s(colorhot_real,sheath,tissue)
-            
-    #show3 = numpy.append(show1,show2,axis=1) # cascade
-    show4 = numpy.append(color1,color,axis=1) # cascade
-    circular1 = Basic_oper.tranfer_frome_rec2cir2(color) 
-    circular2 = Basic_oper.tranfer_frome_rec2cir2(color2)
-    if  Save_img_flag == True:
-        this_save_dir = Output_root + "1out_img/Ori_seg_rec_line/"
-        if not os.path.exists(this_save_dir):
-            os.makedirs(this_save_dir)
-        cv2.imwrite(this_save_dir  +
-                            str(mydata_loader.save_id) +".jpg",show4 )
-
-
-    cv2.imshow('Deeplearning one 2',show4.astype(numpy.uint8)) 
-
-    cv2.imshow('Deeplearning circ',circular1.astype(numpy.uint8)) 
-    cv2.imshow('Deeplearning circ2',circular2.astype(numpy.uint8))
-    if  Save_img_flag == True:
-        this_save_dir = Output_root + "1out_img/Ori_seg_rec_2/"
-        if not os.path.exists(this_save_dir):
-            os.makedirs(this_save_dir)
-        cv2.imwrite(this_save_dir  +
-                        str(mydata_loader.save_id) +".jpg",circular2 )  
-    cv2.imshow('Deeplearning color',color2.astype(numpy.uint8)) 
-    cv2.imshow('  color real',color_real.astype(numpy.uint8)) 
 
 
 #Matrix_dir =  "../dataset/CostMatrix/1/"
@@ -250,6 +103,7 @@ CE_Nets= Model_creator.creat_nets()   # one is for the contour cordinates
 CE_Nets.netD.apply(weights_init)
 CE_Nets.netG.apply(weights_init)
 CE_Nets.netE.apply(weights_init)
+
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
     #ensure loaded module exist
@@ -277,6 +131,14 @@ if Continue_flag == True:
     # CE_Nets.netG.fusion_layer_exist.apply(weights_init)
 
     #CE_Nets.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
+
+if Using_fed_model_flag == True: # reload
+    CE_Nets.netG = cloud_interaction.reset_model_para(CE_Nets.netG, name='cGANG')
+    CE_Nets.netD = cloud_interaction.reset_model_para(CE_Nets.netD, name='cGAND')
+if validation_flag ==True:
+    Federated_learning_flag =False
+
+
 if validation_flag == True:
    CE_Nets.netG.Unet_back.eval()
 print(CE_Nets.netD)
@@ -314,7 +176,9 @@ while(1): # main infinite loop
     if mydata_loader1.read_all_flag2 == 1 and validation_flag ==True:
         break
 
-    while(1): # loop for going through data set 
+    while(1): # loop for going through data set
+
+
         #-------------- load data and convert to GPU tensor format------------------#
         iteration_num +=1
         read_id+=1
@@ -418,98 +282,27 @@ while(1): # main infinite loop
             #        '%s/real_samples.png' % opt.outf,
             #        normalize=True)
 
-            gray2  =   realA[0,0,:,:].cpu().detach().numpy()*104+104
-            show1 = gray2.astype(float)
-            #path2 = mydata_loader.input_path[0,:] 
-            ##path2  = signal.resample(path2, Resample_size)
-            #path2 = numpy.clip(path2,0,Resample_size-1)
-            color1  = numpy.zeros((show1.shape[0],show1.shape[1],3))
-            color1[:,:,0]  =color1[:,:,1] = color1[:,:,2] = show1 [:,:]
-
-            oneHot =  CE_Nets.fake_B_1_hot[0,:,:,:].cpu().detach().numpy() 
-
-            hot  = numpy.zeros((oneHot.shape[1],oneHot.shape[2],3))
-            hot[:,:,0]  =  oneHot [0,:,:]
-            hot[:,:,1]  =  oneHot [1,:,:]
-            hot[:,:,2]  =  oneHot [2,:,:]
-
-            oneHot_real =  CE_Nets.real_B_one_hot[0,:,:,:].cpu().detach().numpy() 
-          
-            hot_real  = numpy.zeros((oneHot.shape[1],oneHot.shape[2],3))
-            hot_real[:,:,0]  =  oneHot_real [0,:,:]
-            hot_real[:,:,1]  =  oneHot_real [1,:,:]
-            hot_real[:,:,2]  =  oneHot_real [2,:,:]
-          
-         
-            #saveout  = CE_Nets.fake_B # display encoding tranform
-            saveout = CE_Nets.pix_wise # middel feature pix encoding
-            show2 =  saveout[0,:,:,:].cpu().detach().numpy()*255 
-
-            
-         
-            color  = numpy.zeros((show2.shape[1],show2.shape[2],3))
-            color[:,:,0]  =color[:,:,1] = color[:,:,2] =numpy.clip( show2[0,:,:],1,254)
-         
-            #for i in range ( len(path2)):
-            #    color = draw_coordinates_color(color,path2[i],i)
-                
-          
-
-
-            
-            #show3 = numpy.append(show1,show2,axis=1) # cascade
-            show4 = numpy.append(color1,color,axis=1) # cascade
-            # the circular of the original image 
-            circ_original = Basic_oper.tranfer_frome_rec2cir2(color1) 
-
-            cv2.imshow('Original circular',circ_original.astype(numpy.uint8)) 
-            if  Save_img_flag == True:
-                this_save_dir = Output_root+"1out_img/original_circ/"
-                if not os.path.exists(this_save_dir):
-                    os.makedirs(this_save_dir)
-                cv2.imwrite(   this_save_dir+
-                            str(mydata_loader.save_id) +".jpg",circ_original )
-            #infinite_save_id
-            
-
-
-            cv2.imshow('Deeplearning one',show4.astype(numpy.uint8)) 
-            if  Save_img_flag == True:
-                this_save_dir = Output_root +"1out_img/Ori_seg_rec/"
-                if not os.path.exists(this_save_dir):
-                    os.makedirs(this_save_dir)
-                cv2.imwrite(this_save_dir  +
-                            str(infinite_save_id) +".jpg",show4 )
-            real_label = CE_Nets.real_B
-            show5 =  real_label[0,0,:,:].cpu().detach().numpy()*255 
-            cv2.imshow('real',show5.astype(numpy.uint8)) 
-            if  Save_img_flag == True:
-                this_save_dir = Output_root + "1out_img/ground_rec/"
-                if not os.path.exists(this_save_dir):
-                    os.makedirs(this_save_dir)
-                cv2.imwrite(this_save_dir  +
-                            str(infinite_save_id) +".jpg",show5 )
-
-            #display_prediction(mydata_loader,  CE_Nets.out_pathes[0],hot)
-            #display_prediction(mydata_loader,  CE_Nets.path_long3,hot)
-            #display_prediction(mydata_loader,  CE_Nets.out_pathes3,hot)
-            #display_prediction(read_id,mydata_loader,  CE_Nets.out_pathes0,hot,hot_real)
-            display_prediction(read_id,mydata_loader,  CE_Nets.out_pathes[0],hot,hot_real)
-            display_prediction_exis(read_id,mydata_loader,  CE_Nets.out_exis_v0 )
+            train_display(CE_Nets, realA, mydata_loader, Save_img_flag, read_id, infinite_save_id)
 
             infinite_save_id += 1 
             if cv2.waitKey(1) & 0xFF == ord('q'):
                break
             #-------------- A variety of visualization - end (this part is a little messy..)  ------------------#
-            
+        if read_id % 100==0:
+            if Federated_learning_flag == True:
+                CE_Nets=cloud_interaction.check_load_global_cloud(CE_Nets)
     # do checkpointing
 
     #--------------  save the current trained model after going through a folder  ------------------#
     torch.save(CE_Nets.netG.state_dict(), pth_save_dir+ "cGANG_epoch_"+str(epoch)+".pth")
     torch.save(CE_Nets.netE.state_dict(), pth_save_dir+ "cGANE_epoch_"+str(epoch)+".pth")
-
     torch.save(CE_Nets.netD.state_dict(), pth_save_dir+ "cGAND_epoch_"+str(epoch)+".pth")
-    torch.save(CE_Nets.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
+    # check to upload
+    if Federated_learning_flag == True:
+        cloud_interaction.save_local_cloud(CE_Nets)
+    #check to update
+
+    # torch.save(CE_Nets.netG.side_branch1.  state_dict(), pth_save_dir+ "cGANG_branch1_epoch_"+str(epoch)+".pth")
      
     if epoch >=5: # just save 5 newest historical models  
         epoch =0

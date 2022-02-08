@@ -1,7 +1,9 @@
 #This is tht high compact version that share a lot of the layers
 from model.networks import UnetSkipConnectionBlock
 from model.networks import get_norm_layer
-import test_model .layer_body_sheath_res2  as baseM 
+import test_model .layer_body_sheath_res2  as baseM
+import torch.nn.functional as F
+
 # the NET dbody for the sheath contour tain  upadat 5th octo 2020
 import torch
 import torch.nn as nn
@@ -12,7 +14,8 @@ import torchvision.models
 import numpy as np
 import cv2
 Out_c = 2 # depends on the bondaried to be preicted 
-Input_c = 3  #  the gray is converted into 3 channnels image 
+Input_c = 3  #  the gray is converted into 3 channnels image
+Pixwise_c = Out_c # Using onehot encoding, the out channel is equal to layer
 class _BackBoneUnet(nn.Module):
     def __init__(self,input_nc=3, output_nc=256, num_downs=8, ngf=32, norm_layer=nn.BatchNorm2d, use_dropout=False ):
         super(_BackBoneUnet, self).__init__()
@@ -265,7 +268,7 @@ class _2layerFusionNets_(nn.Module):
         if UnetBack_flag == True:
             unetf = 100
             self.Unet_back = _BackBoneUnet( output_nc=unetf,use_dropout=True)
-            self.pixencoding = baseM.conv_keep_all(unetf,1,k=(1,1),s=(1,1),p=(0,0),resnet=False,final=True)
+            self.pixencoding = baseM.conv_keep_all(unetf,Pixwise_c,k=(1,1),s=(1,1),p=(0,0),resnet=False,final=True)
             self.backbone =  _BackBonelayer(unetf)
             self.backbone_e =  _BackBonelayer(unetf)
 
@@ -305,6 +308,7 @@ class _2layerFusionNets_(nn.Module):
         if self. UnetBack_flag  == True:
             unet_f = self.Unet_back(x)
             pix_seg = self. pixencoding(unet_f) # use the Unet features to predict a pix wise segmentation
+            pix_seg =    F.sigmoid(pix_seg)
             # pix_seg=unet_f # one feature backbone
             backbone_f = self.backbone(unet_f)
             backbone_fe = self.backbone_e(unet_f)

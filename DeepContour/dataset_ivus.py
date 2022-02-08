@@ -19,14 +19,14 @@ from basic_operator import Basic_Operator
 from scipy.interpolate import interp1d
 # test on the deploy marcopolo
 seed(1)
-Batch_size = 1
+Batch_size = 2
 Resample_size =256 # the input and label will be resampled 
 Path_length = 256
 Augment_limitation_flag = True
 Augment_add_lines = False
 Clip_mat_flag = True
 random_clip_flag = False
-Random_rotate = False
+Random_rotate = True
 Reverse_existence = True
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
 
@@ -65,6 +65,7 @@ class myDataloader(object):
 
         if validation  == True :
             self.OLG_flag = False
+            Random_rotate = False
             self.dataroot = root + "test/img/"
             self.signalroot =root + "test/label/" 
         else: 
@@ -349,7 +350,10 @@ class myDataloader(object):
                pass
 
         #thisfolder_len =  len (this_signal.img_num)
-        thisfolder_len =  len (this_folder_list)
+        # thisfolder_len =  len (this_folder_list)
+        thisfolder_len = len(this_signal.img_num)
+        if self.GT == False:
+            thisfolder_len = len(this_folder_list)
 
 
         while (1):
@@ -357,28 +361,35 @@ class myDataloader(object):
                 this_folder_list  = self.folder_list[self.folder_pointer]
         #read_end  = self.read_record+ self.batch_size
                 this_signal = self.signal[self.folder_pointer]
-                #thisfolder_len =  len (this_signal.img_num)
-                thisfolder_len =  len (this_folder_list)
+                thisfolder_len =  len (this_signal.img_num)
+                # thisfolder_len =  len (this_folder_list)
 
 
         #for i in range(read_start, read_end):
             #this_pointer = i -read_start
             # get the all the pointers 
             #Image_ID , b = os.path.splitext(os.path.dirname(self.folder_list[self.folder_pointer][i]))
-            Path_dir,Image_ID =os.path.split(this_folder_list[i])
-            Image_ID_str,jpg = os.path.splitext(Image_ID)
-            Path_Index_list = this_signal.img_num[:]
 
+
+            Path_Index_list = this_signal.img_num[:]
+            if self.GT == False:
+                Path_Index = 0  # just use the first path, that is fake ground truth, just for testing
+            else:
+                # Path_Index = Path_Index_list.index(Image_ID)
+                Path_Index = i
             #Image_ID = int(Image_ID_str)
             if type(Path_Index_list[0]) is str: 
-                Image_ID = str(Image_ID_str)
+                Image_ID = str(Path_Index_list[Path_Index])
             else:
-                Image_ID = int(Image_ID_str)
-            self.save_id= Image_ID
-            self.real_img_id[this_pointer] = Image_ID
-            #start to read image and paths to fill in the input bach
-            this_image_path = this_folder_list[i] # read saved path
-            this_img = cv2.imread(this_image_path)
+                Image_ID = int(Path_Index_list[Path_Index])
+            Path_dir, image_name = os.path.split(this_folder_list[0])
+            _, imgType = os.path.splitext(image_name)
+            # self.save_id= Image_ID
+            # self.real_img_id[this_pointer] = Image_ID
+            # #start to read image and paths to fill in the input bach
+            # this_image_path = this_folder_list[i] # read saved path
+            this_image_path = Path_dir + "/" + str(Image_ID)  + imgType
+
 
             #resample 
             #this_img = cv2.resize(this_img, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
@@ -386,18 +397,18 @@ class myDataloader(object):
             #get the index of this Imag path
             #Path_Index_list = Path_Index_list.astype(int)
             #Path_Index_list = Path_Index_list.astype(str)
-
             try:
-                if self.GT == False:
-                    Path_Index = 0 # just use the first path, that is fake ground truth, just for testing
-                else:
-                    Path_Index = Path_Index_list.index(Image_ID)
+                this_img = cv2.imread(this_image_path)
+
+
             except ValueError:
-                print(Image_ID_str + "not path exsting")
+                print(str(Image_ID)  + "not image exsting")
 
             else:
-                if self.GT == True:
-                    Path_Index = Path_Index_list.index(Image_ID)  
+
+
+
+
                 #for layers train alll  the x and y are list
                 if  self.all_dir_list[self.folder_pointer] == "1s" or self.OLG_flag == True:
                     this_pathx = this_signal.contoursx[Path_Index]

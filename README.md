@@ -28,13 +28,21 @@ The following steps are required in order to run CEnet:
 
 			---Root/dataset/for IVUS
 
-				---Root/dataset/for IVUS/train
+				----Root/dataset/for IVUS/train
 
-				---Root/dataset/for IVUS/train OLG
+				----Root/dataset/for IVUS/train OLG
 
-				---Root/dataset/for IVUS/test
+				----Root/dataset/for IVUS/test
 
 		--Root/out
+			---Root/out/CEnet_trained
+				----Root/out/CEnet_trained/telecom
+
+
+
+
+1.  Change de defination of working dir in [working_dir.py](https://gitlab.kuleuven.be/u0132260/atlas_collab_ivus/-/blob/main/DeepContour/working_dir_root.py)
+
 
 1.  Download [pre-trained model parameters] (https://seafile.unistra.fr/d/0160d5182a1941c68e5a/)
 
@@ -46,10 +54,24 @@ The following steps are required in order to run CEnet:
 
 		--Root/out/unet_trained
 
-1.  Change de defination of working dir in [working_dir.py](https://gitlab.kuleuven.be/u0132260/atlas_collab_ivus/-/blob/main/DeepContour/working_dir_root.py)
 
 
- 
+
+
+
+
+5.  Json file for cloud based federated learning
+
+a interation file containing the key to access your local folder is  uploaded to here, download [local to loud corresponding comunication json file here ] (https://drive.google.com/drive/folders/1IhIrjm-shSpv_YH1MVgQeU-bBMJ9YLXF)
+If the name is  "/media/icube/DATA1/deeplearning/out/CEnet_trained/telecom/local_training_status.json", rename it as "local_training_status.json"
+
+ should be pasted in the folder:
+
+		----Root/out/CEnet_trained/telecom
+Train CE-net as [" chapter6-fed learning" of this instruction](https://docs.google.com/document/d/1mBG2aeF13Qqxt48tZfYnptq_DKhZpqHj/edit?usp=sharing&ouid=104923533845283983955&rtpof=true&sd=true)
+
+
+
 ## Key useful tools/python scripts
 To run any runable scripts in this project,
 if using the visual studio (not vs code) or pycharm, it can be run directly. 
