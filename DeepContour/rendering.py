@@ -159,8 +159,11 @@ def boundary_visualized_onehot_encodeing(layers,H): # this is for sheath contour
             # out[j, 0, layers[j, i],torch.arange(W)] = (i+1)/layer_n # assign the same value a same continue layer
             # out[j, 0, layers[j, i],torch.arange(W)] = 1 # assign the same value a same continue layer
             out[j, i, layers[j, i],torch.arange(W)] = 1  # assign value to a individul channnel
+            out[j, i, layers[j, i]-1,torch.arange(W)] = 1  # assign value to a individul channnel
+            out[j, i, layers[j, i]-2,torch.arange(W)] = 1  # assign value to a individul channnel
 
-    out = out.type(torch.LongTensor)
+
+    out = out.type(torch.FloatTensor)
 
     out  = out.cuda()
 
@@ -177,6 +180,8 @@ def boundary_visualized_onehot_encodeing(layers,H): # this is for sheath contour
  #            'calcium': ['8','calcification', 'calcium'],
 def layers_visualized_integer_encodeing_full(layers,H): # this is for sheath contour segmentation
     # inetgral encoding return a  one channel map with different numers
+
+    
     bz,layer_n,W = layers.size()
     intial_layers = layers
     #layers = layers +0.1

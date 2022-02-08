@@ -85,7 +85,7 @@ class Pix2LineModel(BaseModel):
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
             # self.criterionL1 = torch.nn.L1Loss()
             # self.criterionL1 = torch.nn.BCELoss()
-            self.criterionL1 = torch.nn.CrossEntropyLoss()
+            # self.criterionL1 = torch.nn.CrossEntropyLoss()
             self.criterionL1 = DiceLoss()
 
             # LGQ add another loss for G
