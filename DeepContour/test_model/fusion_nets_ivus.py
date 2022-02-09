@@ -13,7 +13,7 @@ from  dataset_sheath import Path_length,Batch_size,Resample_size
 import torchvision.models
 import numpy as np
 import cv2
-Out_c = 2 # depends on the bondaried to be preicted 
+Out_c = 6 # depends on the bondaried to be preicted
 Input_c = 3  #  the gray is converted into 3 channnels image
 Pixwise_c = Out_c # Using onehot encoding, the out channel is equal to layer
 class _BackBoneUnet(nn.Module):
@@ -308,7 +308,7 @@ class _2layerFusionNets_(nn.Module):
         if self. UnetBack_flag  == True:
             unet_f = self.Unet_back(x)
             pix_seg = self. pixencoding(unet_f) # use the Unet features to predict a pix wise segmentation
-            pix_seg =    F.sigmoid(pix_seg)
+            pix_seg =    F.sigmoid(pix_seg)  # TODO: comment/uncomment here to change sigmoid function
             # pix_seg=unet_f # one feature backbone
             backbone_f = self.backbone(unet_f)
             backbone_fe = self.backbone_e(unet_f)

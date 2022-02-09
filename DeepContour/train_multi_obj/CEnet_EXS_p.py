@@ -18,6 +18,7 @@ from dataTool import generator_contour_ivus
 
 from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
 from dataTool.generator_contour_ivus import Generator_Contour_sheath
+from dataTool.generator_contour_ivus_multi import Generator_Contour_sheath
 from dataset_ivus  import myDataloader,Batch_size,Resample_size, Path_length
 from FedLearning.Cloud_API import Cloud_API
 from train_multi_obj.local2cloud import Local2Cloud
@@ -30,8 +31,8 @@ from deploy.basic_trans import Basic_oper
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = True  # the flag of using the visdom or not
-OLG_flag = False  # flag of training with on line generating or not
-Hybrid_OLG = False  # whether  mix with online generated images and real images for training
+OLG_flag = True  # flag of training with on line generating or not
+Hybrid_OLG = True  # whether  mix with online generated images and real images for training
 validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler

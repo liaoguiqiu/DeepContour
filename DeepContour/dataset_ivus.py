@@ -34,7 +34,7 @@ class myDataloader(object):
     def __init__(self, batch_size,image_size,path_size,validation= False,OLG=False):
         self.OLG_flag = OLG
         self.GT = True
-        self.noisyflag = True
+        self.noisyflag = False
 
         self.save_id =0
         #Guiqiu modified for my computer
@@ -85,7 +85,7 @@ class myDataloader(object):
         self.batch_size  = batch_size
         self.img_size  = image_size
         self.path_size  = path_size
-        self.obj_num = 2 # take num of objects from vectors
+        self.obj_num = 6 # take num of objects from vectors
 
         self.input_image = np.zeros((batch_size,1,image_size,image_size))
         # the number of the contour has been increased, and another vector has beeen added

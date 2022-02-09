@@ -99,9 +99,9 @@ class Save_Contour_pkl(object):
 
 class Generator_Contour_sheath(object):
     def __init__(self):
-        self.OLG_flag = False
-        self.cv_display = True
-        self.dis_origin = True
+        self.OLG_flag = True
+        self.cv_display = False
+        self.dis_origin = False
 
         # BGR because of OpenCV
         self.color_list = [[75, 25, 230], [75, 180, 60], [25, 225, 255], [200, 130, 0], [48, 130, 245],
@@ -407,7 +407,7 @@ class Generator_Contour_sheath(object):
             file_len = len(self.origin_data.img_num)
 
             # TODO: move update of generated images to somewhere easy to find
-            repeat = int(200 / file_len)  # repeat to balance
+            repeat = int(6 / file_len)  # repeat to balance
             if repeat < 1:
                 repeat = 1
 
