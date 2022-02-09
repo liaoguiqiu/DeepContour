@@ -86,7 +86,9 @@ class Pix2LineModel(BaseModel):
             # self.criterionL1 = torch.nn.L1Loss()
             # self.criterionL1 = torch.nn.BCELoss()
             # self.criterionL1 = torch.nn.CrossEntropyLoss()
-            self.criterionL1 = DiceLoss()
+            self.criterion_Dice = DiceLoss()
+            self.criterionL1 = torch.nn.L1Loss()
+
 
             # LGQ add another loss for G
             self.criterionMTL= MTL_loss(Loss ="L1") # default loss =  L1", that is used  for the Coordinates position
@@ -348,12 +350,15 @@ class Pix2LineModel(BaseModel):
             # self.set_requires_grad(self.netG.fusion_layer, False)
 
 
-            pix_loss = self.criterionL1 (self.pix_wise  , self.real_B)
+            pix_loss1 = self.criterion_Dice (self.pix_wise, self.real_B)
+            backgroud_beta = 0.01
+            pix_loss2 = self.criterionL1 (self.pix_wise *(self.real_B + backgroud_beta)/(1+backgroud_beta), self.real_B)
 
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
+            # self.loss_pix = 100* pix_loss1
 
-            self.loss_pix =  1* pix_loss
+            self.loss_pix = 100*(0.5 * pix_loss1 + 0.5 * pix_loss2)
             self.loss_pix.backward(retain_graph=True)
             # self.loss_G=-self.loss_pix
             # self.optimizer_G.step()             # udpate G's weights
