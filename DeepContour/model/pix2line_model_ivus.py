@@ -391,20 +391,12 @@ class Pix2LineModel(BaseModel):
             #self.loss=self.criterionMTL.multi_loss([self.out_pathes0],self.real_pathes)
             #self.loss=self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
             # 3 imput , also rely on the existence vector
-            # self.loss=self.criterionMTL.multi_loss (self.out_pathes,self.real_pathes ) #
 
+            self.loss=self.criterionMTL.multi_loss (self.out_pathes,self.real_pathes ) #
 
-            #self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] + 0.1*loss[2] + 0.2*loss[3])*self.opt.lambda_L1
-            #self.loss_G_L1 =( 1.0*loss[0]  + 0.02*loss[1] + 0.02*loss[2]+ 0.02*loss[3]+ 0.02*loss[4]+ 0.02*loss[5])*self.opt.lambda_L1
-            #self.loss_G_L1_2 = 0.5*loss[0]
-            #self.loss_G_L1 =( 1.0*loss[0]  +   0.01*loss[1] + 0.01*loss[2] +0.01*loss[3]  )*self.opt.lambda_L1
-            # self.loss_G_L0 =( self.loss[0]    )*self.opt.lambda_L1
-            #self.loss_G_L0 = (self.loss[0])
-            # self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
-            # self.loss_G =   ( 1.0*self.loss[0]  + 0.1*self.loss[1] + 0.01*self.loss[2] + 0.01*self.loss[3])
-            # self.loss_G =   ( 1.0*self.loss[0]  + 0.01*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
-            self.loss =self.criterionMTL.multi_loss_contour_exist([self.out_pathes[0]],self.real_pathes, [self.out_exis_vs[0]],Reverse_existence) #
-            self.loss_G = self.loss[0]
+            self.loss_G = ( 1.0*self.loss[0]  + 0.01*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
+            # self.loss =self.criterionMTL.multi_loss_contour_exist([self.out_pathes[0]],self.real_pathes, [self.out_exis_vs[0]],Reverse_existence) #
+            # self.loss_G = self.loss[0]
 
         if self.swither_G>11:
             self.swither_G = 0
