@@ -13,6 +13,11 @@ from  dataset_sheath import Path_length,Batch_size,Resample_size
 import torchvision.models
 import numpy as np
 import cv2
+
+Sep_up_low = True
+Object_num = 8
+Max_presence = 3
+
 Out_c = 6 # depends on the bondaried to be preicted
 Input_c = 3  #  the gray is converted into 3 channnels image
 Pixwise_c = Out_c # Using onehot encoding, the out channel is equal to layer
