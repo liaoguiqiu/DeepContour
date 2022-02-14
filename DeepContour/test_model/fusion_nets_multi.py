@@ -17,7 +17,7 @@ import cv2
 
 Sep_Up_Low = True
 object_num = 8
-max_presence = 3
+max_presence = 4
 if Sep_Up_Low: #
     Out_c = 2*object_num* max_presence   # depends on the bondaried to be preicted
     Out_c_e = object_num* max_presence # existence does not separete up and lower
