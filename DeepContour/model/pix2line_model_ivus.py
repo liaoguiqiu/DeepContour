@@ -16,7 +16,6 @@ from databufferExcel import EXCEL_saver
 # with torch.autograd.set_detect_anomaly(True).
 from working_dir_root import Dataset_root,Output_root
 
-
 class Pix2LineModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
 
@@ -108,6 +107,7 @@ class Pix2LineModel(BaseModel):
             #
             # ], lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_G = torch.optim.Adam([
+                {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.backbone.parameters()},
                 {'params': self.netG.side_branch1.parameters()},
                 {'params': self.netG.side_branch2.parameters()},
@@ -394,7 +394,8 @@ class Pix2LineModel(BaseModel):
 
             self.loss=self.criterionMTL.multi_loss (self.out_pathes,self.real_pathes ) #
 
-            self.loss_G = ( 1.0*self.loss[0]  + 0.01*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
+            # self.loss_G = ( 1.0*self.loss[0]  + 0.01*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
+            self.loss_G = self.loss[0]
             # self.loss =self.criterionMTL.multi_loss_contour_exist([self.out_pathes[0]],self.real_pathes, [self.out_exis_vs[0]],Reverse_existence) #
             # self.loss_G = self.loss[0]
 
@@ -422,7 +423,9 @@ class Pix2LineModel(BaseModel):
         # self.loss_G_L0 =( self.loss[0]    )*self.opt.lambda_L1
         #self.loss_G_L0 = (self.loss[0])
         # self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
-        self.lossEa =   ( 1.0*self.lossE[0]  + 0.01*self.lossE[1] + 0.01*self.lossE[2] + 0.01*self.lossE[3])
+        # self.lossEa =   ( 1.0*self.lossE[0]  + 0.01*self.lossE[1] + 0.01*self.lossE[2] + 0.01*self.lossE[3])
+        self.lossEa =  self.lossE[0]
+
 
         self.lossEa.backward( )
         #self.optimizer_G.step()             # udpate G's weights

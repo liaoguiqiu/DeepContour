@@ -3,7 +3,7 @@
 
 
 ########################################################################
-# The data root syle should be (double check the name of the folder):
+# The data root formate should be (double check the name of the folder):
 
 #-Root(my is "E:deeplearning")/
 #    --Root/dataset/
@@ -19,10 +19,10 @@
 
 
 #this is for Guiqiu Windows
-# working_root = "E:/Deep learning/"
+working_root = "E:/Deep learning/"
 
 #this is for marcopolo linux
-working_root = "/media/icube/DATA1/deeplearning/"
+# working_root = "/media/icube/DATA1/deeplearning/"
 
 #this is for Beatriz's computer
 # working_root = "C:/Workdir/Develop/atlas_collab_ivus/"
