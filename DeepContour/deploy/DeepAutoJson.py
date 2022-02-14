@@ -187,7 +187,7 @@ class Auto_json_label(object):
         pth_save_dir = Output_root + "CEnet_trained/"
 
         # folder to auto annotate
-        self.database_root = Dataset_root + "annotate/1/"
+        self.database_root = Dataset_root + "annotate/"
 
         self.all_dir = self.database_root + "pic_all/"
         # self.image_dir   = self.database_root + "img/"
@@ -202,17 +202,7 @@ class Auto_json_label(object):
         self.attatch_rate = 0.1  # the portion of attated image to 2     sides
 
         # IVUS possible labels in order
-        self.labels_lists = {
-            'catheter': ['1', 'catheter', 'test'],
-            'lumen': ['2', 'vessel', 'lumen'],
-            'wire': ['3', 'guide-wire', 'guidewire'],
-            'media': ['4', 'vessel (media)', 'vessel(media)', 'media'],
-            'branch': ['5', 'vessel(side-branch)', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
-                       'side-branch', 'sidebranch', 'bifurcation'],
-            'stent': ['6', 'stent'],
-            'plaque': ['7', 'plaque'],
-            'calcium': ['8', 'calcification', 'calcium'],
-        }
+        self.labels_lists = ['catheter', 'lumen', 'wire', 'media', 'branch', 'stent', 'plaque', 'calcium']
 
         self.disease_labels = ['plaque', 'calcium']
 
@@ -361,8 +351,8 @@ class Auto_json_label(object):
             # get a list of x and y per label
             coordinates_all[i] = encode_as_coordinates_padding_exv(pathes[i], existences[i], H_s, W_s, H, W,
                                                                    attatch_rate, points)
-
-            exist_flag_all[i] = existences[i].any()  # if not all zeros (i.e. there is contour), the flag is set to true
+            # if not all zeros (i.e. there is contour), the flag is set to true
+            exist_flag_all[i] = (1 - np.round(existences[i]).astype(int)).any()
 
         return coordinates_all, exist_flag_all
 
@@ -398,7 +388,7 @@ class Auto_json_label(object):
                     this_json['shapes'].clear() # we might have more or less labels for an image than in the example.json
 
                     # pred_coordinates is a list of lists with the points coordinates
-                    for idx in len(pred_coordinates):  # iterate over all the contours
+                    for idx in range(len(pred_coordinates)):  # iterate over all the contours
                         if existence_flags[idx]:  # if existence flag is true, there is contour
                             json_data_idx = {
                                 'label': self.labels_lists[idx],
