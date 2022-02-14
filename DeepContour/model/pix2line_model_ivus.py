@@ -107,7 +107,9 @@ class Pix2LineModel(BaseModel):
             #     {'params': self.netG.fusion_layer.parameters()},
             #
             # ], lr=opt.lr, betas=(opt.beta1, 0.999))
+            # Optimizer of the CEnet after backbone
             self.optimizer_G = torch.optim.Adam([
+                {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.backbone.parameters()},
                 {'params': self.netG.side_branch1.parameters()},
                 {'params': self.netG.side_branch2.parameters()},
@@ -116,6 +118,8 @@ class Pix2LineModel(BaseModel):
                 {'params': self.netG.fusion_layer.parameters()},
 
             ], lr=opt.lr, betas=(opt.beta1, 0.999))
+
+            # Optimizer of the Unet like backbone
             self.optimizer_G_unet = torch.optim.Adam([
                 {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.pixencoding.parameters()},
@@ -394,7 +398,10 @@ class Pix2LineModel(BaseModel):
 
             self.loss=self.criterionMTL.multi_loss (self.out_pathes,self.real_pathes ) #
 
-            self.loss_G = ( 1.0*self.loss[0]  + 0.01*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
+            # self.loss_G = ( 1.0*self.loss[0]  + 0.01*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
+            # TODO: For last training, use line below and comment the one above
+            self.loss_G = self.loss[0]
+
             # self.loss =self.criterionMTL.multi_loss_contour_exist([self.out_pathes[0]],self.real_pathes, [self.out_exis_vs[0]],Reverse_existence) #
             # self.loss_G = self.loss[0]
 
@@ -422,7 +429,11 @@ class Pix2LineModel(BaseModel):
         # self.loss_G_L0 =( self.loss[0]    )*self.opt.lambda_L1
         #self.loss_G_L0 = (self.loss[0])
         # self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
-        self.lossEa =   ( 1.0*self.lossE[0]  + 0.01*self.lossE[1] + 0.01*self.lossE[2] + 0.01*self.lossE[3])
+        # TODO: Enable at the beginning of the training
+        # self.lossEa =   ( 1.0*self.lossE[0]  + 0.01*self.lossE[1] + 0.01*self.lossE[2] + 0.01*self.lossE[3])
+        # TODO: Enable at the "end" of training
+        #  (sacrifice accuracy of higher resolution branch for overall better output)
+        self.lossEa = self.lossE[0]
 
         self.lossEa.backward( )
         #self.optimizer_G.step()             # udpate G's weights

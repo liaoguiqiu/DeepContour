@@ -393,6 +393,7 @@ class Generator_Contour_sheath(object):
 
     def generate(self):
         # for num  in  self.origin_data.img_num:
+        global new_img, mask
         img_id = 1
 
         for subfold in self.all_dir_list:
@@ -444,9 +445,6 @@ class Generator_Contour_sheath(object):
 
                     if self.dis_origin:
                         cv2.imshow('origin', display.astype(np.uint8))
-
-                    H_new = H  # TODO: why is this H_new and W_new being used? we are not going to change the image size - NOT NECESSARY
-                    W_new = W
 
                     gen_contourx = [None] * num_labels_consider
                     gen_contoury = [None] * num_labels_consider

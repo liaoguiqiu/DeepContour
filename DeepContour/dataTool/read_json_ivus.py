@@ -13,6 +13,7 @@ import pandas as pd
 from collections import OrderedDict
 from dataTool.generator_contour_ivus import Save_Contour_pkl
 from working_dir_root import Dataset_root
+
 Train_validation_split = False  # flag for devide the data
 Train_validation_devi = 3  # all data are equally devided by thsi number
 Test_fold = 0  # use the 0 st for training, the other for validation
@@ -26,16 +27,16 @@ class Read_read_check_json_label(object):
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL/"
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE-center/"
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
-        #self.database_root = "../../dataset/ivus/"
+        # self.database_root = "../../dataset/ivus/"
         self.database_root = Dataset_root + "label data/"
 
         # self.database_root = "D:/Deep learning/dataset/label data/"
 
-#<<<<<<< HEAD:DeepContour/dataTool/read_json_ivus.py
-        #sub_folder = "animal2/"
-#=======
+        # <<<<<<< HEAD:DeepContour/dataTool/read_json_ivus.py
+        # sub_folder = "animal2/"
+        # =======
         sub_folder = "case5_PDG/"
-#>>>>>>> b8bb1d19b916df000a1ab2c21c7474cf6fa38b44:dataTool/read_json_ivus.py
+        # >>>>>>> b8bb1d19b916df000a1ab2c21c7474cf6fa38b44:dataTool/read_json_ivus.py
 
         self.image_dir = self.database_root + "img/" + sub_folder
         self.json_dir = self.database_root + "label/" + sub_folder
@@ -64,13 +65,13 @@ class Read_read_check_json_label(object):
         self.labels_lists = {
             'catheter': ['1', 'catheter', 'test'],
             'lumen': ['2', 'vessel', 'lumen'],
-            'wire': ['3','guide-wire', 'guidewire'],
-            'media': ['4','vessel (media)', 'vessel(media)', 'media'],
-            'branch': ['5','vessel(side-branch)', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
+            'wire': ['3', 'guide-wire', 'guidewire'],
+            'media': ['4', 'vessel (media)', 'vessel(media)', 'media'],
+            'branch': ['5', 'vessel(side-branch)', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
                        'side-branch', 'sidebranch', 'bifurcation'],
-            'stent': ['6','stent'],
-            'plaque': ['7','plaque'],
-            'calcium': ['8','calcification', 'calcium'],
+            'stent': ['6', 'stent'],
+            'plaque': ['7', 'plaque'],
+            'calcium': ['8', 'calcification', 'calcium'],
         }
 
         self.disease_labels = ['plaque', 'calcium']
@@ -237,7 +238,8 @@ class Read_read_check_json_label(object):
                                     contours_exist[current_label][path_xl] = 1
                                     contours_y[current_label][path_xl] = path_yl
                                     # Guiqiu : do a final check if the coutour is near the imager height
-                                    contours_exist[current_label] = contours_exist[current_label] * (contours_y[current_label] < (0.95*H ))
+                                    contours_exist[current_label] = contours_exist[current_label] * (
+                                                contours_y[current_label] < (0.95 * H))
                             else:
                                 # Add 1 to the A-lines where there is contour
                                 contours_exist[current_label][path_xl] = 1
@@ -245,8 +247,8 @@ class Read_read_check_json_label(object):
                                 contours_y[current_label][path_xl] = path_yl
                                 # Guiqiu : do a final check if the coutour is near the imager height
 
-                                contours_exist[current_label] = contours_exist[current_label] * (contours_y[current_label] < (0.95*H ))
-
+                                contours_exist[current_label] = contours_exist[current_label] * (
+                                            contours_y[current_label] < (0.95 * H))
 
                             # Check if contour is close to the image height and set existence contour to 0
                             # to handle when there is no back-scattering but the manual label was put close to H
@@ -280,8 +282,8 @@ class Read_read_check_json_label(object):
                                                                      self.save_dir_train)
                     else:
                         self.saver_train.append_new_name_contour(self.img_num, contours_x, contours_y,
-                                                                     contours_exist,
-                                                                     self.save_dir_train)
+                                                                 contours_exist,
+                                                                 self.save_dir_train)
                     cv2.imshow('Image with highlighted contours', img1)
                     print(str(a))
                     cv2.waitKey(10)
