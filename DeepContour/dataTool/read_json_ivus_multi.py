@@ -18,7 +18,7 @@ Train_validation_split = False  # flag for devide the data
 Train_validation_devi = 3  # all data are equally devided by thsi number
 Test_fold = 0  # use the 0 st for training, the other for validation
 Delete_outsider_flag = False
-
+Consider_overlapping = False
 
 class Read_read_check_json_label(object):
     def __init__(self):
@@ -268,15 +268,35 @@ class Read_read_check_json_label(object):
                     # contours_exist = np.zeros((num_label_list, self.max_presence, W))
                     # contours_y_flat = np.zeros((num_label_list * self.max_presence, W))
                     # contours_exist_flat = np.zeros((num_label_list * self.max_presence, W))
-                    contours_y = contours_y.reshape(num_label_list * self.max_presence, W)
-                    contours_exist = contours_exist.reshape(num_label_list * self.max_presence, W)
-                    contours_x = contours_x.reshape(num_label_list * self.max_presence, W)
+                    if (Consider_overlapping == True): # if considering overlapping the contour will be encoded separetely
+                        contours_y = contours_y.reshape(num_label_list * self.max_presence, W)
+                        contours_exist = contours_exist.reshape(num_label_list * self.max_presence, W)
+                        contours_x = contours_x.reshape(num_label_list * self.max_presence, W)
+                    else:
+                        contours_y = contours_y*contours_exist # change the border value to zero
+                        contours_y = np.sum(contours_y,axis = 1)
+
+                        # contours_y = contours_y.reshape(num_label_list * self.max_presence, W)
+                        contours_exist = np.sum(contours_exist, axis = 1)
+                        contours_exist = np.clip(contours_exist,0,1) # limit
+
+                        contours_y = contours_y + (H-1)*(1-contours_exist)
+                        contours_y = np.clip(contours_y, 0, H-1)  # limit
+
+                        contours_x = contours_x[:,0,:] # just remain one dimention of x
+
                     if self.display_flag:  # for loop for display out of previous loop in case of overlap of contours
-                        for id in range(num_label_list * self.max_presence):
+                        for id in range(len(contours_exist[:,0])):
                             if 1 in contours_exist[id,:]:
+                                clr_id  = id
+                                if Consider_overlapping ==True:
+                                    clr_id = int(id/ self.max_presence)
                                 # draw duplicated as the same color
-                                img1 = self.draw_coordinates_color(img1, contours_x[id][
-                                    np.where( contours_exist[id,:] == 1)], contours_y[id][np.where(contours_exist[id,:] == 1)], int(id/self.max_presence))
+                                img1 = self.draw_coordinates_color(img1, contours_x[id] ,
+                                                                   contours_y[id],
+                                                                   int(clr_id))
+                                # img1 = self.draw_coordinates_color(img1, contours_x[id][
+                                #     np.where( contours_exist[id,:] == 1)], contours_y[id][np.where(contours_exist[id,:] == 1)], int(id/self.max_presence))
 
                     # save this result
                     self.img_num = a  # TODO: why assigning a to another variable?
