@@ -22,7 +22,7 @@ from scipy.interpolate import interp1d
 
 Sep_Up_Low = True
 object_num = 3
-max_presence = 2
+max_presence = 1
 if Sep_Up_Low: #
     Out_c = 2*object_num* max_presence   # depends on the bondaried to be preicted
     Out_c_e = 2*object_num* max_presence # existence does not separete up and lower

@@ -21,10 +21,11 @@ class MTL_loss(object):
    def one_loss_exi(self,output1,target1,exist1,Reverse_existence): # multiply the the xistence to dilute the loss of no back scattering
            b, _, len = output1.size()
            target_scaled = F.interpolate(target1, size=len, mode='area')
+           backgroud_beta = 0.1
            if (Reverse_existence == True):
-               this_loss = self.criterion(output1 * (1-exist1), target_scaled*(1-exist1))
+               this_loss = self.criterion(output1 * (1-exist1+backgroud_beta), target_scaled*(1-exist1+backgroud_beta))
            else:
-               this_loss = self.criterion(output1*exist1, target_scaled*exist1)
+               this_loss = self.criterion(output1*(exist1+backgroud_beta), target_scaled*(exist1+backgroud_beta))
            return this_loss
    def multi_loss_contour_exist(self,output,target,outexist,Reverse_existence):
        

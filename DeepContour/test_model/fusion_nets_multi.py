@@ -201,17 +201,17 @@ class Fusion(nn.Module):
     def __init__(self, classfy=False):
         super(Fusion, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
-        self.up2 = nn.ConvTranspose2d(128, 128, (1, 4), (1, 4), (0, 0), bias=False)
-        self.up3 = nn.ConvTranspose2d(128, 128, (1, 8), (1, 8), (0, 0), bias=False)
-        self.fusion = nn.Conv2d(128 + 128 + 128, 128, (1, 3), (1, 1), (0, 1),
+        self.up2 = nn.ConvTranspose2d(512, 512, (1, 4), (1, 4), (0, 0), bias=False)
+        self.up3 = nn.ConvTranspose2d(512, 512, (1, 8), (1, 8), (0, 0), bias=False)
+        self.fusion = nn.Conv2d(512 + 512 + 512, 512, (1, 3), (1, 1), (0, 1),
                                 bias=False)  # from 3 dpth branch to one
-        self.fusion2 = nn.Conv2d(128, 256, (1, 3), (1, 1), (0, 1), bias=False)  # from 3 dpth branch to one
+        self.fusion2 = nn.Conv2d(512, 512, (1, 3), (1, 1), (0, 1), bias=False)  # from 3 dpth branch to one
         if (classfy == False):
-            self.fusion3 = nn.Conv2d(256, Out_c, (1, 3), (1, 1), (0, 1), bias=False)  # from 3 dpth branch to one
+            self.fusion3 = nn.Conv2d(512, Out_c, (1, 3), (1, 1), (0, 1), bias=False)  # from 3 dpth branch to one
         else:
             self.fusion3 = nn.Sequential(
 
-                nn.Conv2d(256, Out_c, (1, 3), (1, 1), (0, 1), bias=False),  # 2*64
+                nn.Conv2d(512, Out_c, (1, 3), (1, 1), (0, 1), bias=False),  # 2*64
                 # nn.BatchNorm2d(1),
                 nn.Softmax()
             )
@@ -236,7 +236,7 @@ class Fusion(nn.Module):
 class _2layerFusionNets_(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, classfy=False, UnetBack_flag=False):
+    def __init__(self, classfy=False, UnetBack_flag=True):
         super(_2layerFusionNets_, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
         self.UnetBack_flag = UnetBack_flag
@@ -254,7 +254,7 @@ class _2layerFusionNets_(nn.Module):
             self.backbone_e = _BackBonelayer()
 
         backboneDepth = self.backbone.depth
-        feature = 8
+        feature = 32
         self.side_branch1 = _2LayerScale1(backboneDepth, feature)
 
         self.side_branch2 = _2LayerScale2(backboneDepth, feature)
@@ -265,7 +265,7 @@ class _2layerFusionNets_(nn.Module):
         self.side_branch3e = _2LayerScale3(backboneDepth, feature)
         self.fusion_layer = Fusion(classfy)
         self.fusion_layer_exist = Fusion(classfy)  # an additional fusion layer for exv
-        self.low_level_encoding = nn.Conv2d(128, Out_c, (1, 3), (1, 1), (0, 1), bias=False)
+        self.low_level_encoding = nn.Conv2d(512, Out_c, (1, 3), (1, 1), (0, 1), bias=False)
 
     # def fuse_forward(self,side_out1,side_out2,side_out3):
     def upsample_path(self, side_out_low):
