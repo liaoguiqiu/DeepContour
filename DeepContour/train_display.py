@@ -12,7 +12,7 @@ from dataTool import generator_contour_ivus
 
 from dataTool.generator_contour import Generator_Contour, Save_Contour_pkl, Communicate
 from dataTool.generator_contour_ivus import Generator_Contour_sheath
-from dataset_ivus import myDataloader, Batch_size, Resample_size, Path_length
+from dataset_ivus import myDataloader, Batch_size, Resample_size, Path_length,max_presence
 
 import os
 # from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
@@ -45,7 +45,9 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
     hot_real[:, :, 2] = oneHot_real[2, :, :]
 
     # saveout  = CE_Nets.fake_B # display encoding tranform
-    saveout = CE_Nets.pix_wise  # middel feature pix encoding
+    # saveout = CE_Nets.pix_wise  # middel feature pix encoding
+    saveout = CE_Nets.fake_B_1_hot  # middel feature pix encoding
+
     saveout = rendering.onehot2integer(saveout)
     show2 = saveout[0, :, :, :].cpu().detach().numpy() * 255
 
@@ -154,7 +156,7 @@ def display_prediction_exis(read_id, mydata_loader, save_out):  # display in coo
     color1[:, :, 0] = color1[:, :, 1] = color1[:, :, 2] = show1
 
     for i in range(len(path2)):
-        color1 = draw_coordinates_color(color1, path2[i], i)
+        color1 = draw_coordinates_color(color1, path2[i], int(i/max_presence))
 
     show2 = gray2.astype(float)
     save_out = save_out.cpu().detach().numpy()
@@ -167,7 +169,7 @@ def display_prediction_exis(read_id, mydata_loader, save_out):  # display in coo
 
     for i in range(len(save_out)):
         this_coordinate = signal.resample(save_out[i], Resample_size)
-        color = draw_coordinates_color(color, this_coordinate, i)
+        color = draw_coordinates_color(color, this_coordinate, int(i/max_presence))
 
     # show3 = numpy.append(show1,show2,axis=1) # cascade
     show4 = numpy.append(color1, color, axis=1)  # cascade
@@ -185,7 +187,7 @@ def display_prediction(read_id, mydata_loader, save_out, hot, hot_real,Save_img_
     color1[:, :, 0] = color1[:, :, 1] = color1[:, :, 2] = show1
 
     for i in range(len(path2)):
-        color1 = draw_coordinates_color(color1, path2[i], i)
+        color1 = draw_coordinates_color(color1, path2[i], int(i/max_presence)) # draw duplicate the same color
 
     show2 = gray2.astype(float)
     save_out = save_out.cpu().detach().numpy()
@@ -210,7 +212,7 @@ def display_prediction(read_id, mydata_loader, save_out, hot, hot_real,Save_img_
 
     for i in range(len(save_out)):
         this_coordinate = signal.resample(save_out[i], Resample_size)
-        color = draw_coordinates_color(color, this_coordinate, i)
+        color = draw_coordinates_color(color, this_coordinate, int(i/max_presence)) # same color for duplication
     colorhot = (color + 50) * hot
 
     sheath = signal.resample(save_out[0], Resample_size)

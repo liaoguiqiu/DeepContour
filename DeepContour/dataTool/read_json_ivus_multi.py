@@ -37,7 +37,7 @@ class Read_read_check_json_label(object):
 #=======
         sub_folder = "apple/"
 #>>>>>>> b8bb1d19b916df000a1ab2c21c7474cf6fa38b44:dataTool/read_json_ivus.py
-        self.max_presence = 4
+        self.max_presence = 2
         self.image_dir = self.database_root + "img/" + sub_folder
         self.json_dir = self.database_root + "label/" + sub_folder
         self.save_dir = self.database_root + "seg label pkl/" + sub_folder
@@ -76,24 +76,24 @@ class Read_read_check_json_label(object):
 
         # hard ecodeing the index number to ensure the index is correspondng tp a specificlly value
         self.labels_lists = {
-            'catheter_u': ['1', 'catheter_u', 'test'],
-            'catheter_l': ['2', 'catheter_l', 'test'],
-            'lumen_u': ['3', 'lumen_u', 'lumen'],
-            'lumen_l': ['4', 'lumen_l', 'lumen'],
-            'wire_u': ['5', 'wire_u', 'guidewire'],
-            'wire_l': ['6', 'wire_l', 'guidewire'],
-            'media_u': ['7', 'media_u', 'vessel(media)', 'media'],
-            'media_l': ['8', 'media_l', 'vessel(media)', 'media'],
-            'branch_u': ['9', 'branch_u', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
-                       'side-branch', 'sidebranch', 'bifurcation'],
-            'branch_l': ['10', 'branch_l', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
-                       'side-branch', 'sidebranch', 'bifurcation'],
-            'stent_u': ['11', 'stent_u'],
-            'stent_l': ['12', 'stent_l'],
-            'plaque_u': ['13', 'plaque_u'],
-            'plaque_l': ['14', 'plaque_l'],
-            'calcium_u': ['15', 'calcium_u', 'calcium'],
-            'calcium_l': ['16', 'calcium_l', 'calcium'],
+            # 'catheter_u': ['1', 'catheter_u', 'test'],
+            # 'catheter_l': ['2', 'catheter_l', 'test'],
+            # 'lumen_u': ['3', 'lumen_u', 'lumen'],
+            # 'lumen_l': ['4', 'lumen_l', 'lumen'],
+            # 'wire_u': ['5', 'wire_u', 'guidewire'],
+            # 'wire_l': ['6', 'wire_l', 'guidewire'],
+            # 'media_u': ['7', 'media_u', 'vessel(media)', 'media'],
+            # 'media_l': ['8', 'media_l', 'vessel(media)', 'media'],
+            # 'branch_u': ['9', 'branch_u', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
+            #            'side-branch', 'sidebranch', 'bifurcation'],
+            # 'branch_l': ['10', 'branch_l', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
+            #            'side-branch', 'sidebranch', 'bifurcation'],
+            'stent_u': ['1', 'stent_u'],
+            'stent_l': ['2', 'stent_l'],
+            'plaque_u': ['3', 'plaque_u'],
+            'plaque_l': ['4', 'plaque_l'],
+            'calcium_u': ['5', 'calcium_u', 'calcium'],
+            'calcium_l': ['6', 'calcium_l', 'calcium'],
         }
 
         self.disease_labels = ['plaque', 'calcium']

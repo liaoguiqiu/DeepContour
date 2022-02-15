@@ -2,7 +2,9 @@ import torch
 from model.base_model import BaseModel
 import model.networks as  networks
 from test_model import layer_body_sheath_res2
-from test_model import fusion_nets_ivus
+# from test_model import fusion_nets_ivus
+import test_model.fusion_nets_multi as fusion_nets_ivus
+
 from test_model.loss_MTL import MTL_loss,DiceLoss
 import rendering
 from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length,Reverse_existence
@@ -108,21 +110,21 @@ class Pix2LineModel(BaseModel):
             # ], lr=opt.lr, betas=(opt.beta1, 0.999))
             # Optimizer of the CEnet after backbone
             self.optimizer_G = torch.optim.Adam([
-                {'params': self.netG.Unet_back.parameters()},
+                # {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.backbone.parameters()},
                 {'params': self.netG.side_branch1.parameters()},
                 {'params': self.netG.side_branch2.parameters()},
                 {'params': self.netG.side_branch3.parameters()},
                 {'params': self.netG.low_level_encoding.parameters()},
                 {'params': self.netG.fusion_layer.parameters()},
-
             ], lr=opt.lr, betas=(opt.beta1, 0.999))
 
             # Optimizer of the Unet like backbone
-            self.optimizer_G_unet = torch.optim.Adam([
-                {'params': self.netG.Unet_back.parameters()},
-                {'params': self.netG.pixencoding.parameters()},
-            ], lr=opt.lr, betas=(opt.beta1, 0.999))
+            self.optimizer_G_unet = None
+            # self.optimizer_G_unet = torch.optim.Adam([
+            #     {'params': self.netG.Unet_back.parameters()},
+            #     {'params': self.netG.pixencoding.parameters()},
+            # ], lr=opt.lr, betas=(opt.beta1, 0.999))
 
             self.optimizer_G_f = torch.optim.Adam(self.netG.fusion_layer.  parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_G_1 = torch.optim.Adam(self.netG.side_branch1.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
@@ -340,11 +342,13 @@ class Pix2LineModel(BaseModel):
     def backward_G(self):
         """Calculate GAN and L1 loss for the generator"""
         # First, G(A) should fake the discriminator
-        # self.swither_G = 9
+        self.swither_G = 9
         self.optimizer_G.zero_grad()        # set G's gradients to zero
-        self.optimizer_G_unet.zero_grad()  # udpate G's weights
+        # self.optimizer_G_unet.zero_grad()  # udpate G's weights
 
         if self.netG.UnetBack_flag == True and self.swither_G<=5:
+            self.optimizer_G_unet.zero_grad()  # udpate G's weights
+
             self.swither_G+=1
             self.set_requires_grad(self.netG, True)
             # self.set_requires_grad(self.netG.side_branch1, False)
@@ -399,10 +403,10 @@ class Pix2LineModel(BaseModel):
 
             # self.loss_G = ( 1.0*self.loss[0]  + 0.01*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
             # TODO: For last training, use line below and comment the one above
-            self.loss_G = self.loss[0]
-
-            # self.loss =self.criterionMTL.multi_loss_contour_exist([self.out_pathes[0]],self.real_pathes, [self.out_exis_vs[0]],Reverse_existence) #
             # self.loss_G = self.loss[0]
+
+            self.loss =self.criterionMTL.multi_loss_contour_exist([self.out_pathes[0]],self.real_pathes, [self.out_exis_vs[0]],Reverse_existence) #
+            self.loss_G = self.loss[0]
 
         if self.swither_G>11:
             self.swither_G = 0
@@ -419,6 +423,8 @@ class Pix2LineModel(BaseModel):
         # use BEC for the existence vectors
         #self.loss=self.criterionMTL_BCE.multi_loss(self.out_exis_vs,self.real_exv)
         self.lossE=self.criterionMTL_BCE.multi_loss(self.out_exis_vs,self.real_exv)
+        # self.lossE=self.criterion_Dice(self.out_exis_vs[0],self.real_exv[0])
+
 
 
         #self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] + 0.1*loss[2] + 0.2*loss[3])*self.opt.lambda_L1
