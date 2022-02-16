@@ -365,9 +365,11 @@ class Pix2LineModel(BaseModel):
 
             # pix_loss1 = self.criterion_Dice (self.pix_wise, self.real_B)
 
-            backgroud_beta = 0.01
-            # pix_loss2 = self.criterionL1 (self.pix_wise *(self.real_B + backgroud_beta)/(1+backgroud_beta), self.real_B)
-            pix_loss2 = self.criterionL1(self.pix_wise ,self.real_B)
+            backgroud_beta = 0.5
+            backgroud_mask = (self.real_B < 0.1)*backgroud_beta +  (self.real_B > 0.1)
+
+            pix_loss2 = self.criterionL1 (self.pix_wise *backgroud_mask, self.real_B)
+            # pix_loss2 = self.criterionL1(self.pix_wise ,self.real_B)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
             self.loss_pix = 100* pix_loss2

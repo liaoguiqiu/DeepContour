@@ -48,7 +48,7 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
     saveout = CE_Nets.pix_wise  # middel feature pix encoding
     # saveout = CE_Nets.fake_B_1_hot  # middel feature pix encoding
 
-    saveout = rendering.onehot2integer(saveout)
+    # saveout = rendering.onehot2integer(CE_Nets.real_B_one_hot)
     show2 = saveout[0, :, :, :].cpu().detach().numpy() * 255
 
     color = numpy.zeros((show2.shape[1], show2.shape[2], 3))
@@ -93,8 +93,14 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
     # display_prediction(mydata_loader,  CE_Nets.path_long3,hot)
     # display_prediction(mydata_loader,  CE_Nets.out_pathes3,hot)
     # display_prediction(read_id,mydata_loader,  CE_Nets.out_pathes0,hot,hot_real)
-    display_prediction(read_id, mydata_loader, CE_Nets.out_pathes[0], hot, hot_real, Save_img_flag)
-    display_prediction_exis(read_id, mydata_loader, CE_Nets.out_exis_v0)
+
+    if ( CE_Nets.out_pathes  is None):
+        CE_Nets.out_pathes = CE_Nets.real_pathes
+        display_prediction(read_id, mydata_loader, CE_Nets.out_pathes, hot, hot_real, Save_img_flag)
+    else:
+        display_prediction(read_id, mydata_loader, CE_Nets.out_pathes[0], hot, hot_real, Save_img_flag)
+    if (CE_Nets.out_exis_v0 is not None):
+        display_prediction_exis(read_id, mydata_loader, CE_Nets.out_exis_v0)
     return
 # 3 functions to drae the results in real time
 def draw_coordinates_color(img1 ,vy ,color):
