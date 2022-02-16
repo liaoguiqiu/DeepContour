@@ -45,8 +45,8 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
     hot_real[:, :, 2] = oneHot_real[2, :, :]
 
     # saveout  = CE_Nets.fake_B # display encoding tranform
-    # saveout = CE_Nets.pix_wise  # middel feature pix encoding
-    saveout = CE_Nets.fake_B_1_hot  # middel feature pix encoding
+    saveout = CE_Nets.pix_wise  # middel feature pix encoding
+    # saveout = CE_Nets.fake_B_1_hot  # middel feature pix encoding
 
     saveout = rendering.onehot2integer(saveout)
     show2 = saveout[0, :, :, :].cpu().detach().numpy() * 255
