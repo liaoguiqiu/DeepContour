@@ -121,10 +121,10 @@ class Pix2LineModel(BaseModel):
 
             # Optimizer of the Unet like backbone
             self.optimizer_G_unet = None
-            self.optimizer_G_unet = torch.optim.Adam([
-                {'params': self.netG.Unet_back.parameters()},
-                {'params': self.netG.pixencoding.parameters()},
-            ], lr=opt.lr, betas=(opt.beta1, 0.999))
+            # self.optimizer_G_unet = torch.optim.Adam([
+            #     {'params': self.netG.Unet_back.parameters()},
+            #     {'params': self.netG.pixencoding.parameters()},
+            # ], lr=opt.lr, betas=(opt.beta1, 0.999))
 
             self.optimizer_G_f = torch.optim.Adam(self.netG.fusion_layer.  parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_G_1 = torch.optim.Adam(self.netG.side_branch1.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
@@ -325,7 +325,8 @@ class Pix2LineModel(BaseModel):
 
             # self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing(self.out_pathes[0],Resample_size)
             self.fake_B_1_hot = rendering.integer2onehot(self.fake_B )
-
+        if self.pix_wise is None:
+            self.pix_wise = self.fake_B
         #self.fake_B = self.netG(self.real_A)  # G(A)
 
     def backward_D(self):
@@ -348,7 +349,7 @@ class Pix2LineModel(BaseModel):
     def backward_G(self):
         """Calculate GAN and L1 loss for the generator"""
         # First, G(A) should fake the discriminator
-        # self.swither_G = 9
+        self.swither_G = 9
         self.optimizer_G.zero_grad()        # set G's gradients to zero
         # self.optimizer_G_unet.zero_grad()  # udpate G's weights
 

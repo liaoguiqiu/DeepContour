@@ -236,7 +236,7 @@ class Fusion(nn.Module):
 class _2layerFusionNets_(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, classfy=False, UnetBack_flag=True):
+    def __init__(self, classfy=False, UnetBack_flag=False):
         super(_2layerFusionNets_, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
         self.UnetBack_flag = UnetBack_flag
