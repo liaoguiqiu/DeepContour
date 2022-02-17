@@ -1,8 +1,8 @@
 import cv2
 import os
 import numpy as np
-read_dir =  "C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_08_25 case 5/TIFF_PDGT3Q3C/"
-save_dir =  "C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_08_25 case 5/TIFF_PDGT3Q3C_rect/"
+read_dir =  "C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_08_25 case 6/TIFF_PDOTVXX3/"
+save_dir =  "C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_08_25 case 6/TIFF_PDOTVXX3_rect/"
 
 def   tranfer_frome_cir2rec(gray):
         H,W = gray.shape
@@ -31,6 +31,9 @@ def tranfer_frome_rec2cir2(color, padding_H =58):
         return circular
 
 if __name__ == '__main__':
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
     read_start = 1 # the first
     read_sequence = os.listdir(read_dir) # read all file name
     #seqence_Len = len(read_sequence)    # get all file number 

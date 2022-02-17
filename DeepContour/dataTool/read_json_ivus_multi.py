@@ -88,12 +88,10 @@ class Read_read_check_json_label(object):
             #            'side-branch', 'sidebranch', 'bifurcation'],
             # 'branch_l': ['10', 'branch_l', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
             #            'side-branch', 'sidebranch', 'bifurcation'],
-            'stent_u': ['1', 'stent_u'],
-            'stent_l': ['2', 'stent_l'],
-            'plaque_u': ['3', 'plaque_u'],
-            'plaque_l': ['4', 'plaque_l'],
-            'calcium_u': ['5', 'calcium_u', 'calcium'],
-            'calcium_l': ['6', 'calcium_l', 'calcium'],
+            'plaque_u': ['1', 'plaque_u'],
+            'plaque_l': ['2', 'plaque_l'],
+            'calcium_u': ['3', 'calcium_u', 'calcium'],
+            'calcium_l': ['4', 'calcium_l', 'calcium'],
         }
 
         self.disease_labels = ['plaque', 'calcium']
