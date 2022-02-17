@@ -17,7 +17,19 @@ from random import random
 import pickle
 from basic_operator import Basic_Operator
 from scipy.interpolate import interp1d
+# from test_model.fusion_nets_multi import Out_c
 # test on the deploy marcopolo
+
+Sep_Up_Low = True
+object_num = 3
+max_presence = 1
+if Sep_Up_Low: #
+    Out_c = 2*object_num* max_presence   # depends on the bondaried to be preicted
+    Out_c_e = 2*object_num* max_presence # existence does not separete up and lower
+else:
+    Out_c = object_num* max_presence   # depends on the bondaried to be preicted
+    Out_c_e = object_num * max_presence
+
 seed(1)
 Batch_size = 2
 Resample_size =256 # the input and label will be resampled 
@@ -85,8 +97,8 @@ class myDataloader(object):
         self.batch_size  = batch_size
         self.img_size  = image_size
         self.path_size  = path_size
-        self.obj_num = 6 # take num of objects from vectors
-
+        # self.obj_num = 6 # take num of objects from vectors
+        self.obj_num =Out_c
         self.input_image = np.zeros((batch_size,1,image_size,image_size))
         # the number of the contour has been increased, and another vector has beeen added
         self.input_path = np.zeros((batch_size,self.obj_num,path_size)) # predifine the path number is 2
@@ -406,18 +418,18 @@ class myDataloader(object):
 
             else:
 
-
-
-
+                this_pathx = this_signal.contoursx[Path_Index]
+                this_pathy = this_signal.contoursy[Path_Index]
+                this_exist = this_signal.contours_exist[Path_Index]
                 #for layers train alll  the x and y are list
-                if  self.all_dir_list[self.folder_pointer] == "1s" or self.OLG_flag == True:
-                    this_pathx = this_signal.contoursx[Path_Index]
-                    this_pathy = this_signal.contoursy[Path_Index]
-                    this_exist = this_signal.contours_exist[Path_Index]
-                else:
-                    this_pathx = np.array(list(this_signal.contoursx[Path_Index].values())[0:self.obj_num])
-                    this_pathy = np.array(list(this_signal.contoursy[Path_Index].values())[0:self.obj_num])
-                    this_exist = np.array(list(this_signal.contours_exist[Path_Index].values())[0:self.obj_num])
+                # if  self.all_dir_list[self.folder_pointer] == "1s" or self.OLG_flag == True:
+                #     this_pathx = this_signal.contoursx[Path_Index]
+                #     this_pathy = this_signal.contoursy[Path_Index]
+                #     this_exist = this_signal.contours_exist[Path_Index]
+                # else:
+                #     this_pathx = np.array(list(this_signal.contoursx[Path_Index].values())[0:self.obj_num])
+                #     this_pathy = np.array(list(this_signal.contoursy[Path_Index].values())[0:self.obj_num])
+                #     this_exist = np.array(list(this_signal.contours_exist[Path_Index].values())[0:self.obj_num])
                
                 #path2 =  signal.resample(this_path, self.path_size)#resample the path
                 # concreate the image batch and path

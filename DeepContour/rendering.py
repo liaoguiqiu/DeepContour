@@ -182,42 +182,33 @@ def boundary_visualized_onehot_encodeing(layers, H):  # this is for sheath conto
 #            'stent': ['6','stent'],
 #            'plaque': ['7','plaque'],
 #            'calcium': ['8','calcification', 'calcium'],
-def layers_visualized_integer_encodeing_full(layers, H):  # this is for sheath contour segmentation
-    # inetgral encoding return a  one channel map with different numers
 
+
+# encode as sigle channel inte with up and lowe boudnary
+def layers_visualized_integer_encodeing_full(layers,existence, H,reverse_exs=True):  # this is for sheath contour segmentation
+    # inetgral encoding return a  one channel map with different numers
+    if (reverse_exs == True):
+        existence = 1- existence
     bz, layer_n, W = layers.size()
     intial_layers = layers
     # layers = layers +0.1
     layers = layers * H
-    layers = layers.type(torch.IntTensor)
+    layers = layers.type(torch.LongTensor)
     layers = torch.clamp(layers, 0, H - 1)
     # out depth = 1
-    out = torch.zeros([bz, 1, H, W], dtype=torch.float)  # the back ground is zero
+    out = torch.zeros([bz, 1, H, W], dtype=torch.float)  # the back ground is zero,
     # every layer need to mask the front part :
-    # for i in range(layer_n):
-    for j in range(bz):
-        for k in range(W):
-            # for the sheath/catheter, luemn/tissue and guidwire, there is no need to compare, they are separated tissue
-            # cather/backgorund devide
-            layer_index = 0
-            out[j, 0, 0:layers[j, layer_index, k], k] = (
-                                                                    layer_index + 1) / layer_n  # first layer is the sheath, and light go to the rest of it
-            out[j, 0, layers[j, layer_index, k]:H,
-            k] = 0  # first layer is the sheath, and light go to the rest of it,degualback value as 0
+    for l in range(0, layer_n, 2):  # the range step of the layer is 2 since every object have up and lower
+        # confine up and lowerbound
+        layers[:, l + 1, :] = torch.where(layers[:, l + 1, :] < layers[:, l, :], layers[:, l, :], layers[:, l + 1, :])
+        for j in range(bz):
+            this_layer_x = torch.arange(0, W)
+            combine_exist = existence[j,l, :] * existence[j,l+1, :]
+            presence_x  = this_layer_x[torch.where(combine_exist >0.5)[0]]
 
-            layer_index = 1  # the second layer is the boundary formed by the tissue
-            out[j, 0, layers[j, layer_index, k]:H, k] = (
-                                                                    layer_index + 1) / layer_n  # first layer is the sheath, and light go to the rest of it
 
-            mean0 = torch.mean(intial_layers[j, 0, :])
-            mean1 = torch.mean(intial_layers[j, 1, :])
-
-            if (mean0 < mean1):
-                out[j, 0, 0:layers[j, 0, k], k] = 0.5  # first layer is the sheath, albels 0:layer is 0.5
-                out[j, 0, layers[j, 1, k]:H, k] = 1  # second layer is the contou, albels is 1
-            else:
-                out[j, 0, 0:layers[j, 1, k], k] = 0.5  # first layer is the sheath, albels 0:layer is 0.5
-                out[j, 0, layers[j, 0, k]:H, k] = 1  # second layer is the contou, albels is 1
+            for i in presence_x:
+                out[j, 0, torch.arange(layers[j,l,i],layers[j,l+1,i]), i] =  (l + 2) / layer_n
     # out   =( out  -0.5)/0.5
     out = out.cuda()
     return out

@@ -22,9 +22,11 @@ class MTL_loss(object):
            b, _, len = output1.size()
            target_scaled = F.interpolate(target1, size=len, mode='area')
            if (Reverse_existence == True):
-               this_loss = self.criterion(output1 * (1-exist1), target_scaled*(1-exist1))
-           else:
-               this_loss = self.criterion(output1*exist1, target_scaled*exist1)
+               exist1 = 1- exist1
+
+           backgroud_beta = 0.1 * (1-exist1) + exist1
+
+           this_loss = self.criterion(output1*(backgroud_beta), target_scaled*(backgroud_beta))
            return this_loss
    def multi_loss_contour_exist(self,output,target,outexist,Reverse_existence):
        

@@ -2,7 +2,9 @@ import torch
 from model.base_model import BaseModel
 import model.networks as  networks
 from test_model import layer_body_sheath_res2
-from test_model import fusion_nets_ivus
+# from test_model import fusion_nets_ivus
+import test_model.fusion_nets_multi as fusion_nets_ivus
+
 from test_model.loss_MTL import MTL_loss,DiceLoss
 import rendering
 from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length,Reverse_existence
@@ -15,7 +17,6 @@ from databufferExcel import EXCEL_saver
 # expected version 2 instead. Hint: enable anomaly detection to find the operation that failed to compute its gradient,
 # with torch.autograd.set_detect_anomaly(True).
 from working_dir_root import Dataset_root,Output_root
-
 
 class Pix2LineModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
@@ -109,17 +110,17 @@ class Pix2LineModel(BaseModel):
             # ], lr=opt.lr, betas=(opt.beta1, 0.999))
             # Optimizer of the CEnet after backbone
             self.optimizer_G = torch.optim.Adam([
-                {'params': self.netG.Unet_back.parameters()},
+                # {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.backbone.parameters()},
                 {'params': self.netG.side_branch1.parameters()},
                 {'params': self.netG.side_branch2.parameters()},
                 {'params': self.netG.side_branch3.parameters()},
                 {'params': self.netG.low_level_encoding.parameters()},
                 {'params': self.netG.fusion_layer.parameters()},
-
             ], lr=opt.lr, betas=(opt.beta1, 0.999))
 
             # Optimizer of the Unet like backbone
+            self.optimizer_G_unet = None
             self.optimizer_G_unet = torch.optim.Adam([
                 {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.pixencoding.parameters()},
@@ -275,7 +276,7 @@ class Pix2LineModel(BaseModel):
         #self.real_B = realB.to(self.device)
         # self.real_B=rendering.layers_visualized_integer_encodeing(pathes,Resample_size) # this way render it as semantic map
         # self.real_B=rendering.boundary_visualized_integer_encodeing(pathes,Resample_size) # this is a way to encode it as boundary (very spars)
-        self.real_B=rendering.boundary_visualized_onehot_encodeing(pathes,Resample_size) # this is a way to encode it as boundary (very spars)
+        self.real_B=rendering.layers_visualized_integer_encodeing_full(pathes,exis_v,Resample_size,Reverse_existence) # this is a way to encode it as boundary (very spars)
 
         self.real_B_one_hot=rendering.layers_visualized_OneHot_encodeing(pathes,Resample_size)
 
@@ -316,9 +317,16 @@ class Pix2LineModel(BaseModel):
              self.mask_with_exist()
         if (one_hot_render == True):
             # self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes[0],Resample_size) # encode as semantic map
-            self.fake_B=  rendering.boundary_visualized_integer_encodeing(self.out_pathes[0],Resample_size) # encode as boundary
+            # self.fake_B=  rendering.boundary_visualized_integer_encodeing(self.out_pathes[0],Resample_size) # encode as boundary
 
-            self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing(self.out_pathes[0],Resample_size)
+
+            self.fake_B=  rendering.layers_visualized_integer_encodeing_full(self.out_pathes[0], self. out_exis_vs[0],Resample_size,Reverse_existence) # encode as boundary
+
+
+            # self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing(self.out_pathes[0],Resample_size)
+            self.fake_B_1_hot = rendering.integer2onehot(self.fake_B )
+        if self.pix_wise is None:
+            self.pix_wise = self.fake_B
         #self.fake_B = self.netG(self.real_A)  # G(A)
 
     def backward_D(self):
@@ -343,9 +351,11 @@ class Pix2LineModel(BaseModel):
         # First, G(A) should fake the discriminator
         # self.swither_G = 9
         self.optimizer_G.zero_grad()        # set G's gradients to zero
-        self.optimizer_G_unet.zero_grad()  # udpate G's weights
+        # self.optimizer_G_unet.zero_grad()  # udpate G's weights
 
         if self.netG.UnetBack_flag == True and self.swither_G<=5:
+            self.optimizer_G_unet.zero_grad()  # udpate G's weights
+
             self.swither_G+=1
             self.set_requires_grad(self.netG, True)
             # self.set_requires_grad(self.netG.side_branch1, False)
@@ -354,15 +364,18 @@ class Pix2LineModel(BaseModel):
             # self.set_requires_grad(self.netG.fusion_layer, False)
 
 
-            pix_loss1 = self.criterion_Dice (self.pix_wise, self.real_B)
-            backgroud_beta = 0.01
-            pix_loss2 = self.criterionL1 (self.pix_wise *(self.real_B + backgroud_beta)/(1+backgroud_beta), self.real_B)
+            # pix_loss1 = self.criterion_Dice (self.pix_wise, self.real_B)
 
+            backgroud_beta = 0.5
+            backgroud_mask = (self.real_B < 0.1)*backgroud_beta +  (self.real_B > 0.1)
+
+            pix_loss2 = self.criterionL1 (self.pix_wise *backgroud_mask, self.real_B)
+            # pix_loss2 = self.criterionL1(self.pix_wise ,self.real_B)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
-            # self.loss_pix = 100* pix_loss1
+            self.loss_pix = 100* pix_loss2
 
-            self.loss_pix = 100*(0.5 * pix_loss1 + 0.5 * pix_loss2)
+            # self.loss_pix = 1000*(0.5 * pix_loss1 + 0.5 * pix_loss2)
             self.loss_pix.backward(retain_graph=True)
             # self.loss_G=-self.loss_pix
             # self.optimizer_G.step()             # udpate G's weights
@@ -396,14 +409,14 @@ class Pix2LineModel(BaseModel):
             #self.loss=self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
             # 3 imput , also rely on the existence vector
 
-            self.loss=self.criterionMTL.multi_loss (self.out_pathes,self.real_pathes ) #
+            # self.loss=self.criterionMTL.multi_loss (self.out_pathes,self.real_pathes ) #
 
             # self.loss_G = ( 1.0*self.loss[0]  + 0.01*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
             # TODO: For last training, use line below and comment the one above
-            self.loss_G = self.loss[0]
-
-            # self.loss =self.criterionMTL.multi_loss_contour_exist([self.out_pathes[0]],self.real_pathes, [self.out_exis_vs[0]],Reverse_existence) #
             # self.loss_G = self.loss[0]
+
+            self.loss =self.criterionMTL.multi_loss_contour_exist([self.out_pathes[0]],self.real_pathes, [self.real_exv[0]],Reverse_existence) #
+            self.loss_G = self.loss[0]
 
         if self.swither_G>11:
             self.swither_G = 0
@@ -420,6 +433,8 @@ class Pix2LineModel(BaseModel):
         # use BEC for the existence vectors
         #self.loss=self.criterionMTL_BCE.multi_loss(self.out_exis_vs,self.real_exv)
         self.lossE=self.criterionMTL_BCE.multi_loss(self.out_exis_vs,self.real_exv)
+        # self.lossE=self.criterion_Dice(self.out_exis_vs[0],self.real_exv[0])
+
 
 
         #self.loss_G_L1 =( 1.0*loss[0]  + 0.5*loss[1] + 0.1*loss[2] + 0.2*loss[3])*self.opt.lambda_L1
@@ -430,10 +445,10 @@ class Pix2LineModel(BaseModel):
         #self.loss_G_L0 = (self.loss[0])
         # self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
         # TODO: Enable at the beginning of the training
-        # self.lossEa =   ( 1.0*self.lossE[0]  + 0.01*self.lossE[1] + 0.01*self.lossE[2] + 0.01*self.lossE[3])
+        self.lossEa =   ( 1.0*self.lossE[0]  + 0.01*self.lossE[1] + 0.01*self.lossE[2] + 0.01*self.lossE[3])
         # TODO: Enable at the "end" of training
         #  (sacrifice accuracy of higher resolution branch for overall better output)
-        self.lossEa = self.lossE[0]
+        # self.lossEa = self.lossE[0]
 
         self.lossEa.backward( )
         #self.optimizer_G.step()             # udpate G's weights
@@ -511,13 +526,13 @@ class Pix2LineModel(BaseModel):
         # self.backward_G_2()                   # calculate graidents for G
         #
         # self.backward_G_3()                   # calculate graidents for G
-        if (self.switcher==0):
+        if (self.switcher<=5):
             self.backward_G()                   # calculate graidents for G
         else:
             self.backward_E()                   # calculate graidents for E
 
         self.switcher += 1
-        if (self.switcher>=2):
+        if (self.switcher>=11):
             self.switcher = 0
 
         self.displayloss0 = self.loss_G. data.mean()

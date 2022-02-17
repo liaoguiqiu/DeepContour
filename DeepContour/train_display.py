@@ -12,7 +12,7 @@ from dataTool import generator_contour_ivus
 
 from dataTool.generator_contour import Generator_Contour, Save_Contour_pkl, Communicate
 from dataTool.generator_contour_ivus import Generator_Contour_sheath
-from dataset_ivus import myDataloader, Batch_size, Resample_size, Path_length
+from dataset_ivus import myDataloader, Batch_size, Resample_size, Path_length,max_presence
 
 import os
 # from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
@@ -46,7 +46,9 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
 
     # saveout  = CE_Nets.fake_B # display encoding tranform
     saveout = CE_Nets.pix_wise  # middel feature pix encoding
-    saveout = rendering.onehot2integer(saveout)
+    # saveout = CE_Nets.fake_B_1_hot  # middel feature pix encoding
+
+    # saveout = rendering.onehot2integer(CE_Nets.real_B_one_hot)
     show2 = saveout[0, :, :, :].cpu().detach().numpy() * 255
 
     color = numpy.zeros((show2.shape[1], show2.shape[2], 3))
@@ -91,8 +93,14 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
     # display_prediction(mydata_loader,  CE_Nets.path_long3,hot)
     # display_prediction(mydata_loader,  CE_Nets.out_pathes3,hot)
     # display_prediction(read_id,mydata_loader,  CE_Nets.out_pathes0,hot,hot_real)
-    display_prediction(read_id, mydata_loader, CE_Nets.out_pathes[0], hot, hot_real, Save_img_flag)
-    display_prediction_exis(read_id, mydata_loader, CE_Nets.out_exis_v0)
+
+    if ( CE_Nets.out_pathes  is None):
+        CE_Nets.out_pathes = CE_Nets.real_pathes
+        display_prediction(read_id, mydata_loader, CE_Nets.out_pathes, hot, hot_real, Save_img_flag)
+    else:
+        display_prediction(read_id, mydata_loader, CE_Nets.out_pathes[0], hot, hot_real, Save_img_flag)
+    if (CE_Nets.out_exis_v0 is not None):
+        display_prediction_exis(read_id, mydata_loader, CE_Nets.out_exis_v0)
     return
 # 3 functions to drae the results in real time
 def draw_coordinates_color(img1 ,vy ,color):
@@ -154,7 +162,7 @@ def display_prediction_exis(read_id, mydata_loader, save_out):  # display in coo
     color1[:, :, 0] = color1[:, :, 1] = color1[:, :, 2] = show1
 
     for i in range(len(path2)):
-        color1 = draw_coordinates_color(color1, path2[i], i)
+        color1 = draw_coordinates_color(color1, path2[i], int(i/max_presence))
 
     show2 = gray2.astype(float)
     save_out = save_out.cpu().detach().numpy()
@@ -167,7 +175,7 @@ def display_prediction_exis(read_id, mydata_loader, save_out):  # display in coo
 
     for i in range(len(save_out)):
         this_coordinate = signal.resample(save_out[i], Resample_size)
-        color = draw_coordinates_color(color, this_coordinate, i)
+        color = draw_coordinates_color(color, this_coordinate, int(i/max_presence))
 
     # show3 = numpy.append(show1,show2,axis=1) # cascade
     show4 = numpy.append(color1, color, axis=1)  # cascade
@@ -185,7 +193,7 @@ def display_prediction(read_id, mydata_loader, save_out, hot, hot_real,Save_img_
     color1[:, :, 0] = color1[:, :, 1] = color1[:, :, 2] = show1
 
     for i in range(len(path2)):
-        color1 = draw_coordinates_color(color1, path2[i], i)
+        color1 = draw_coordinates_color(color1, path2[i], int(i/max_presence)) # draw duplicate the same color
 
     show2 = gray2.astype(float)
     save_out = save_out.cpu().detach().numpy()
@@ -210,7 +218,7 @@ def display_prediction(read_id, mydata_loader, save_out, hot, hot_real,Save_img_
 
     for i in range(len(save_out)):
         this_coordinate = signal.resample(save_out[i], Resample_size)
-        color = draw_coordinates_color(color, this_coordinate, i)
+        color = draw_coordinates_color(color, this_coordinate, int(i/max_presence)) # same color for duplication
     colorhot = (color + 50) * hot
 
     sheath = signal.resample(save_out[0], Resample_size)

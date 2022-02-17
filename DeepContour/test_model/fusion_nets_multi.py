@@ -14,16 +14,7 @@ from dataset_sheath import Path_length, Batch_size, Resample_size
 import torchvision.models
 import numpy as np
 import cv2
-
-Sep_Up_Low = True
-object_num = 8
-max_presence = 3
-if Sep_Up_Low: #
-    Out_c = 2*object_num* max_presence   # depends on the bondaried to be preicted
-    Out_c_e = object_num* max_presence # existence does not separete up and lower
-else:
-    Out_c = object_num* max_presence   # depends on the bondaried to be preicted
-    Out_c_e = object_num * max_presence
+from dataset_ivus import Out_c,Out_c_e
 
 Input_c = 3  # the gray is converted into 3 channnels image
 Pixwise_c = Out_c  # Using onehot encoding, the out channel is equal to layer
@@ -57,7 +48,7 @@ class _BackBonelayer(nn.Module):
         super(_BackBonelayer, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
 
-        feature = 16
+        feature = 8
 
         self.side_branch1 = nn.ModuleList()
 
@@ -260,6 +251,7 @@ class _2layerFusionNets_(nn.Module):
 
         else:
             self.backbone = _BackBonelayer()
+            self.backbone_e = _BackBonelayer()
 
         backboneDepth = self.backbone.depth
         feature = 32
@@ -294,7 +286,7 @@ class _2layerFusionNets_(nn.Module):
         if self.UnetBack_flag == True:
             unet_f = self.Unet_back(x)
             pix_seg = self.pixencoding(unet_f)  # use the Unet features to predict a pix wise segmentation
-            pix_seg = F.sigmoid(pix_seg)  # TODO: comment/uncomment here to change sigmoid function
+            # pix_seg = F.sigmoid(pix_seg)  # TODO: comment/uncomment here to change sigmoid function
             # pix_seg=unet_f # one feature backbone
             backbone_f = self.backbone(unet_f)
             backbone_fe = self.backbone_e(unet_f)
@@ -302,6 +294,8 @@ class _2layerFusionNets_(nn.Module):
 
         else:
             backbone_f = self.backbone(x)
+            backbone_fe = self.backbone_e(x)
+
             pix_seg = None
         f1 = self.side_branch1(backbone_f)  # coordinates encoding
         f2 = self.side_branch2(backbone_f)  # coordinates encoding
@@ -311,6 +305,8 @@ class _2layerFusionNets_(nn.Module):
         f3e = self.side_branch3e(backbone_fe)  # coordinates encoding
         out = self.fusion_layer(f1, f2, f3)
         out_exist = self.fusion_layer_exist(f1e, f2e, f3e)
+        # out_exist = F.sigmoid(out_exist)
+
 
         side_out1l = self.low_level_encoding(f1)
         side_out2l = self.low_level_encoding(f2)

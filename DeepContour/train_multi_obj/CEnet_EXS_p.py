@@ -19,7 +19,7 @@ from dataTool import generator_contour_ivus
 from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
 from dataTool.generator_contour_ivus import Generator_Contour_sheath
 from dataTool.generator_contour_ivus_multi import Generator_Contour_sheath
-from dataset_ivus  import myDataloader,Batch_size,Resample_size, Path_length
+from dataset_ivus  import myDataloader,Batch_size,Resample_size, Path_length,max_presence
 from FedLearning.Cloud_API import Cloud_API
 from train_multi_obj.local2cloud import Local2Cloud
 import os
@@ -31,15 +31,15 @@ from deploy.basic_trans import Basic_oper
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag  = True  # the flag of using the visdom or not
-OLG_flag = True  # flag of training with on line generating or not
+OLG_flag = False  # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
 validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not
 Save_img_flag = False # this flag determine if the reuslt will be save  in to a foler
-Continue_flag = True  # if not true, it start from scratch again
+Continue_flag = False  # if not true, it start from scratch again
 Federated_learning_flag = False # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
 Using_fed_model_flag = False # True: Fed model, false: local model
-loadmodel_index = '_5.pth'
+loadmodel_index = '_1.pth'
 
 
 
@@ -270,7 +270,7 @@ while(1): # main infinite loop
                   % (epoch, 0, read_id, 0,
                      G_x, D_x, 0, 0, 0))
 
-        if read_id % 2 == 0 and Visdom_flag == True and validation_flag==False:
+        if read_id % 1 == 0 and Visdom_flag == True and validation_flag==False:
                 plotter.plot( 'l0', 'l0', 'l0', iteration_num, CE_Nets.displayloss0.cpu().detach().numpy())
                 plotter.plot( 'l1', 'l1', 'l1', iteration_num, CE_Nets.displayloss1.cpu().detach().numpy())
                 plotter.plot( 'l2', 'l2', 'l2', iteration_num, CE_Nets.displayloss2.cpu().detach().numpy())

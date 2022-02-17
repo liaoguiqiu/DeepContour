@@ -3,7 +3,7 @@
 
 
 ########################################################################
-# The data root syle should be (double check the name of the folder):
+# The data root formate should be (double check the name of the folder):
 
 #-Root(my is "E:deeplearning")/
 #    --Root/dataset/
