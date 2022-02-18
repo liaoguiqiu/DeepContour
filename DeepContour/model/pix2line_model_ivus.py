@@ -385,7 +385,7 @@ class Pix2LineModel(BaseModel):
 
             background = (self.real_B < 0.1)
             Nonebackground = (self.real_B > 0.1)
-            backgroud_beta = (torch.sum(Nonebackground) + 0.0001) / (torch.sum(background) + 0.0001)
+            backgroud_beta = (torch.sum(Nonebackground) + 0.0001) / (torch.sum(background) + torch.sum(Nonebackground) + 0.0001)
             backgroud_mask = background * backgroud_beta + Nonebackground
 
 

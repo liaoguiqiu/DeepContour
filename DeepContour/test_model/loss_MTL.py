@@ -25,7 +25,7 @@ class MTL_loss(object):
                exist1 = 1- exist1
            background = (exist1 < 0.5)
            Nonebackground = (exist1 > 0.5)
-           backgroud_beta = (torch.sum(Nonebackground) + 0.0001) / (torch.sum(background) + 0.0001)
+           backgroud_beta = (torch.sum(Nonebackground) + 0.0001) / (torch.sum(background) + torch.sum(Nonebackground) + 0.0001)
            backgroud_mask = background * backgroud_beta + Nonebackground
 
 
