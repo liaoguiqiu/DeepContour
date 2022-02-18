@@ -23,10 +23,13 @@ class MTL_loss(object):
            target_scaled = F.interpolate(target1, size=len, mode='area')
            if (Reverse_existence == True):
                exist1 = 1- exist1
+           background = (exist1 < 0.5)
+           Nonebackground = (exist1 > 0.5)
+           backgroud_beta = (torch.sum(Nonebackground) + 0.0001) / (torch.sum(background) + 0.0001)
+           backgroud_mask = background * backgroud_beta + Nonebackground
 
-           backgroud_beta = 0.1 * (1-exist1) + exist1
 
-           this_loss = self.criterion(output1*(backgroud_beta), target_scaled*(backgroud_beta))
+           this_loss = self.criterion(output1*(backgroud_mask), target_scaled*(backgroud_mask))
            return this_loss
    def multi_loss_contour_exist(self,output,target,outexist,Reverse_existence):
        

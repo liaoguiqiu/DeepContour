@@ -39,6 +39,7 @@ Augment_add_lines = False
 Clip_mat_flag = True
 random_clip_flag = False
 Random_rotate = True
+Random_vertical_shift = True
 Reverse_existence = True
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
 
@@ -233,7 +234,28 @@ class myDataloader(object):
                 matrix[i,lines-i+3] =value
 
 
-        return matrix 
+        return matrix
+
+    def vertical_shift(self, image, pathes, exis_vec,Reverse_existence):
+
+        H, W = image.shape
+        roller = np.random.random_sample() * H -H/2
+        if Reverse_existence == True:
+            use_existence = 1- exis_vec
+        pathes= pathes*use_existence # mask out
+        Top = np.min(pathes)
+        Bottom = np.max(pathes)
+        L1 = Top
+        L2 = (H-Bottom)
+        roller = np.clip(roller,-L1/2,L2/2) # half the space of shifting
+        roller = int(roller)
+
+        image = np.roll(image, roller, axis=0)
+        pathes = pathes + roller
+        pathes = pathes + (1-use_existence)*(H-1)
+        # exis_vec = np.roll(exis_vec, roller, axis=1)
+
+        return image, pathes, exis_vec
     def rolls(self,image,pathes,exis_vec):
  
         H,W = image.shape
@@ -502,7 +524,9 @@ class myDataloader(object):
     
                 #img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
                     img_piece, self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :] =  self.flips2(img_piece,self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :])
-                
+                if Random_vertical_shift == True:
+                    img_piece, self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :] =  self.vertical_shift(img_piece,self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :],Reverse_existence)
+
 
 
                 self.input_image[this_pointer,0,:,:] = transform(img_piece)[0]/104.0
