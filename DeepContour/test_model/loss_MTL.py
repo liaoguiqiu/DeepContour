@@ -25,9 +25,11 @@ class MTL_loss(object):
                exist1 = 1- exist1
            background = (exist1 < 0.5)
            Nonebackground = (exist1 > 0.5)
-           backgroud_beta = (torch.sum(Nonebackground) + 0.0001) / (torch.sum(background) + torch.sum(Nonebackground) + 0.0001)
+           backgroud_beta=0.1
+           #TODO: the background beta should be calculated per batch, other wise some channel will be diluted unreasonabley
+           # backgroud_beta = (torch.sum(Nonebackground) + 0.0001) / (torch.sum(background) + torch.sum(Nonebackground) + 0.0001)
            backgroud_mask = background * backgroud_beta + Nonebackground
-
+           # backgroud_mask = Nonebackground
 
            this_loss = self.criterion(output1*(backgroud_mask), target_scaled*(backgroud_mask))
            return this_loss

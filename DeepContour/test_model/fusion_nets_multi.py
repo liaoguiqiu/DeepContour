@@ -18,7 +18,10 @@ from dataset_ivus import Out_c,Out_c_e
 
 Input_c = 3  # the gray is converted into 3 channnels image
 Pixwise_c = Out_c  # Using onehot encoding, the out channel is equal to layer
-
+Backbone_u_d = 100
+Backbone_f = 8
+CEnet_f = 8
+Fusion_times = 3
 
 class _BackBoneUnet(nn.Module):
     def __init__(self, input_nc=3, output_nc=256, num_downs=8, ngf=32, norm_layer=nn.BatchNorm2d, use_dropout=False):
@@ -48,7 +51,7 @@ class _BackBonelayer(nn.Module):
         super(_BackBonelayer, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
 
-        feature = 8
+        feature = Backbone_f
 
         self.side_branch1 = nn.ModuleList()
 
@@ -97,7 +100,7 @@ class _2LayerScale1(nn.Module):
         feature = feature * 2
 
         self.side_branch1.append(baseM.conv_keep_W(feature, 2 * feature, k=(4, 1), s=(1, 1), p=(0, 0)))  # 2*256
-
+        self.depth = feature*2
     def forward(self, x):
         side_out = x
         for j, name in enumerate(self.side_branch1):
@@ -132,6 +135,7 @@ class _2LayerScale2(nn.Module):
         feature = feature * 2
 
         self.side_branch1.append(baseM.conv_keep_W(feature, 2 * feature, k=(4, 1), s=(1, 1), p=(0, 0)))  # 2*64
+        self.depth = feature*2
 
     def forward(self, x):
         side_out = x
@@ -172,6 +176,7 @@ class _2LayerScale3(nn.Module):
         feature = feature * 2
 
         self.side_branch1.append(baseM.conv_keep_W(feature, 2 * feature, k=(4, 1), s=(1, 1), p=(0, 0)))  # 2*64
+        self.depth = feature*2
 
     def display_one_channel(self, img):
         gray2 = img[0, 0, :, :].cpu().detach().numpy() * 104 + 104
@@ -198,20 +203,20 @@ class _2LayerScale3(nn.Module):
 class Fusion(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, classfy=False):
+    def __init__(self, classfy=False,d1=512,d2=512,d3=512,fusion_times=1):
         super(Fusion, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
-        self.up2 = nn.ConvTranspose2d(512, 512, (1, 4), (1, 4), (0, 0), bias=False)
-        self.up3 = nn.ConvTranspose2d(512, 512, (1, 8), (1, 8), (0, 0), bias=False)
-        self.fusion = nn.Conv2d(512 + 512 + 512, 512, (1, 3), (1, 1), (0, 1),
+        self.up2 = nn.ConvTranspose2d(d2, d1, (1, 4), (1, 4), (0, 0), bias=False)
+        self.up3 = nn.ConvTranspose2d(d3, d1, (1, 8), (1, 8), (0, 0), bias=False)
+        self.fusion = nn.Conv2d(d1 + d1 + d1, fusion_times*d1, (1, 3), (1, 1), (0, 1),
                                 bias=False)  # from 3 dpth branch to one
-        self.fusion2 = nn.Conv2d(512, 512, (1, 3), (1, 1), (0, 1), bias=False)  # from 3 dpth branch to one
+        self.fusion2 = nn.Conv2d(fusion_times*d1, d1, (1, 3), (1, 1), (0, 1), bias=False)  # from 3 dpth branch to one
         if (classfy == False):
-            self.fusion3 = nn.Conv2d(512, Out_c, (1, 3), (1, 1), (0, 1), bias=False)  # from 3 dpth branch to one
+            self.fusion3 = nn.Conv2d( d1, Out_c, (1, 3), (1, 1), (0, 1), bias=False)  # from 3 dpth branch to one
         else:
             self.fusion3 = nn.Sequential(
 
-                nn.Conv2d(512, Out_c, (1, 3), (1, 1), (0, 1), bias=False),  # 2*64
+                nn.Conv2d( d1, Out_c, (1, 3), (1, 1), (0, 1), bias=False),  # 2*64
                 # nn.BatchNorm2d(1),
                 nn.Softmax()
             )
@@ -242,7 +247,7 @@ class _2layerFusionNets_(nn.Module):
         self.UnetBack_flag = UnetBack_flag
 
         if UnetBack_flag == True:
-            unetf = 100
+            unetf = Backbone_u_d
             self.Unet_back = _BackBoneUnet(output_nc=unetf, use_dropout=True)
             self.pixencoding = baseM.conv_keep_all(unetf, Pixwise_c, k=(1, 1), s=(1, 1), p=(0, 0), resnet=False,
                                                    final=True)
@@ -254,7 +259,7 @@ class _2layerFusionNets_(nn.Module):
             self.backbone_e = _BackBonelayer()
 
         backboneDepth = self.backbone.depth
-        feature = 32
+        feature = CEnet_f
         self.side_branch1 = _2LayerScale1(backboneDepth, feature)
 
         self.side_branch2 = _2LayerScale2(backboneDepth, feature)
@@ -263,9 +268,9 @@ class _2layerFusionNets_(nn.Module):
 
         self.side_branch2e = _2LayerScale2(backboneDepth, feature)
         self.side_branch3e = _2LayerScale3(backboneDepth, feature)
-        self.fusion_layer = Fusion(classfy)
-        self.fusion_layer_exist = Fusion(classfy)  # an additional fusion layer for exv
-        self.low_level_encoding = nn.Conv2d(512, Out_c, (1, 3), (1, 1), (0, 1), bias=False)
+        self.fusion_layer = Fusion(classfy,self.side_branch1.depth,self.side_branch2.depth,self.side_branch3.depth,Fusion_times)
+        self.fusion_layer_exist = Fusion(classfy,self.side_branch1e.depth,self.side_branch2e.depth,self.side_branch3e.depth,Fusion_times)  # an additional fusion layer for exv
+        self.low_level_encoding = nn.Conv2d(self.side_branch1.depth, Out_c, (1, 3), (1, 1), (0, 1), bias=False)
 
     # def fuse_forward(self,side_out1,side_out2,side_out3):
     def upsample_path(self, side_out_low):

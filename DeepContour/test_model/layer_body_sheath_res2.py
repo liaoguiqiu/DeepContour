@@ -9,26 +9,39 @@ nz = int( arg_parse.opt.nz)
 ngf = int( arg_parse.opt.ngf)
 ndf = int( arg_parse.opt.ndf)
 nc = 1
-basic_feature=12
+# basic_feature=12
+Drop_out =False
 
+
+def build_conv_block(indepth, outdepth, k, s, p, final=False):
+    if final == False:
+        module = nn.Sequential(
+            # nn.ReflectionPad2d((p[1],p[1],p[0],p[0])),
+            # nn.Conv2d(indepth, outdepth,k, s, (0,0), bias=False),
+            nn.Conv2d(indepth, outdepth, k, s, p, bias=False),
+
+            nn.BatchNorm2d(outdepth),
+            # nn.GroupNorm(4*int(outdepth/basic_feature),outdepth),
+
+            nn.LeakyReLU(0.1, inplace=True),
+            # nn.Dropout(0.1)
+        )
+        if Drop_out == True:
+            module= torch.nn.Sequential(module,nn.Dropout(0.5))
+    else:
+        module = nn.Sequential(
+            # nn.ReflectionPad2d((p[1],p[1],p[0],p[0])),
+            # nn.Conv2d(indepth, outdepth,k, s, (0,0), bias=False),
+            nn.Conv2d(indepth, outdepth, k, s, p, bias=False),
+            # nn.Tanh()
+            # nn.LeakyReLU(0.1, inplace=True)
+        )
+    return module
 class conv_keep_W(nn.Module):
     def __init__ (self, indepth,outdepth,k=(4,5),s=(2,1),p=(1,2)):
         super(conv_keep_W, self).__init__()
-        self.conv_block = self.build_conv_block(indepth,outdepth,k,s,p)
-    def build_conv_block(self, indepth,outdepth,k,s,p):
-        module = nn.Sequential(
-    # relection padding padding_left , \text{padding\_right}padding_right , \text{padding\_top}padding_top , \text{padding\_bottom}padding_bottom 
-            #nn.ReflectionPad2d((p[1],p[1],p[0],p[0])), 
-            #nn.Conv2d(indepth, outdepth,k, s, (0,0), bias=False),  
-            nn.Conv2d(indepth, outdepth,k, s, p, bias=False),          
-            
-            nn.BatchNorm2d(outdepth),
-            #nn.GroupNorm(8*int(outdepth/basic_feature),outdepth),
+        self.conv_block =  build_conv_block(indepth,outdepth,k,s,p)
 
-            nn.LeakyReLU(0.1,inplace=False) # after I add Iddentity afre this the inplace should be false, 
-            )                                # next time I should  use identity before the relu layer
-
-        return module
     def forward(self, x):
         #"""Forward function (with skip connections)"""
         out =  self.conv_block(x)  # add skip connections
@@ -47,20 +60,8 @@ class conv_keep_W(nn.Module):
 class conv_dv_2(nn.Module):
     def __init__ (self, indepth,outdepth,k=(6,6),s=(2,2),p=(2,2)):
         super(conv_dv_2, self).__init__()
-        self.conv_block = self.build_conv_block(indepth,outdepth,k,s,p)
+        self.conv_block =  build_conv_block(indepth,outdepth,k,s,p)
 
-    def build_conv_block(self, indepth,outdepth,k,s,p):
-        module = nn.Sequential(
-             #nn.ReflectionPad2d((p[1],p[1],p[0],p[0])),             
-             #nn.Conv2d(indepth, outdepth,k, s,(0,0), bias=False), 
-             nn.Conv2d(indepth, outdepth,k, s,p, bias=False),          
-             
-             nn.BatchNorm2d(outdepth),
-             #nn.GroupNorm(8*int(outdepth/basic_feature),outdepth),
-
-             nn.LeakyReLU(0.1,inplace=False)
-             )
-        return module
  
 
     def forward(self, x):
@@ -78,28 +79,9 @@ class conv_dv_2(nn.Module):
 class conv_keep_all(nn.Module):
     def __init__ (self, indepth,outdepth,k=(3,3),s=(1,1),p=(1,1),resnet=False,final=False):
         super(conv_keep_all, self).__init__()
-        self.conv_block = self.build_conv_block(indepth,outdepth,k,s,p,final)
+        self.conv_block =  build_conv_block(indepth,outdepth,k,s,p,final)
         self.resnet = resnet
-    def build_conv_block(self, indepth,outdepth,k,s,p,final):
-        if final == False:
-            module = nn.Sequential(
-                 #nn.ReflectionPad2d((p[1],p[1],p[0],p[0])), 
-                 #nn.Conv2d(indepth, outdepth,k, s, (0,0), bias=False),          
-                 nn.Conv2d(indepth, outdepth,k, s,p, bias=False),          
 
-                 nn.InstanceNorm2d(outdepth),
-                 #nn.GroupNorm(4*int(outdepth/basic_feature),outdepth),
-
-                 nn.LeakyReLU(0.1,inplace=True)
-                 )
-        else:
-            module = nn.Sequential(
-                 #nn.ReflectionPad2d((p[1],p[1],p[0],p[0])), 
-                 #nn.Conv2d(indepth, outdepth,k, s, (0,0), bias=False),          
-                 nn.Conv2d(indepth, outdepth,k, s,p, bias=False), 
-                 #nn.Tanh()
-                 )
-        return module
  
     def forward(self, x):
         #"""Forward function (with skip connections)"""
