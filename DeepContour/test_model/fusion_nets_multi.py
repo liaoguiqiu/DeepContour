@@ -20,8 +20,8 @@ Input_c = 3  # the gray is converted into 3 channnels image
 Pixwise_c = Out_c  # Using onehot encoding, the out channel is equal to layer
 Backbone_u_d = 100
 Backbone_f = 8
-CEnet_f = 32
-Fusion_times = 1
+CEnet_f = 8
+Fusion_times = 3
 
 class _BackBoneUnet(nn.Module):
     def __init__(self, input_nc=3, output_nc=256, num_downs=8, ngf=32, norm_layer=nn.BatchNorm2d, use_dropout=False):
