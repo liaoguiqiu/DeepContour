@@ -9,7 +9,7 @@ nz = int( arg_parse.opt.nz)
 ngf = int( arg_parse.opt.ngf)
 ndf = int( arg_parse.opt.ndf)
 nc = 1
-basic_feature=12
+# basic_feature=12
 Drop_out =False
 
 
