@@ -17,7 +17,7 @@ from databufferExcel import EXCEL_saver
 # expected version 2 instead. Hint: enable anomaly detection to find the operation that failed to compute its gradient,
 # with torch.autograd.set_detect_anomaly(True).
 from working_dir_root import Dataset_root,Output_root
-
+import numpy as np
 class Pix2LineModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
 
@@ -169,7 +169,7 @@ class Pix2LineModel(BaseModel):
             self.optimizers.append(self.optimizer_G)
             # self.optimizers.append(self.optimizer_E)
             self.optimizers.append(self.optimizer_D)
-        self.validation_init()
+        # self.validation_init()
         self.bw_cnt =0
         self.displayloss1=0
         self.displayloss2=0
@@ -181,21 +181,21 @@ class Pix2LineModel(BaseModel):
         self.loss_G = torch.tensor(0,dtype=torch.float)
         self.lossEa = torch.tensor(0,dtype=torch.float)
 
-        self.metrics_saver = EXCEL_saver(8) # 8 values
+        self.metrics_saver = EXCEL_saver(10) # 8 values
         self.switcher = 0  # used to switch gradient between different part of the nets
         self.swither_G = 0 # used to optimize the back bone or not
 
-    def validation_init(self):
-        self.L1 = 0
-        self.L2 = 0
-        self.J1 = 0
-        self.J2 = 0
-        self.J3 = 0
-
-        self.D1 = 0
-        self.D2 = 0
-        self.D3 = 0
-        self.validation_cnt =0
+    # def validation_init(self):
+    #     self.L1 = 0
+    #     self.L2 = 0
+    #     self.J1 = 0
+    #     self.J2 = 0
+    #     self.J3 = 0
+    #
+    #     self.D1 = 0
+    #     self.D2 = 0
+    #     self.D3 = 0
+    #     self.validation_cnt =0
     def error_calculation(self): 
         #average Jaccard index J
         def cal_J(true,predict):
@@ -226,12 +226,36 @@ class Pix2LineModel(BaseModel):
             return x
         self.set_requires_grad(self.netG, False)  # D requires no gradients when optimizing G
 
-        self.validation_cnt += 1
+        # self.validation_cnt += 1
+        if self.out_pathes is not None:
+            out_pathes_all = self.out_pathes[0]
+            out_exv_all = self.out_exis_vs[0]
+            out_pathes_real = self.real_pathes
+            # out_pathes_all = self.real_pathes.cpu().detach().numpy() * 0
+            out_exv_all = self.real_exv
+            out_pathes = out_pathes_all[0]
+            real_pathes = self.real_pathes[0]
+            if Reverse_existence == True:
+                out_exv_all = 1 - out_exv_all
+            out_exv_all = out_exv_all > 0.5
+            out_exv = out_exv_all[0]
+            # merge two exist
+            for i in range(0, len(out_pathes), 2):
+                out_exv[i] = out_exv[i] * out_exv[i + 1]
+                out_exv[i + 1] = out_exv[i] * out_exv[i + 1]
+
+            for i in range(len(out_pathes)):
+                out_pathes[i] = out_pathes[i] * out_exv[i] + (~out_exv[i])
+            # self.real_pathes = pathes
+            # self.real_exv = exis_v
+        else:
+            out_pathes =rendering.onehot2layers(self. real_B_one_hot)
+
 
         #loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
         #self.error = 1.0*loss[0] 
         #out_pathes[fusion_predcition][batch 0, contour index,:]
-        cutedge = 1
+        # cutedge = 1
         # if Reverse_existence == True:
         #     exvP =    self.out_exis_v0 <0.7
         #     exvT =    self.real_exv<0.7
@@ -240,35 +264,51 @@ class Pix2LineModel(BaseModel):
         #     exvT = self.real_exv > 0.7
         # self.out_pathes[0] = self.out_pathes[0] * exvP + (~exvP) # reverse the mask
         # self.real_pathes = self.real_pathes * exvT + (~exvT)
-        self.L1 = cal_L(self.out_pathes[0][0,0,cutedge:Resample_size-cutedge],self.real_pathes[0,0,cutedge:Resample_size-cutedge]) * Resample_size
-        self.L2 = cal_L(self.out_pathes[0][0,1,cutedge:Resample_size-cutedge],self.real_pathes[0,1,cutedge:Resample_size-cutedge]) * Resample_size
+        self.L = np.zeros( len(out_pathes))
+        for i in range(len(out_pathes)):
+            self.L[i] = cal_L(out_pathes[i],real_pathes[i]) * Resample_size
+            print(" L " + str(i)+'=' +str(self.L[i]))
+        # self.L1 = cal_L(self.out_pathes[0][0,0,cutedge:Resample_size-cutedge],self.real_pathes[0,0,cutedge:Resample_size-cutedge]) * Resample_size
+        # self.L2 = cal_L(self.out_pathes[0][0,1,cutedge:Resample_size-cutedge],self.real_pathes[0,1,cutedge:Resample_size-cutedge]) * Resample_size
 
-        print (" L1 =  "  + str(self.L1))
-        print (" L2 =  "  + str(self.L2))
+        # print (" L1 =  "  + str(self.L1))
+        # print (" L2 =  "  + str(self.L2))
 
         # calculate J (IOU insetion portion)
-        real_b_hot = rendering.layers_visualized_OneHot_encodeing  (self.real_pathes,Resample_size) 
-        fake_b_hot = self.fake_B_1_hot 
-        # this is the format of hot map
-        #out  = torch.zeros([bz,3, H,W], dtype=torch.float)
-        self.J1 = cal_J(real_b_hot[0,0,:,cutedge:Resample_size-cutedge],fake_b_hot[0,0,:,cutedge:Resample_size-cutedge])
-        self.J2 = cal_J(real_b_hot[0,1,:,cutedge:Resample_size-cutedge],fake_b_hot[0,1,:,cutedge:Resample_size-cutedge])
-        self.J3 = cal_J(real_b_hot[0,2,:,cutedge:Resample_size-cutedge],fake_b_hot[0,2,:,cutedge:Resample_size-cutedge])
-        print (" J1 =  "  + str(self.J1 ))
-        print (" J2 =  "  + str(self.J2 ))
-        print (" J3 =  "  + str(self.J3 ))
+        real_b_hot = self.real_B_one_hot[0]
+        fake_b_hot = self.fake_B_1_hot[0]
+        self.J = np.zeros( len(real_b_hot))
+        for i in range(len(real_b_hot)):
+            self.J[i] = cal_J(real_b_hot[i],  fake_b_hot[i])
+            print(" J " + str(i) + '=' + str(self.L[i]))
 
+        self.D = np.zeros( len(real_b_hot))
+        for i in range(len(real_b_hot)):
+            self.D[i] = cal_D(real_b_hot[i], fake_b_hot[i])
+            print(" D " + str(i) + '=' + str(self.L[i]))
+        # # this is the format of hot map
+        # #out  = torch.zeros([bz,3, H,W], dtype=torch.float)
+        # self.J1 = cal_J(real_b_hot[0,0,:,cutedge:Resample_size-cutedge],fake_b_hot[0,0,:,cutedge:Resample_size-cutedge])
+        # self.J2 = cal_J(real_b_hot[0,1,:,cutedge:Resample_size-cutedge],fake_b_hot[0,1,:,cutedge:Resample_size-cutedge])
+        # self.J3 = cal_J(real_b_hot[0,2,:,cutedge:Resample_size-cutedge],fake_b_hot[0,2,:,cutedge:Resample_size-cutedge])
+        # print (" J1 =  "  + str(self.J1 ))
+        # print (" J2 =  "  + str(self.J2 ))
+        # print (" J3 =  "  + str(self.J3 ))
+        #
+        #
+        #
+        # self.D1 = cal_D(real_b_hot[0,0,:,cutedge:Resample_size-cutedge],fake_b_hot[0,0,:,cutedge:Resample_size-cutedge])
+        # self.D2 = cal_D(real_b_hot[0,1,:,cutedge:Resample_size-cutedge],fake_b_hot[0,1,:,cutedge:Resample_size-cutedge])
+        # self.D3 = cal_D(real_b_hot[0,2,:,cutedge:Resample_size-cutedge],fake_b_hot[0,2,:,cutedge:Resample_size-cutedge])
+        # print (" D1 =  "  + str(self.D1 ))
+        # print (" D2 =  "  + str(self.D2 ))
+        # print (" D3 =  "  + str(self.D3 ))
+        vector = np.append(self.L,self.J)
+        vector = np.append(vector,self.D)
 
-
-        self.D1 = cal_D(real_b_hot[0,0,:,cutedge:Resample_size-cutedge],fake_b_hot[0,0,:,cutedge:Resample_size-cutedge])
-        self.D2 = cal_D(real_b_hot[0,1,:,cutedge:Resample_size-cutedge],fake_b_hot[0,1,:,cutedge:Resample_size-cutedge])
-        self.D3 = cal_D(real_b_hot[0,2,:,cutedge:Resample_size-cutedge],fake_b_hot[0,2,:,cutedge:Resample_size-cutedge])
-        print (" D1 =  "  + str(self.D1 ))
-        print (" D2 =  "  + str(self.D2 ))
-        print (" D3 =  "  + str(self.D3 ))
-        vector = [self.L1,self.L2,self.J1, self.J2,self.J3,self.D1,self.D2,self.D3]
-        vector = torch.stack(vector)
-        vector= vector.cpu().detach().numpy()
+        # vector = [self.L1,self.L2,self.J1, self.J2,self.J3,self.D1,self.D2,self.D3]
+        # vector = torch.stack(vector)
+        # vector= vector.cpu().detach().numpy()
         save_dir = Output_root + "1Excel/"
         self.metrics_saver.append_save(vector,save_dir)
 
@@ -294,8 +334,8 @@ class Pix2LineModel(BaseModel):
         # self.real_B=rendering.layers_visualized_integer_encodeing(pathes,Resample_size) # this way render it as semantic map
         # self.real_B=rendering.boundary_visualized_integer_encodeing(pathes,Resample_size) # this is a way to encode it as boundary (very spars)
         self.real_B=rendering.layers_visualized_integer_encodeing_full(pathes,exis_v,Resample_size,Reverse_existence) # this is a way to encode it as boundary (very spars)
-
-        self.real_B_one_hot=rendering.layers_visualized_OneHot_encodeing(pathes,Resample_size)
+        self.real_B_one_hot = rendering.integer2onehot(self.real_B)
+        # self.real_B_one_hot=rendering.layers_visualized_OneHot_encodeing(pathes,Resample_size)
 
         # LGQ add real path as creterioa for G
         self.real_pathes = pathes
