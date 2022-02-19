@@ -313,7 +313,7 @@ def onehot2integer(onehot):
 
 
 def onehot2layers(onehot):
-    _, H, W = onehot.size()
+    C, H, W = onehot.size()
     layer1 = np.zeros(W)
     layer2 = np.ones(W) * (H - 1)
     for i in range(W):  # search the sheath contour  # second channel is the sheath
@@ -326,21 +326,29 @@ def onehot2layers(onehot):
             if (onehot[2, j, i] < 0.5 and onehot[2, j + 2, i] > 0.5):
                 layer2[i] = j
                 break
-
-    # for i in range(W): # search the sheath contour  # second channel is the sheath
-    #    for j in range(H-5):
-    #        if(onehot[1,j,i]>0.5 and onehot[1,j+2,i ]<0.5 and (onehot[0,j+2,i ]>0.5 or onehot[2,j+2,i ]>0.5 )):
-    #            layer1[i]=j
-    #            break
-    # for i in range(W): # search the tissue contour
-    #    for j in range(H-5):
-    #        if(onehot[2,j,i ]<0.5 and onehot[2,j+2,i ]>0.5 and (onehot[0, j ,i ]>0.5 or onehot[1,j,i ]>0.5 )):
-    #            layer2[i]=j
-    #            break
-
     return layer1, layer2
 
+def onehot2layers_cut_bound(onehot): # cut the up and lower boundarys
+    C, H, W = onehot.size()
+    layers= torch.ones([2*(C-1), W], dtype=torch.long)*(H - 1)
+    layers =layers.cuda()
+    # layer2 = np.ones(W) * (H - 1)
+    for k in range(0,C-1):
+        for i in range(W):  # search the sheath contour  # second channel is the sheath
+            for j in range(H - 5): # ignore the first background layer
+                if (onehot[k+1, j, i] < 0.5 and onehot[k+1, j + 2, i] > 0.5):
+                    layers[2*k,i] = j
+                    break
+            for j in range(layers[2*k,i],H - 5):  # ignore the first background layer
+                if (onehot[k + 1, j, i] > 0.5 and onehot[k + 1, j + 2, i] < 0.5):
+                    layers[2 * k+1, i] = j
+                    break
 
+    # out = out.type(torch.FloatTensor)
+    layers=layers.type(torch.FloatTensor)/(H-1)
+    layers =layers.cuda()
+
+    return layers
 def pytorch_test():
     H = 300
     I0 = 400

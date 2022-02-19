@@ -249,9 +249,10 @@ class Pix2LineModel(BaseModel):
             # self.real_pathes = pathes
             # self.real_exv = exis_v
         else:
-            out_pathes =rendering.onehot2layers(self. real_B_one_hot)
+            out_pathes =rendering.onehot2layers_cut_bound(self. fake_B_1_hot[0])
 
-
+        # out_pathes = rendering.onehot2layers_cut_bound(self.fake_B_1_hot[0])
+        # self.out_pathes[0][0] = out_pathes
         #loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
         #self.error = 1.0*loss[0] 
         #out_pathes[fusion_predcition][batch 0, contour index,:]
@@ -280,12 +281,12 @@ class Pix2LineModel(BaseModel):
         self.J = np.zeros( len(real_b_hot))
         for i in range(len(real_b_hot)):
             self.J[i] = cal_J(real_b_hot[i],  fake_b_hot[i])
-            print(" J " + str(i) + '=' + str(self.L[i]))
+            print(" J " + str(i) + '=' + str(self.J[i]))
 
         self.D = np.zeros( len(real_b_hot))
         for i in range(len(real_b_hot)):
             self.D[i] = cal_D(real_b_hot[i], fake_b_hot[i])
-            print(" D " + str(i) + '=' + str(self.L[i]))
+            print(" D " + str(i) + '=' + str(self.D[i]))
         # # this is the format of hot map
         # #out  = torch.zeros([bz,3, H,W], dtype=torch.float)
         # self.J1 = cal_J(real_b_hot[0,0,:,cutedge:Resample_size-cutedge],fake_b_hot[0,0,:,cutedge:Resample_size-cutedge])
