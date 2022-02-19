@@ -12,7 +12,7 @@ from dataTool import generator_contour_ivus
 
 from dataTool.generator_contour import Generator_Contour, Save_Contour_pkl, Communicate
 from dataTool.generator_contour_ivus import Generator_Contour_sheath
-from dataset_ivus import myDataloader, Batch_size, Resample_size, Path_length,max_presence
+from dataset_ivus import myDataloader, Batch_size, Resample_size, Path_length,max_presence,Reverse_existence
 
 import os
 # from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
@@ -21,7 +21,7 @@ from working_dir_root import Dataset_root, Output_root
 from deploy.basic_trans import Basic_oper
 from scipy import signal
 
-def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_save_id):
+def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_save_id,Model_key):
     gray2 = realA[0, 0, :, :].cpu().detach().numpy() * 104 + 104
     show1 = gray2.astype(float)
     # path2 = mydata_loader.input_path[0,:]
@@ -32,17 +32,19 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
 
     oneHot = CE_Nets.fake_B_1_hot[0, :, :, :].cpu().detach().numpy()
 
-    hot = numpy.zeros((oneHot.shape[1], oneHot.shape[2], 3))
+    hot = numpy.ones((oneHot.shape[1], oneHot.shape[2], 3))
+    # change the background to no back ground mask
+    #dilute the mask
     hot[:, :, 0] = oneHot[0, :, :]
-    hot[:, :, 1] = oneHot[1, :, :]
-    hot[:, :, 2] = oneHot[2, :, :]
+    hot[:, :, 1] = oneHot[1, :, :]*1.1+ oneHot[0, :, :]+ oneHot[2, :, :]*0.5
+    hot[:, :, 2] = oneHot[2, :, :]*1.1+oneHot[0, :, :] + oneHot[1, :, :]*0.5
 
     oneHot_real = CE_Nets.real_B_one_hot[0, :, :, :].cpu().detach().numpy()
 
-    hot_real = numpy.zeros((oneHot.shape[1], oneHot.shape[2], 3))
+    hot_real = numpy.ones((oneHot.shape[1], oneHot.shape[2], 3))
     hot_real[:, :, 0] = oneHot_real[0, :, :]
-    hot_real[:, :, 1] = oneHot_real[1, :, :]
-    hot_real[:, :, 2] = oneHot_real[2, :, :]
+    hot_real[:, :, 1] = oneHot_real[1, :, :]*1.1+oneHot_real[0, :, :] + oneHot_real[2, :, :]*0.5
+    hot_real[:, :, 2] = oneHot_real[2, :, :]*1.1+oneHot_real[0, :, :]+oneHot_real[1, :, :]*0.5
 
     # saveout  = CE_Nets.fake_B # display encoding tranform
     saveout = CE_Nets.pix_wise  # middel feature pix encoding
@@ -64,7 +66,7 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
 
     cv2.imshow('Original circular', circ_original.astype(numpy.uint8))
     if Save_img_flag == True:
-        this_save_dir = Output_root + "1out_img/original_circ/"
+        this_save_dir = Output_root + "1out_img/"+Model_key+"/original_circ/"
         if not os.path.exists(this_save_dir):
             os.makedirs(this_save_dir)
         cv2.imwrite(this_save_dir +
@@ -73,7 +75,7 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
 
     cv2.imshow('Deeplearning one', show4.astype(numpy.uint8))
     if Save_img_flag == True:
-        this_save_dir = Output_root + "1out_img/Ori_seg_rec/"
+        this_save_dir = Output_root + "1out_img/"+Model_key+"/Ori_seg_rec/"
         if not os.path.exists(this_save_dir):
             os.makedirs(this_save_dir)
         cv2.imwrite(this_save_dir +
@@ -83,7 +85,7 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
     show5 = real_label[0, 0, :, :].cpu().detach().numpy() * 255
     cv2.imshow('real', show5.astype(numpy.uint8))
     if Save_img_flag == True:
-        this_save_dir = Output_root + "1out_img/ground_rec/"
+        this_save_dir = Output_root + "1out_img/"+Model_key+"/ground_rec/"
         if not os.path.exists(this_save_dir):
             os.makedirs(this_save_dir)
         cv2.imwrite(this_save_dir +
@@ -94,11 +96,8 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
     # display_prediction(mydata_loader,  CE_Nets.out_pathes3,hot)
     # display_prediction(read_id,mydata_loader,  CE_Nets.out_pathes0,hot,hot_real)
 
-    if ( CE_Nets.out_pathes  is None):
-        CE_Nets.out_pathes = CE_Nets.real_pathes
-        display_prediction(read_id, mydata_loader, CE_Nets.out_pathes, hot, hot_real, Save_img_flag)
-    else:
-        display_prediction(read_id, mydata_loader, CE_Nets.out_pathes[0], hot, hot_real, Save_img_flag)
+
+    display_prediction(read_id, mydata_loader, CE_Nets , hot, hot_real, Save_img_flag,Model_key)
     if (CE_Nets.out_exis_v0 is not None):
         display_prediction_exis(read_id, mydata_loader, CE_Nets.out_exis_v0)
     return
@@ -183,7 +182,7 @@ def display_prediction_exis(read_id, mydata_loader, save_out):  # display in coo
     cv2.imshow('Deeplearning exitence 2', show4.astype(numpy.uint8))
 
 
-def display_prediction(read_id, mydata_loader, save_out, hot, hot_real,Save_img_flag):  # display in coordinates form
+def display_prediction(read_id, mydata_loader, CE_Nets , hot, hot_real,Save_img_flag,Model_key):  # display in coordinates form
     gray2 = (mydata_loader.input_image[0, 0, :, :] * 104) + 104
     show1 = gray2.astype(float)
     path2 = mydata_loader.input_path[0, :]
@@ -196,45 +195,63 @@ def display_prediction(read_id, mydata_loader, save_out, hot, hot_real,Save_img_
         color1 = draw_coordinates_color(color1, path2[i], int(i/max_presence)) # draw duplicate the same color
 
     show2 = gray2.astype(float)
-    save_out = save_out.cpu().detach().numpy()
-
-    save_out = save_out[0, :] * (Resample_size)
-    # save_out  = signal.resample(save_out, Resample_size)
-    save_out = numpy.clip(save_out, 0, Resample_size - 1)
+    if CE_Nets.out_pathes is not None:
+        out_pathes_all= CE_Nets.out_pathes[0].cpu().detach().numpy()
+        out_exv_all =  CE_Nets.out_exis_vs[0].cpu().detach().numpy()
+        # self.real_pathes = pathes
+        # self.real_exv = exis_v
+    else:
+        out_pathes_all = CE_Nets.real_pathes.cpu().detach().numpy()*0
+        out_exv_all = CE_Nets.real_exv.cpu().detach().numpy()*0
+    out_pathes = out_pathes_all[0] * (Resample_size)
+    if Reverse_existence ==True:
+        out_exv_all = 1-out_exv_all
+    out_exv_all = out_exv_all>0.5
+    out_exv = out_exv_all[0]
+    # CE_Nets.out_pathes  = signal.resample(CE_Nets.out_pathes, Resample_size)
+    out_pathes = numpy.clip( out_pathes, 0, Resample_size - 1)
     color = numpy.zeros((show2.shape[0], show2.shape[1], 3))
     color[:, :, 0] = color[:, :, 1] = color[:, :, 2] = show2
-    colorhot_real = (color + 50) * hot_real
-    sheath_real = signal.resample(path2[0], Resample_size)
-    tissue_real = signal.resample(path2[1], Resample_size)
-    colorhot_real = draw_coordinates_color_s(colorhot_real, sheath_real, tissue_real)
+    colorhot_real = (color  ) * hot_real
+    # sheath_real = signal.resample(path2[0], Resample_size)
+    # tissue_real = signal.resample(path2[1], Resample_size)
+    # colorhot_real = draw_coordinates_color_s(colorhot_real, sheath_real, tissue_real)
     circular_color_real = Basic_oper.tranfer_frome_rec2cir2(colorhot_real)
     cv2.imshow('color real cir', circular_color_real.astype(numpy.uint8))
     if Save_img_flag == True:
-        this_save_dir = Output_root + "1out_img/ground_circ/"
+        this_save_dir = Output_root + "1out_img/"+Model_key+"/ground_circ/"
         if not os.path.exists(this_save_dir):
             os.makedirs(this_save_dir)
         cv2.imwrite(this_save_dir +
                     str(mydata_loader.save_id) + ".jpg", circular_color_real)
 
-    for i in range(len(save_out)):
-        this_coordinate = signal.resample(save_out[i], Resample_size)
+
+    for i in range(0,len( out_pathes),2):
+        out_exv[i] =  out_exv[i] *  out_exv[i+1]
+        out_exv[i+1] =  out_exv[i] *  out_exv[i+1]
+
+    for i in range(len( out_pathes)):
+        out_pathes[i] = out_pathes[i] * out_exv[i]
+        this_coordinate = signal.resample( out_pathes[i], Resample_size)
         color = draw_coordinates_color(color, this_coordinate, int(i/max_presence)) # same color for duplication
-    colorhot = (color + 50) * hot
+    colorhot = (color ) * hot
+    colorhot  =numpy.clip(colorhot,1,254)
+    # sheath = signal.resample( out_pathes[0], Resample_size)
+    # tissue = signal.resample( out_pathes[1], Resample_size)
 
-    sheath = signal.resample(save_out[0], Resample_size)
-    tissue = signal.resample(save_out[1], Resample_size)
-
-    color = draw_coordinates_color_s(color, sheath, tissue)
-    color2 = draw_coordinates_color_s(colorhot, sheath, tissue)
-
-    color_real = draw_coordinates_color_s(colorhot_real, sheath, tissue)
-
+    color2 = colorhot
+    # this is just to draw contact quickly
+    # color = draw_coordinates_color_s(color, sheath, tissue)
+    # color2 = draw_coordinates_color_s(colorhot, sheath, tissue)
+    #
+    # color_real = draw_coordinates_color_s(colorhot_real, sheath, tissue)
+    color_real = colorhot_real
     # show3 = numpy.append(show1,show2,axis=1) # cascade
     show4 = numpy.append(color1, color, axis=1)  # cascade
     circular1 = Basic_oper.tranfer_frome_rec2cir2(color)
     circular2 = Basic_oper.tranfer_frome_rec2cir2(color2)
     if Save_img_flag == True:
-        this_save_dir = Output_root + "1out_img/Ori_seg_rec_line/"
+        this_save_dir = Output_root + "1out_img/"+Model_key+"/Ori_seg_rec_line/"
         if not os.path.exists(this_save_dir):
             os.makedirs(this_save_dir)
         cv2.imwrite(this_save_dir +
@@ -245,7 +262,7 @@ def display_prediction(read_id, mydata_loader, save_out, hot, hot_real,Save_img_
     cv2.imshow('Deeplearning circ', circular1.astype(numpy.uint8))
     cv2.imshow('Deeplearning circ2', circular2.astype(numpy.uint8))
     if Save_img_flag == True:
-        this_save_dir = Output_root + "1out_img/Ori_seg_rec_2/"
+        this_save_dir = Output_root + "1out_img/"+Model_key+"/Ori_seg_rec_2/"
         if not os.path.exists(this_save_dir):
             os.makedirs(this_save_dir)
         cv2.imwrite(this_save_dir +

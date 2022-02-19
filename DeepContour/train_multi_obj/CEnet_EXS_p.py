@@ -35,13 +35,13 @@ OLG_flag = False  # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
 validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not
-Save_img_flag = False # this flag determine if the reuslt will be save  in to a foler
+Save_img_flag = True # this flag determine if the reuslt will be save  in to a foler
 Continue_flag = True  # if not true, it start from scratch again
 Federated_learning_flag = False # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
 Using_fed_model_flag = False # True: Fed model, false: local model
 loadmodel_index = '_3.pth'
 
-
+Model_key = "CEnet"
 
 
 
@@ -53,7 +53,7 @@ if Visdom_flag == True:
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 
 # pth_save_dir = "C:/Workdir/Develop/atlas_collab/out/sheathCGAN_coordinates3/"
-pth_save_dir = Output_root + "CEnet_trained/"
+pth_save_dir = Output_root + Model_key +"_trained/"
 if Federated_learning_flag == True:
     cloud_interaction = Local2Cloud(pth_save_dir)
 
@@ -283,7 +283,7 @@ while(1): # main infinite loop
             #        '%s/real_samples.png' % opt.outf,
             #        normalize=True)
 
-            train_display(CE_Nets, realA, mydata_loader, Save_img_flag, read_id, infinite_save_id)
+            train_display(CE_Nets, realA, mydata_loader, Save_img_flag, read_id, infinite_save_id,Model_key)
 
             infinite_save_id += 1 
             if cv2.waitKey(1) & 0xFF == ord('q'):
