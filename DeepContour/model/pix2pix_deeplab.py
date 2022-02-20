@@ -216,7 +216,7 @@ class Pix2Pix_deeplab_Model(BaseModel):
         self.real_B = rendering.layers_visualized_integer_encodeing_full(pathes, exis_v, Resample_size,
                                                                          Reverse_existence)  # this is a way to encode it as boundary (very spars)
 
-        self.real_B_one_hot = rendering.layers_visualized_OneHot_encodeing(pathes, Resample_size)
+        self.real_B_one_hot = rendering.integer2onehot(self.real_B )
 
         # LGQ add real path as creterioa for G
         self.real_pathes = pathes

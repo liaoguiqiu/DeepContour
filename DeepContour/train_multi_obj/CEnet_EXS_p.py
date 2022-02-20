@@ -26,6 +26,7 @@ import os
 #from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 #switch to another data loader for the IVUS, whih will have both the position and existence vector
 from working_dir_root import Dataset_root,Output_root
+from validation import Validation
 from deploy.basic_trans import Basic_oper
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -33,12 +34,13 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 Visdom_flag  = False  # the flag of using the visdom or not
 OLG_flag = False  # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
-validation_flag = True  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
+validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not
 Save_img_flag = False # this flag determine if the reuslt will be save  in to a foler
 Continue_flag = True  # if not true, it start from scratch again
 Federated_learning_flag = False # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
 Using_fed_model_flag = False # True: Fed model, false: local model
+validator = Validation()
 loadmodel_index = '_3.pth'
 
 Model_key = "CEnet"
@@ -241,7 +243,8 @@ while(1): # main infinite loop
 
         if validation_flag ==True:
             CE_Nets.forward(validation_flag)
-            CE_Nets.error_calculation()
+            # CE_Nets.error_calculation()
+            validator.error_calculation(CE_Nets,Model_key)
         else:
             CE_Nets.optimize_parameters(validation_flag)   # calculate loss functions, get gradients, update network weights
         #--------------input, Forward network,  and compare output with the label - end------------------#

@@ -21,7 +21,7 @@ from working_dir_root import Dataset_root, Output_root
 from deploy.basic_trans import Basic_oper
 from scipy import signal
 
-def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_save_id,Model_key):
+def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_id,Model_key):
     gray2 = realA[0, 0, :, :].cpu().detach().numpy() * 104 + 104
     show1 = gray2.astype(float)
     # path2 = mydata_loader.input_path[0,:]
@@ -30,7 +30,7 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
     color1 = numpy.zeros((show1.shape[0], show1.shape[1], 3))
     color1[:, :, 0] = color1[:, :, 1] = color1[:, :, 2] = show1[:, :]
 
-    oneHot = CE_Nets.fake_B_1_hot[0, :, :, :].cpu().detach().numpy()
+    oneHot = MODEL.fake_B_1_hot[0, :, :, :].cpu().detach().numpy()
 
     hot = numpy.ones((oneHot.shape[1], oneHot.shape[2], 3))
     # change the background to no back ground mask
@@ -39,18 +39,18 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
     hot[:, :, 1] = oneHot[1, :, :]*1.1+ oneHot[0, :, :]+ oneHot[2, :, :]*0.5
     hot[:, :, 2] = oneHot[2, :, :]*1.1+oneHot[0, :, :] + oneHot[1, :, :]*0.5
 
-    oneHot_real = CE_Nets.real_B_one_hot[0, :, :, :].cpu().detach().numpy()
+    oneHot_real = MODEL.real_B_one_hot[0, :, :, :].cpu().detach().numpy()
 
     hot_real = numpy.ones((oneHot.shape[1], oneHot.shape[2], 3))
     hot_real[:, :, 0] = oneHot_real[0, :, :]
     hot_real[:, :, 1] = oneHot_real[1, :, :]*1.1+oneHot_real[0, :, :] + oneHot_real[2, :, :]*0.5
     hot_real[:, :, 2] = oneHot_real[2, :, :]*1.1+oneHot_real[0, :, :]+oneHot_real[1, :, :]*0.5
 
-    # saveout  = CE_Nets.fake_B # display encoding tranform
-    saveout = CE_Nets.pix_wise  # middel feature pix encoding
-    # saveout = CE_Nets.fake_B_1_hot  # middel feature pix encoding
+    # saveout  = MODEL.fake_B # display encoding tranform
+    saveout = MODEL.pix_wise  # middel feature pix encoding
+    # saveout = MODEL.fake_B_1_hot  # middel feature pix encoding
 
-    # saveout = rendering.onehot2integer(CE_Nets.real_B_one_hot)
+    # saveout = rendering.onehot2integer(MODEL.real_B_one_hot)
     show2 = saveout[0, :, :, :].cpu().detach().numpy() * 255
 
     color = numpy.zeros((show2.shape[1], show2.shape[2], 3))
@@ -80,7 +80,7 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
             os.makedirs(this_save_dir)
         cv2.imwrite(this_save_dir +
                     str(infinite_save_id) + ".jpg", show4)
-    real_label = CE_Nets.real_B
+    real_label = MODEL.real_B
     real_label = rendering.onehot2integer(real_label)
     show5 = real_label[0, 0, :, :].cpu().detach().numpy() * 255
     cv2.imshow('real', show5.astype(numpy.uint8))
@@ -91,15 +91,15 @@ def train_display(CE_Nets,realA,mydata_loader,Save_img_flag,read_id,infinite_sav
         cv2.imwrite(this_save_dir +
                     str(infinite_save_id) + ".jpg", show5)
 
-    # display_prediction(mydata_loader,  CE_Nets.out_pathes[0],hot)
-    # display_prediction(mydata_loader,  CE_Nets.path_long3,hot)
-    # display_prediction(mydata_loader,  CE_Nets.out_pathes3,hot)
-    # display_prediction(read_id,mydata_loader,  CE_Nets.out_pathes0,hot,hot_real)
+    # display_prediction(mydata_loader,  MODEL.out_pathes[0],hot)
+    # display_prediction(mydata_loader,  MODEL.path_long3,hot)
+    # display_prediction(mydata_loader,  MODEL.out_pathes3,hot)
+    # display_prediction(read_id,mydata_loader,  MODEL.out_pathes0,hot,hot_real)
 
 
-    display_prediction(read_id, mydata_loader, CE_Nets , hot, hot_real, Save_img_flag,Model_key)
-    if (CE_Nets.out_exis_v0 is not None):
-        display_prediction_exis(read_id, mydata_loader, CE_Nets.out_exis_v0)
+    display_prediction(read_id, mydata_loader, MODEL , hot, hot_real, Save_img_flag,Model_key)
+    if (MODEL.out_exis_v0 is not None):
+        display_prediction_exis(read_id, mydata_loader, MODEL.out_exis_v0)
     return
 # 3 functions to drae the results in real time
 def draw_coordinates_color(img1 ,vy ,color):
@@ -182,7 +182,7 @@ def display_prediction_exis(read_id, mydata_loader, save_out):  # display in coo
     cv2.imshow('Deeplearning exitence 2', show4.astype(numpy.uint8))
 
 
-def display_prediction(read_id, mydata_loader, CE_Nets , hot, hot_real,Save_img_flag,Model_key):  # display in coordinates form
+def display_prediction(read_id, mydata_loader, MODEL , hot, hot_real,Save_img_flag,Model_key):  # display in coordinates form
     gray2 = (mydata_loader.input_image[0, 0, :, :] * 104) + 104
     show1 = gray2.astype(float)
     path2 = mydata_loader.input_path[0, :]
@@ -195,20 +195,20 @@ def display_prediction(read_id, mydata_loader, CE_Nets , hot, hot_real,Save_img_
         color1 = draw_coordinates_color(color1, path2[i], int(i/max_presence)) # draw duplicate the same color
 
     show2 = gray2.astype(float)
-    if CE_Nets.out_pathes is not None:
-        out_pathes_all= CE_Nets.out_pathes[0].cpu().detach().numpy()
-        out_exv_all =  CE_Nets.out_exis_vs[0].cpu().detach().numpy()
+    if MODEL.out_pathes is not None:
+        out_pathes_all= MODEL.out_pathes[0].cpu().detach().numpy()
+        out_exv_all =  MODEL.out_exis_vs[0].cpu().detach().numpy()
         # self.real_pathes = pathes
         # self.real_exv = exis_v
     else:
-        out_pathes_all = CE_Nets.real_pathes.cpu().detach().numpy()*0
-        out_exv_all = CE_Nets.real_exv.cpu().detach().numpy()*0
+        out_pathes_all = MODEL.real_pathes.cpu().detach().numpy()*0
+        out_exv_all = MODEL.real_exv.cpu().detach().numpy()*0
     out_pathes = out_pathes_all[0] * (Resample_size)
     if Reverse_existence ==True:
         out_exv_all = 1-out_exv_all
     out_exv_all = out_exv_all>0.5
     out_exv = out_exv_all[0]
-    # CE_Nets.out_pathes  = signal.resample(CE_Nets.out_pathes, Resample_size)
+    # MODEL.out_pathes  = signal.resample(MODEL.out_pathes, Resample_size)
     out_pathes = numpy.clip( out_pathes, 0, Resample_size - 1)
     color = numpy.zeros((show2.shape[0], show2.shape[1], 3))
     color[:, :, 0] = color[:, :, 1] = color[:, :, 2] = show2

@@ -15,6 +15,8 @@ class EXCEL_saver(object):
         self.plots[0,:] = np.arange(num)
         #self.firstflag = False
     def append_save(self,vector,save_dir):
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
         self.plots = np.append(self.plots, [vector], axis=0)
         DF1 = pd.DataFrame(self.plots)
         DF1.to_csv(save_dir+"error_buff.csv")

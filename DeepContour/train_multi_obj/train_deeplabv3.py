@@ -27,6 +27,7 @@ import os
 # switch to another data loader for the IVUS, whih will have both the position and existence vector
 from working_dir_root import Dataset_root, Output_root
 from deploy.basic_trans import Basic_oper
+from validation import Validation
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
@@ -39,9 +40,10 @@ Save_img_flag = False  # this flag determine if the reuslt will be save  in to a
 Continue_flag = True  # if not true, it start from scratch again
 Federated_learning_flag = False  # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
 Using_fed_model_flag = False  # True: Fed model, false: local model
-loadmodel_index = '_2.pth'
+loadmodel_index = '_5.pth'
 Model_key = 'DeeplabV3'
 infinite_save_id = 0  # use this method so that the index of the image will not start from 0 again when switch the folder
+validator = Validation()
 
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
@@ -137,8 +139,8 @@ if Using_fed_model_flag == True:  # reload
 if validation_flag == True:
     Federated_learning_flag = False
 
-if validation_flag == True:
-    MODEL.netG.Unet_back.eval()
+# if validation_flag == True:
+    # MODEL.netG.Unet_back.eval()
 print(MODEL.netD)
 print(MODEL.netG)
 # print(MODEL.netE)
@@ -230,8 +232,9 @@ while (1):  # main infinite loop
         MODEL.set_input(realA,real_pathes,real_exv,inputv)     # unpack data from dataset and apply preprocessing
 
         if validation_flag == True:
-            MODEL.forward(validation_flag)
-            MODEL.error_calculation()
+            MODEL.forward()
+            # MODEL.error_calculation()
+            validator.error_calculation(MODEL, Model_key)
         else:
             MODEL.optimize_parameters()  # calculate loss functions, get gradients, update network weights
         # --------------input, Forward network,  and compare output with the label - end------------------#

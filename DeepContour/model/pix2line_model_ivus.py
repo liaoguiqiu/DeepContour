@@ -196,122 +196,122 @@ class Pix2LineModel(BaseModel):
     #     self.D2 = 0
     #     self.D3 = 0
     #     self.validation_cnt =0
-    def error_calculation(self): 
-        #average Jaccard index J
-        def cal_J(true,predict):
-            AnB = true*predict # assume that the lable are all binary
-            AuB = true+predict
-            AuB=torch.clamp(AuB, 0, 1)
-            s  = 0.0001
-            this_j = (torch.sum(AnB)+s)/(torch.sum(AuB)+s)
-            return this_j
-        # dice cofefficient
-        def cal_D(true,predict): 
-            AB = true*predict # assume that the lable are all binary
-            #AuB = true+predict
-            #AuB=torch.clamp(AuB, 0, 1)
-            s  = 0.0001
-
-            this_d = (2 * torch.sum(AB)+s)/(torch.sum(true) + torch.sum(predict)+s)
-            return this_d
-        def cal_L (true,predct):  # the L1 distance of one contour
-        # calculate error
-            true=torch.clamp(true, 0, 1)
-            predct=torch.clamp(predct, 0, 1)
-
-
-            error = torch.abs(true-predct)
-            l = error.size()
-            x= torch.sum(error)/l[0]
-            return x
-        self.set_requires_grad(self.netG, False)  # D requires no gradients when optimizing G
-
-        # self.validation_cnt += 1
-        if self.out_pathes is not None:
-            out_pathes_all = self.out_pathes[0]
-            out_exv_all = self.out_exis_vs[0]
-            out_pathes_real = self.real_pathes
-            # out_pathes_all = self.real_pathes.cpu().detach().numpy() * 0
-            out_exv_all = self.real_exv
-            out_pathes = out_pathes_all[0]
-            real_pathes = self.real_pathes[0]
-            if Reverse_existence == True:
-                out_exv_all = 1 - out_exv_all
-            out_exv_all = out_exv_all > 0.5
-            out_exv = out_exv_all[0]
-            # merge two exist
-            for i in range(0, len(out_pathes), 2):
-                out_exv[i] = out_exv[i] * out_exv[i + 1]
-                out_exv[i + 1] = out_exv[i] * out_exv[i + 1]
-
-            for i in range(len(out_pathes)):
-                out_pathes[i] = out_pathes[i] * out_exv[i] + (~out_exv[i])
-            # self.real_pathes = pathes
-            # self.real_exv = exis_v
-        else:
-            out_pathes =rendering.onehot2layers_cut_bound(self. fake_B_1_hot[0])
-
-        # out_pathes = rendering.onehot2layers_cut_bound(self.fake_B_1_hot[0])
-        # self.out_pathes[0][0] = out_pathes
-        #loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
-        #self.error = 1.0*loss[0] 
-        #out_pathes[fusion_predcition][batch 0, contour index,:]
-        # cutedge = 1
-        # if Reverse_existence == True:
-        #     exvP =    self.out_exis_v0 <0.7
-        #     exvT =    self.real_exv<0.7
-        # else:
-        #     exvP = self.out_exis_v0 > 0.7
-        #     exvT = self.real_exv > 0.7
-        # self.out_pathes[0] = self.out_pathes[0] * exvP + (~exvP) # reverse the mask
-        # self.real_pathes = self.real_pathes * exvT + (~exvT)
-        self.L = np.zeros( len(out_pathes))
-        for i in range(len(out_pathes)):
-            self.L[i] = cal_L(out_pathes[i],real_pathes[i]) * Resample_size
-            print(" L " + str(i)+'=' +str(self.L[i]))
-        # self.L1 = cal_L(self.out_pathes[0][0,0,cutedge:Resample_size-cutedge],self.real_pathes[0,0,cutedge:Resample_size-cutedge]) * Resample_size
-        # self.L2 = cal_L(self.out_pathes[0][0,1,cutedge:Resample_size-cutedge],self.real_pathes[0,1,cutedge:Resample_size-cutedge]) * Resample_size
-
-        # print (" L1 =  "  + str(self.L1))
-        # print (" L2 =  "  + str(self.L2))
-
-        # calculate J (IOU insetion portion)
-        real_b_hot = self.real_B_one_hot[0]
-        fake_b_hot = self.fake_B_1_hot[0]
-        self.J = np.zeros( len(real_b_hot))
-        for i in range(len(real_b_hot)):
-            self.J[i] = cal_J(real_b_hot[i],  fake_b_hot[i])
-            print(" J " + str(i) + '=' + str(self.J[i]))
-
-        self.D = np.zeros( len(real_b_hot))
-        for i in range(len(real_b_hot)):
-            self.D[i] = cal_D(real_b_hot[i], fake_b_hot[i])
-            print(" D " + str(i) + '=' + str(self.D[i]))
-        # # this is the format of hot map
-        # #out  = torch.zeros([bz,3, H,W], dtype=torch.float)
-        # self.J1 = cal_J(real_b_hot[0,0,:,cutedge:Resample_size-cutedge],fake_b_hot[0,0,:,cutedge:Resample_size-cutedge])
-        # self.J2 = cal_J(real_b_hot[0,1,:,cutedge:Resample_size-cutedge],fake_b_hot[0,1,:,cutedge:Resample_size-cutedge])
-        # self.J3 = cal_J(real_b_hot[0,2,:,cutedge:Resample_size-cutedge],fake_b_hot[0,2,:,cutedge:Resample_size-cutedge])
-        # print (" J1 =  "  + str(self.J1 ))
-        # print (" J2 =  "  + str(self.J2 ))
-        # print (" J3 =  "  + str(self.J3 ))
-        #
-        #
-        #
-        # self.D1 = cal_D(real_b_hot[0,0,:,cutedge:Resample_size-cutedge],fake_b_hot[0,0,:,cutedge:Resample_size-cutedge])
-        # self.D2 = cal_D(real_b_hot[0,1,:,cutedge:Resample_size-cutedge],fake_b_hot[0,1,:,cutedge:Resample_size-cutedge])
-        # self.D3 = cal_D(real_b_hot[0,2,:,cutedge:Resample_size-cutedge],fake_b_hot[0,2,:,cutedge:Resample_size-cutedge])
-        # print (" D1 =  "  + str(self.D1 ))
-        # print (" D2 =  "  + str(self.D2 ))
-        # print (" D3 =  "  + str(self.D3 ))
-        vector = np.append(self.L,self.J)
-        vector = np.append(vector,self.D)
-
-        # vector = [self.L1,self.L2,self.J1, self.J2,self.J3,self.D1,self.D2,self.D3]
-        # vector = torch.stack(vector)
-        # vector= vector.cpu().detach().numpy()
-        save_dir = Output_root + "1Excel/"
-        self.metrics_saver.append_save(vector,save_dir)
+    # def error_calculation(self):
+    #     #average Jaccard index J
+    #     def cal_J(true,predict):
+    #         AnB = true*predict # assume that the lable are all binary
+    #         AuB = true+predict
+    #         AuB=torch.clamp(AuB, 0, 1)
+    #         s  = 0.0001
+    #         this_j = (torch.sum(AnB)+s)/(torch.sum(AuB)+s)
+    #         return this_j
+    #     # dice cofefficient
+    #     def cal_D(true,predict):
+    #         AB = true*predict # assume that the lable are all binary
+    #         #AuB = true+predict
+    #         #AuB=torch.clamp(AuB, 0, 1)
+    #         s  = 0.0001
+    #
+    #         this_d = (2 * torch.sum(AB)+s)/(torch.sum(true) + torch.sum(predict)+s)
+    #         return this_d
+    #     def cal_L (true,predct):  # the L1 distance of one contour
+    #     # calculate error
+    #         true=torch.clamp(true, 0, 1)
+    #         predct=torch.clamp(predct, 0, 1)
+    #
+    #
+    #         error = torch.abs(true-predct)
+    #         l = error.size()
+    #         x= torch.sum(error)/l[0]
+    #         return x
+    #     self.set_requires_grad(self.netG, False)  # D requires no gradients when optimizing G
+    #
+    #     # self.validation_cnt += 1
+    #     if self.out_pathes is not None:
+    #         out_pathes_all = self.out_pathes[0]
+    #         out_exv_all = self.out_exis_vs[0]
+    #         out_pathes_real = self.real_pathes
+    #         # out_pathes_all = self.real_pathes.cpu().detach().numpy() * 0
+    #         out_exv_all = self.real_exv
+    #         out_pathes = out_pathes_all[0]
+    #         real_pathes = self.real_pathes[0]
+    #         if Reverse_existence == True:
+    #             out_exv_all = 1 - out_exv_all
+    #         out_exv_all = out_exv_all > 0.5
+    #         out_exv = out_exv_all[0]
+    #         # merge two exist
+    #         for i in range(0, len(out_pathes), 2):
+    #             out_exv[i] = out_exv[i] * out_exv[i + 1]
+    #             out_exv[i + 1] = out_exv[i] * out_exv[i + 1]
+    #
+    #         for i in range(len(out_pathes)):
+    #             out_pathes[i] = out_pathes[i] * out_exv[i] + (~out_exv[i])
+    #         # self.real_pathes = pathes
+    #         # self.real_exv = exis_v
+    #     else:
+    #         out_pathes =rendering.onehot2layers_cut_bound(self. fake_B_1_hot[0])
+    #
+    #     # out_pathes = rendering.onehot2layers_cut_bound(self.fake_B_1_hot[0])
+    #     # self.out_pathes[0][0] = out_pathes
+    #     #loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
+    #     #self.error = 1.0*loss[0]
+    #     #out_pathes[fusion_predcition][batch 0, contour index,:]
+    #     # cutedge = 1
+    #     # if Reverse_existence == True:
+    #     #     exvP =    self.out_exis_v0 <0.7
+    #     #     exvT =    self.real_exv<0.7
+    #     # else:
+    #     #     exvP = self.out_exis_v0 > 0.7
+    #     #     exvT = self.real_exv > 0.7
+    #     # self.out_pathes[0] = self.out_pathes[0] * exvP + (~exvP) # reverse the mask
+    #     # self.real_pathes = self.real_pathes * exvT + (~exvT)
+    #     self.L = np.zeros( len(out_pathes))
+    #     for i in range(len(out_pathes)):
+    #         self.L[i] = cal_L(out_pathes[i],real_pathes[i]) * Resample_size
+    #         print(" L " + str(i)+'=' +str(self.L[i]))
+    #     # self.L1 = cal_L(self.out_pathes[0][0,0,cutedge:Resample_size-cutedge],self.real_pathes[0,0,cutedge:Resample_size-cutedge]) * Resample_size
+    #     # self.L2 = cal_L(self.out_pathes[0][0,1,cutedge:Resample_size-cutedge],self.real_pathes[0,1,cutedge:Resample_size-cutedge]) * Resample_size
+    #
+    #     # print (" L1 =  "  + str(self.L1))
+    #     # print (" L2 =  "  + str(self.L2))
+    #
+    #     # calculate J (IOU insetion portion)
+    #     real_b_hot = self.real_B_one_hot[0]
+    #     fake_b_hot = self.fake_B_1_hot[0]
+    #     self.J = np.zeros( len(real_b_hot))
+    #     for i in range(len(real_b_hot)):
+    #         self.J[i] = cal_J(real_b_hot[i],  fake_b_hot[i])
+    #         print(" J " + str(i) + '=' + str(self.J[i]))
+    #
+    #     self.D = np.zeros( len(real_b_hot))
+    #     for i in range(len(real_b_hot)):
+    #         self.D[i] = cal_D(real_b_hot[i], fake_b_hot[i])
+    #         print(" D " + str(i) + '=' + str(self.D[i]))
+    #     # # this is the format of hot map
+    #     # #out  = torch.zeros([bz,3, H,W], dtype=torch.float)
+    #     # self.J1 = cal_J(real_b_hot[0,0,:,cutedge:Resample_size-cutedge],fake_b_hot[0,0,:,cutedge:Resample_size-cutedge])
+    #     # self.J2 = cal_J(real_b_hot[0,1,:,cutedge:Resample_size-cutedge],fake_b_hot[0,1,:,cutedge:Resample_size-cutedge])
+    #     # self.J3 = cal_J(real_b_hot[0,2,:,cutedge:Resample_size-cutedge],fake_b_hot[0,2,:,cutedge:Resample_size-cutedge])
+    #     # print (" J1 =  "  + str(self.J1 ))
+    #     # print (" J2 =  "  + str(self.J2 ))
+    #     # print (" J3 =  "  + str(self.J3 ))
+    #     #
+    #     #
+    #     #
+    #     # self.D1 = cal_D(real_b_hot[0,0,:,cutedge:Resample_size-cutedge],fake_b_hot[0,0,:,cutedge:Resample_size-cutedge])
+    #     # self.D2 = cal_D(real_b_hot[0,1,:,cutedge:Resample_size-cutedge],fake_b_hot[0,1,:,cutedge:Resample_size-cutedge])
+    #     # self.D3 = cal_D(real_b_hot[0,2,:,cutedge:Resample_size-cutedge],fake_b_hot[0,2,:,cutedge:Resample_size-cutedge])
+    #     # print (" D1 =  "  + str(self.D1 ))
+    #     # print (" D2 =  "  + str(self.D2 ))
+    #     # print (" D3 =  "  + str(self.D3 ))
+    #     vector = np.append(self.L,self.J)
+    #     vector = np.append(vector,self.D)
+    #
+    #     # vector = [self.L1,self.L2,self.J1, self.J2,self.J3,self.D1,self.D2,self.D3]
+    #     # vector = torch.stack(vector)
+    #     # vector= vector.cpu().detach().numpy()
+    #     save_dir = Output_root + "1Excel/"
+    #     self.metrics_saver.append_save(vector,save_dir)
 
     def set_input(self, realA,pathes,exis_v,input_img):
         """Unpack input data from the dataloader and perform necessary pre-processing steps.
