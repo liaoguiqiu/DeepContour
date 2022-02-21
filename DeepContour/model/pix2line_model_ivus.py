@@ -19,6 +19,9 @@ from databufferExcel import EXCEL_saver
 # with torch.autograd.set_detect_anomaly(True).
 from working_dir_root import Dataset_root,Output_root
 import numpy as np
+
+# Learning rate for backbone
+Coord_lr = 0.0001
 Pix_lr_lambda = 10.0
 EXxtens_lr_lambda = 10.0
 
@@ -121,7 +124,7 @@ class Pix2LineModel(BaseModel):
                 {'params': self.netG.side_branch3.parameters()},
                 {'params': self.netG.low_level_encoding.parameters()},
                 {'params': self.netG.fusion_layer.parameters()},
-            ], lr=opt.lr, betas=(opt.beta1, 0.999))
+            ], lr=Coord_lr, betas=(opt.beta1, 0.999))
             # self.optimizer_G = torch.optim.SGD([
             #     # {'params': self.netG.Unet_back.parameters()},
             #     {'params': self.netG.backbone.parameters()},
@@ -130,23 +133,23 @@ class Pix2LineModel(BaseModel):
             #     {'params': self.netG.side_branch3.parameters()},
             #     {'params': self.netG.low_level_encoding.parameters()},
             #     {'params': self.netG.fusion_layer.parameters()},
-            # ], lr=opt.lr, momentum=0.9)
+            # ], lr=Coord_lr, momentum=0.9)
             # Optimizer of the Unet like backbone
             self.optimizer_G_unet = None
             self.optimizer_G_unet = torch.optim.Adam([
                 {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.pixencoding.parameters()},
-            ], lr=opt.lr, betas=(opt.beta1, 0.999))
+            ], lr=Coord_lr, betas=(opt.beta1, 0.999))
 
-            self.optimizer_G_f = torch.optim.Adam(self.netG.fusion_layer.  parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-            self.optimizer_G_1 = torch.optim.Adam(self.netG.side_branch1.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-            self.optimizer_G_2 = torch.optim.Adam(self.netG.side_branch2.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-            self.optimizer_G_3 = torch.optim.Adam(self.netG.side_branch3.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+            self.optimizer_G_f = torch.optim.Adam(self.netG.fusion_layer.  parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
+            self.optimizer_G_1 = torch.optim.Adam(self.netG.side_branch1.parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
+            self.optimizer_G_2 = torch.optim.Adam(self.netG.side_branch2.parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
+            self.optimizer_G_3 = torch.optim.Adam(self.netG.side_branch3.parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
 
             # The same optimization for the 
             # self.optimizer_G_e = torch.optim.Adam([
             #     {'params': self.netG.fusion_layer_exist .parameters()}
-            # ], lr=opt.lr, betas=(opt.beta1, 0.999))
+            # ], lr=Coord_lr, betas=(opt.beta1, 0.999))
             self.optimizer_G_e = torch.optim.Adam([
                 {'params': self.netG.backbone_e.parameters()},
                 {'params': self.netG.side_branch1e.parameters()},
@@ -154,22 +157,22 @@ class Pix2LineModel(BaseModel):
                 {'params': self.netG.side_branch3e.parameters()},
                 {'params': self.netG.fusion_layer_exist.parameters()},
 
-            ], lr=opt.lr, betas=(opt.beta1, 0.999))
+            ], lr=Coord_lr, betas=(opt.beta1, 0.999))
             # self.optimizer_G_e= torch.optim.SGD([
             #     {'params': self.netG.backbone_e.parameters()},
             #     {'params': self.netG.side_branch1e.parameters()},
             #     {'params': self.netG.side_branch2e.parameters()},
             #     {'params': self.netG.side_branch3e.parameters()},
             #     {'params': self.netG.fusion_layer_exist.parameters()},
-            # ], lr=opt.lr, momentum=0.9)
-            self.optimizer_E_f = torch.optim.Adam(self.netE.fusion_layer.  parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-            self.optimizer_E_1 = torch.optim.Adam(self.netE.side_branch1.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-            self.optimizer_E_2 = torch.optim.Adam(self.netE.side_branch2.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-            self.optimizer_E_3 = torch.optim.Adam(self.netE.side_branch3.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+            # ], lr=Coord_lr, momentum=0.9)
+            self.optimizer_E_f = torch.optim.Adam(self.netE.fusion_layer.  parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
+            self.optimizer_E_1 = torch.optim.Adam(self.netE.side_branch1.parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
+            self.optimizer_E_2 = torch.optim.Adam(self.netE.side_branch2.parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
+            self.optimizer_E_3 = torch.optim.Adam(self.netE.side_branch3.parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
 
 
 
-            self.optimizer_D = torch.optim.Adam(self.netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
+            self.optimizer_D = torch.optim.Adam(self.netD.parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
             # self.optimizers.append(self.optimizer_E)
             self.optimizers.append(self.optimizer_D)
