@@ -31,17 +31,19 @@ from validation import Validation
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
-Visdom_flag = True  # the flag of using the visdom or not
+Visdom_flag = False  # the flag of using the visdom or not
 OLG_flag = False  # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
 validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = False  # display and save result or not
 Save_img_flag = False  # this flag determine if the reuslt will be save  in to a foler
-Continue_flag = True  # if not true, it start from scratch again
+Continue_flag = False  # if not true, it start from scratch again
 Federated_learning_flag = False  # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
 Using_fed_model_flag = False  # True: Fed model, false: local model
 loadmodel_index = '_4.pth'
-Model_key = 'DeeplabV3'
+from model.pix2pix_deeplab import Modelkey
+Model_key = Modelkey
+# Model_key = 'DeeplabV3'
 infinite_save_id = 0  # use this method so that the index of the image will not start from 0 again when switch the folder
 validator = Validation()
 

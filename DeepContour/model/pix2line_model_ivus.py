@@ -309,7 +309,7 @@ class Pix2LineModel(BaseModel):
 
 
             pix_loss2 = self.criterionL1 (self.pix_wise *backgroud_mask, self.real_B_one_hot)
-            # pix_loss2 = self.criterionL1(self.pix_wise ,self.real_B)
+            # pix_loss2 = self.criterionL1(self.pix_wise ,self.real_B_one_hot)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
             self.loss_pix =  Pix_lr_lambda * pix_loss2
@@ -353,13 +353,15 @@ class Pix2LineModel(BaseModel):
         #self.loss=self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
         # 3 imput , also rely on the existence vector
 
-        # self.loss=self.criterionMTL.multi_loss (self.out_pathes,self.real_pathes ) #
 
         # self.loss_G = ( 1.0*self.loss[0]  + 0.01*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
         # TODO: For last training, use line below and comment the one above
         # self.loss_G = self.loss[0]
 
+
         # TODO: Enable at the "end"/fine-tuning of training
+        # self.loss=self.criterionMTL.multi_loss (self.out_pathes,self.real_pathes ) #
+
         self.loss =self.criterionMTL.multi_loss_contour_exist([self.out_pathes[0]],self.real_pathes, [self.real_exv[0]],Reverse_existence) #
         self.loss_G = self.loss[0]
 

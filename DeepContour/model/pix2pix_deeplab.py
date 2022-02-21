@@ -10,6 +10,11 @@ from working_dir_root import Dataset_root, Output_root
 import os
 """ DeepLabv3 Model download and change the head for your prediction"""
 from torchvision.models.segmentation.deeplabv3 import DeepLabHead
+from torchvision.models.segmentation.fcn import FCNHead
+
+Modelkey_list=['DeeplabV3','FCN']
+Modelkey = Modelkey_list[1]
+
 from torchvision import models
 
 Deeplab_feature = 2048
@@ -104,11 +109,20 @@ class Pix2Pix_deeplab_Model(BaseModel):
             Returns:
                 model: Returns the DeepLabv3 model with the ResNet101 backbone.
             """
-        model = models.segmentation.deeplabv3_resnet101(pretrained=True,
-                                                        progress=True)
-        model.classifier = DeepLabHead(2048, outputchannels)
-        # Set the model in training mode
-        model.train()
+        # Modelkey_list = ['DeeplabV3', 'FCN']
+
+        if Modelkey == 'DeeplabV3':
+            model = models.segmentation.deeplabv3_resnet101(pretrained=True,
+                                                            progress=True)
+            model.classifier = DeepLabHead(Deeplab_feature, outputchannels)
+            # Set the model in training mode
+            model.train()
+        if Modelkey == 'FCN':
+            model = models.segmentation.fcn_resnet50(pretrained=True,
+                                                            progress=True)
+            model.classifier = FCNHead(Deeplab_feature, outputchannels)
+            # Set the model in training mode
+            model.train()
         return model
         # return
 
