@@ -12,7 +12,7 @@ from dataTool import generator_contour_ivus
 
 from dataTool.generator_contour import Generator_Contour, Save_Contour_pkl, Communicate
 from dataTool.generator_contour_ivus import Generator_Contour_sheath
-from dataset_ivus import myDataloader, Batch_size, Resample_size, Path_length,max_presence,Reverse_existence
+from dataset_ivus import myDataloader, Batch_size, Resample_size, Path_length,max_presence,Reverse_existence,Existence_thrshold
 
 import os
 # from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
@@ -22,6 +22,9 @@ from deploy.basic_trans import Basic_oper
 from scipy import signal
 
 def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_id,Model_key):
+    if(infinite_save_id > 1000):
+        infinite_save_id = 1000
+
     gray2 = realA[0, 0, :, :].cpu().detach().numpy() * 104 + 104
     show1 = gray2.astype(float)
     # path2 = mydata_loader.input_path[0,:]
@@ -70,7 +73,7 @@ def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_
         if not os.path.exists(this_save_dir):
             os.makedirs(this_save_dir)
         cv2.imwrite(this_save_dir +
-                    str(mydata_loader.save_id) + ".jpg", circ_original)
+                    str(infinite_save_id) + ".jpg", circ_original)
     # infinite_save_id
 
     cv2.imshow('Deeplearning one', show4.astype(numpy.uint8))
@@ -97,9 +100,9 @@ def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_
     # display_prediction(read_id,mydata_loader,  MODEL.out_pathes0,hot,hot_real)
 
 
-    display_prediction(read_id, mydata_loader, MODEL , hot, hot_real, Save_img_flag,Model_key)
+    display_prediction(infinite_save_id, mydata_loader, MODEL , hot, hot_real, Save_img_flag,Model_key)
     if (MODEL.out_exis_v0 is not None):
-        display_prediction_exis(read_id, mydata_loader, MODEL.out_exis_v0)
+        display_prediction_exis(infinite_save_id, mydata_loader, MODEL.out_exis_v0)
     return
 # 3 functions to drae the results in real time
 def draw_coordinates_color(img1 ,vy ,color):
@@ -151,7 +154,7 @@ def draw_coordinates_color_s(img1 ,vy0 ,vy1):
     return img1
 
 
-def display_prediction_exis(read_id, mydata_loader, save_out):  # display in coordinates form
+def display_prediction_exis(infinite_save_id, mydata_loader, save_out):  # display in coordinates form
     gray2 = (mydata_loader.input_image[0, 0, :, :] * 104) + 104
     show1 = gray2.astype(float)
     path2 = mydata_loader.exis_vec[0, :] * Resample_size
@@ -182,7 +185,7 @@ def display_prediction_exis(read_id, mydata_loader, save_out):  # display in coo
     cv2.imshow('Deeplearning exitence 2', show4.astype(numpy.uint8))
 
 
-def display_prediction(read_id, mydata_loader, MODEL , hot, hot_real,Save_img_flag,Model_key):  # display in coordinates form
+def display_prediction(infinite_save_id, mydata_loader, MODEL , hot, hot_real,Save_img_flag,Model_key):  # display in coordinates form
     gray2 = (mydata_loader.input_image[0, 0, :, :] * 104) + 104
     show1 = gray2.astype(float)
     path2 = mydata_loader.input_path[0, :]
@@ -206,7 +209,7 @@ def display_prediction(read_id, mydata_loader, MODEL , hot, hot_real,Save_img_fl
     out_pathes = out_pathes_all[0] * (Resample_size)
     if Reverse_existence ==True:
         out_exv_all = 1-out_exv_all
-    out_exv_all = out_exv_all>0.5
+    out_exv_all = out_exv_all>Existence_thrshold
     out_exv = out_exv_all[0]
     # MODEL.out_pathes  = signal.resample(MODEL.out_pathes, Resample_size)
     out_pathes = numpy.clip( out_pathes, 0, Resample_size - 1)
@@ -223,18 +226,19 @@ def display_prediction(read_id, mydata_loader, MODEL , hot, hot_real,Save_img_fl
         if not os.path.exists(this_save_dir):
             os.makedirs(this_save_dir)
         cv2.imwrite(this_save_dir +
-                    str(mydata_loader.save_id) + ".jpg", circular_color_real)
+                    str(infinite_save_id) + ".jpg", circular_color_real)
 
 
     for i in range(0,len( out_pathes),2):
         out_exv[i] =  out_exv[i] *  out_exv[i+1]
         out_exv[i+1] =  out_exv[i] *  out_exv[i+1]
 
+
+    colorhot = (color ) * hot
     for i in range(len( out_pathes)):
         out_pathes[i] = out_pathes[i] * out_exv[i]
         this_coordinate = signal.resample( out_pathes[i], Resample_size)
-        color = draw_coordinates_color(color, this_coordinate, int(i/max_presence)) # same color for duplication
-    colorhot = (color ) * hot
+        colorhot = draw_coordinates_color(colorhot, this_coordinate, int(i/max_presence)) # same color for duplication
     colorhot  =numpy.clip(colorhot,1,254)
     # sheath = signal.resample( out_pathes[0], Resample_size)
     # tissue = signal.resample( out_pathes[1], Resample_size)
@@ -255,7 +259,7 @@ def display_prediction(read_id, mydata_loader, MODEL , hot, hot_real,Save_img_fl
         if not os.path.exists(this_save_dir):
             os.makedirs(this_save_dir)
         cv2.imwrite(this_save_dir +
-                    str(mydata_loader.save_id) + ".jpg", show4)
+                    str(infinite_save_id) + ".jpg", show4)
 
     cv2.imshow('Deeplearning one 2', show4.astype(numpy.uint8))
 
@@ -266,6 +270,12 @@ def display_prediction(read_id, mydata_loader, MODEL , hot, hot_real,Save_img_fl
         if not os.path.exists(this_save_dir):
             os.makedirs(this_save_dir)
         cv2.imwrite(this_save_dir +
-                    str(mydata_loader.save_id) + ".jpg", circular2)
+                    str(infinite_save_id) + ".jpg", circular2)
     cv2.imshow('Deeplearning color', color2.astype(numpy.uint8))
     cv2.imshow('  color real', color_real.astype(numpy.uint8))
+    if Save_img_flag == True:
+        this_save_dir = Output_root + "1out_img/"+Model_key+"/seg_rec_color2/"
+        if not os.path.exists(this_save_dir):
+            os.makedirs(this_save_dir)
+        cv2.imwrite(this_save_dir +
+                    str(infinite_save_id) + ".jpg", color2)

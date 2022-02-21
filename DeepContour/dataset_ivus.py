@@ -41,6 +41,7 @@ random_clip_flag = False
 Random_rotate = True
 Random_vertical_shift = True
 Reverse_existence = True
+Existence_thrshold = 0.7
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
 
 class myDataloader(object):

@@ -7,7 +7,7 @@ import test_model.fusion_nets_multi as fusion_nets_ivus
 
 from test_model.loss_MTL import MTL_loss,DiceLoss
 import rendering
-from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length,Reverse_existence
+from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length,Reverse_existence,Existence_thrshold
 from time import time
 import torch.nn as nn
 from torch.autograd import Variable
@@ -69,7 +69,7 @@ class Validation(object):
             # real_pathes = MODEL.real_pathes[0]
             if Reverse_existence == True:
                 out_exv_all = 1 - out_exv_all
-            out_exv_all = out_exv_all > 0.5
+            out_exv_all = out_exv_all > Existence_thrshold
             out_exv = out_exv_all[0]
             # merge two exist
             for i in range(0, len(out_pathes), 2):
