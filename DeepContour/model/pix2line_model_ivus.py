@@ -1,4 +1,5 @@
 import torch
+import torch.nn.functional as F
 from model.base_model import BaseModel
 import model.networks as  networks
 from test_model import layer_body_sheath_res2
@@ -18,6 +19,9 @@ from databufferExcel import EXCEL_saver
 # with torch.autograd.set_detect_anomaly(True).
 from working_dir_root import Dataset_root,Output_root
 import numpy as np
+Pix_lr_lambda = 10.0
+EXxtens_lr_lambda = 10.0
+
 class Pix2LineModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
 
@@ -95,7 +99,7 @@ class Pix2LineModel(BaseModel):
             self.criterionMTL= MTL_loss(Loss ="L1") # default loss =  L1", that is used  for the Coordinates position
             # LGQ add another loss for G
             self.criterionMTL_BCE= MTL_loss(Loss ="L1") # multi_scale_cross entrofy for the existence 
-
+            self.customeBCE =  torch.nn.BCELoss()
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
 
             # self.optimizer_G = torch.optim.Adam([
@@ -130,7 +134,7 @@ class Pix2LineModel(BaseModel):
             # Optimizer of the Unet like backbone
             self.optimizer_G_unet = None
             self.optimizer_G_unet = torch.optim.Adam([
-                # {'params': self.netG.Unet_back.parameters()},
+                {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.pixencoding.parameters()},
             ], lr=opt.lr, betas=(opt.beta1, 0.999))
 
@@ -284,17 +288,28 @@ class Pix2LineModel(BaseModel):
 
             # pix_loss1 = self.criterion_Dice (self.pix_wise, self.real_B)
 
-            background = (self.real_B < 0.1)
-            Nonebackground = (self.real_B > 0.1)
-            backgroud_beta = (torch.sum(Nonebackground) + 0.0001) / (torch.sum(background) + torch.sum(Nonebackground) + 0.0001)
-            backgroud_mask = background * backgroud_beta + Nonebackground
+            background = (self.real_B_one_hot < 0.1)
+            Nonebackground = (self.real_B_one_hot > 0.1)
 
 
-            pix_loss2 = self.criterionL1 (self.pix_wise *backgroud_mask, self.real_B)
+            backgroud_beta = (torch.sum(Nonebackground,dim=[2,3]) + 0.0001) / (torch.sum(background,dim=[2,3]) + torch.sum(Nonebackground,dim=[2,3]) + 0.0001)
+            backgroud_mask = background
+            B,C,H,W  = backgroud_mask.size()
+
+            # backgroud_mask[0:B,0:C,:,:] = backgroud_beta
+            backgroud_beta  =  torch.unsqueeze(backgroud_beta, 2)
+            backgroud_beta  =  torch.unsqueeze(backgroud_beta, 3)
+
+            backgroud_mask = backgroud_mask[:, :, 0:H, 0:W] * backgroud_beta
+
+            backgroud_mask = backgroud_mask + Nonebackground*1.0
+
+
+            pix_loss2 = self.criterionL1 (self.pix_wise *backgroud_mask, self.real_B_one_hot)
             # pix_loss2 = self.criterionL1(self.pix_wise ,self.real_B)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
-            self.loss_pix =   pix_loss2
+            self.loss_pix =  Pix_lr_lambda * pix_loss2
 
             # self.loss_pix = 1000*(0.5 * pix_loss1 + 0.5 * pix_loss2)
             self.loss_pix.backward(retain_graph=True)
@@ -364,7 +379,7 @@ class Pix2LineModel(BaseModel):
         self.set_requires_grad(self.netG, True)
         # use BEC for the existence vectors
         #self.loss=self.criterionMTL_BCE.multi_loss(self.out_exis_vs,self.real_exv)
-        self.lossE=self.criterionMTL_BCE.multi_loss(self.out_exis_vs,self.real_exv)
+        # self.lossE=self.criterionMTL_BCE.multi_loss(self.out_exis_vs,self.real_exv)
         # self.lossE=self.criterion_Dice(self.out_exis_vs[0],self.real_exv[0])
 
 
@@ -378,71 +393,19 @@ class Pix2LineModel(BaseModel):
         # self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
         # TODO: Enable at the beginning of the training
         # self.lossEa =   ( 1.0*self.lossE[0]  + 0.01*self.lossE[1] + 0.01*self.lossE[2] + 0.01*self.lossE[3])
+        # self.lossEa = self.lossE[0]
+
         # TODO: Enable at the "end" of training
         #  (sacrifice accuracy of higher resolution branch for overall better output)
-        self.lossEa = self.lossE[0]
+        B, C, W = self.real_exv.size()
+        # self.real_exv = self.real_exv . type(torch.LongTensor)
+        self.lossEa = EXxtens_lr_lambda* self.customeBCE (self.out_exis_vs[0] ,self.real_exv )
 
         self.lossEa.backward(retain_graph=True )
         self.optimizer_G_e .step()             # udpate G's weights
 
         #self.optimizer_G.step()             # udpate G's weights
 
-    def backward_G_1(self):
-        self.optimizer_G.zero_grad()        # set G's gradients to zero
- 
-        # First, G(A) should fake the discriminator
-        self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
-        self.set_requires_grad(self.netG, True)  # D requires no gradients when optimizing G
-
-        #self.set_requires_grad(self.netG.side_branch1, True)  # D requires no gradients when optimizing G
-        #self.set_requires_grad(self.netG.side_branch2, False)  # D requires no gradients when optimizing G
-        #self.set_requires_grad(self.netG.side_branch3, False)  # D requires no gradients when optimizing G
-        
-        loss1 = self.criterionMTL.multi_loss([self.out_pathes1],self.real_pathes) 
-        #self.loss_G_L1 = Variable( loss1[0],requires_grad=True)
-        self.loss_G_L1 =   loss1[0] 
-
-          
-        self.loss_G_L1.backward(retain_graph=True)
-        self.optimizer_G_1.step()             # udpate G's weights
-    def backward_G_2(self):
-        self.optimizer_G.zero_grad()        # set G's gradients to zero
- 
-        # First, G(A) should fake the discriminator
-        self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
-        self.set_requires_grad(self.netG, True)  # D requires no gradients when optimizing G
-
-        #self.set_requires_grad(self.netG.side_branch1, False)  # D requires no gradients when optimizing G
-        #self.set_requires_grad(self.netG.side_branch2, True)  # D requires no gradients when optimizing G
-        #self.set_requires_grad(self.netG.side_branch3, False)  # D requires no gradients when optimizing G
-         
-        loss2 = self.criterionMTL.multi_loss([self.out_pathes2],self.real_pathes) 
-        
-        self.loss_G_L2 =   loss2[0] 
-
-          
-        self.loss_G_L2.backward(retain_graph=True)
-        self.optimizer_G_2.step()             # udpate G's weights
-    def backward_G_3(self):
-
-        """Calculate GAN and L1 loss for the generator"""
-        # First, G(A) should fake the discriminator
-        self.optimizer_G.zero_grad()        # set G's gradients to zero
-
-        self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
-        self.set_requires_grad(self.netG, True)  # D requires no gradients when optimizing G
-
-        #self.set_requires_grad(self.netG.side_branch1, False)  # D requires no gradients when optimizing G
-        #self.set_requires_grad(self.netG.side_branch2, False)  # D requires no gradients when optimizing G
-        #self.set_requires_grad(self.netG.side_branch3, True)  # D requires no gradients when optimizing G
-         
-        loss3 = self.criterionMTL.multi_loss([self.out_pathes3],self.real_pathes) 
-        
-        self.loss_G_L3 =  loss3[0] 
-        #self.loss_G_L3.backward(retain_graph=True)
-        self.loss_G_L3.backward( retain_graph=True)
-
-        self.optimizer_G_3.step()             # udpate G's weights
 
     def optimize_parameters(self,validation_flag):
         self.forward(validation_flag)                   # compute fake images: G(A) # seperatee the for

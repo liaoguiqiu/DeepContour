@@ -14,10 +14,10 @@ from dataset_sheath import Path_length, Batch_size, Resample_size
 import torchvision.models
 import numpy as np
 import cv2
-from dataset_ivus import Out_c,Out_c_e
+from dataset_ivus import Out_c,Out_c_e,object_num
 
 Input_c = 3  # the gray is converted into 3 channnels image
-Pixwise_c = Out_c  # Using onehot encoding, the out channel is equal to layer
+Pixwise_c = object_num+1  #  addtional heathy layer
 Backbone_u_d = 100
 Backbone_f = 8
 CEnet_f = 8
@@ -251,8 +251,10 @@ class _2layerFusionNets_(nn.Module):
             self.Unet_back = _BackBoneUnet(output_nc=unetf, use_dropout=True)
             self.pixencoding = baseM.conv_keep_all(unetf, Pixwise_c, k=(1, 1), s=(1, 1), p=(0, 0), resnet=False,
                                                    final=True)
-            self.backbone = _BackBonelayer(unetf)
-            self.backbone_e = _BackBonelayer(unetf)
+            # self.backbone = _BackBonelayer(unetf)
+            # self.backbone_e = _BackBonelayer(unetf)
+            self.backbone = _BackBonelayer(Pixwise_c)
+            self.backbone_e = _BackBonelayer(Pixwise_c)
 
         else:
             self.backbone = _BackBonelayer()
@@ -293,8 +295,10 @@ class _2layerFusionNets_(nn.Module):
             pix_seg = self.pixencoding(unet_f)  # use the Unet features to predict a pix wise segmentation
             # pix_seg = F.sigmoid(pix_seg)  # TODO: comment/uncomment here to change sigmoid function
             # pix_seg=unet_f # one feature backbone
-            backbone_f = self.backbone(unet_f)
-            backbone_fe = self.backbone_e(unet_f)
+            # backbone_f = self.backbone(unet_f)
+            # backbone_fe = self.backbone_e(unet_f)
+            backbone_f = self.backbone(pix_seg)
+            backbone_fe = self.backbone_e(pix_seg)
 
 
         else:
@@ -319,7 +323,8 @@ class _2layerFusionNets_(nn.Module):
         side_out1l, side_out1H = self.upsample_path(side_out1l)
         side_out2l, side_out2H = self.upsample_path(side_out2l)
         side_out3l, side_out3H = self.upsample_path(side_out3l)
-
+        activation = nn.Sigmoid()
+        out_exist =activation(out_exist)
         return out, side_out1l, side_out2l, side_out3l, pix_seg, out_exist
 
         # return out,side_out,side_out2

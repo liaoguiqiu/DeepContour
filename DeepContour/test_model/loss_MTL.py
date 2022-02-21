@@ -41,7 +41,9 @@ class MTL_loss(object):
            loss[i] = self.one_loss_exi(output[i],target,outexist[i],Reverse_existence)
        return loss
    # PyTorch
-
+   def custom_cross(self,my_pred,true,batch_size ):
+        loss= -torch.mean(torch.sum(true.view(batch_size, -1) * torch.log(my_pred.view(batch_size, -1)), dim=1))
+        return loss
 
 class DiceLoss(nn.Module):
     def __init__(self, weight=None, size_average=True):

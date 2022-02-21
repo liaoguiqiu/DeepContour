@@ -56,14 +56,23 @@ def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_
     # saveout = rendering.onehot2integer(MODEL.real_B_one_hot)
     show2 = saveout[0, :, :, :].cpu().detach().numpy() * 255
 
-    color = numpy.zeros((show2.shape[1], show2.shape[2], 3))
-    color[:, :, 0] = color[:, :, 1] = color[:, :, 2] = numpy.clip(show2[0, :, :], 1, 254)
+    if show2.shape[0]>1:
+        color = numpy.zeros((show2.shape[1], show2.shape[2], 3))
+
+        color[:, :, 0] =  numpy.clip(show2[0, :, :], 1, 254)
+        color[:, :, 1] =  numpy.clip(show2[1, :, :], 1, 254)
+        color[:, :, 2] =  numpy.clip(show2[2, :, :], 1, 254)
+    else:
+        color = numpy.zeros((show2.shape[1], show2.shape[2]))
+        color[:,:] =  numpy.clip(show2[0, :, :], 1, 254)
+
 
     # for i in range ( len(path2)):
     #    color = draw_coordinates_color(color,path2[i],i)
 
     # show3 = numpy.append(show1,show2,axis=1) # cascade
-    show4 = numpy.append(color1, color, axis=1)  # cascade
+    show4 = color
+    # show4 = numpy.append(color1, color, axis=1)  # cascade
     # the circular of the original image
     circ_original = Basic_oper.tranfer_frome_rec2cir2(color1)
 
@@ -239,6 +248,9 @@ def display_prediction(infinite_save_id, mydata_loader, MODEL , hot, hot_real,Sa
         out_pathes[i] = out_pathes[i] * out_exv[i]
         this_coordinate = signal.resample( out_pathes[i], Resample_size)
         colorhot = draw_coordinates_color(colorhot, this_coordinate, int(i/max_presence)) # same color for duplication
+        color = draw_coordinates_color(color, this_coordinate,
+                                          int(i / max_presence))  # same color for duplication
+
     colorhot  =numpy.clip(colorhot,1,254)
     # sheath = signal.resample( out_pathes[0], Resample_size)
     # tissue = signal.resample( out_pathes[1], Resample_size)
