@@ -1,8 +1,8 @@
 import cv2
 import os
 import numpy as np
-read_dir =  "C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_08_25 case 6/TIFF_PDOTVXX3/"
-save_dir =  "C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_08_25 case 6/TIFF_PDOTVXX3_rect/"
+read_dir =  "C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_12_09 case 10/TIFF_PDY7MCOS/"
+save_dir =  "C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_12_09 case 10/TIFF_PDY7MCOS_rect/"
 
 def   tranfer_frome_cir2rec(gray):
         H,W = gray.shape

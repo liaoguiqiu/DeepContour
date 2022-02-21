@@ -130,7 +130,7 @@ class Pix2LineModel(BaseModel):
             # Optimizer of the Unet like backbone
             self.optimizer_G_unet = None
             self.optimizer_G_unet = torch.optim.Adam([
-                {'params': self.netG.Unet_back.parameters()},
+                # {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.pixencoding.parameters()},
             ], lr=opt.lr, betas=(opt.beta1, 0.999))
 
@@ -481,6 +481,7 @@ class Pix2LineModel(BaseModel):
         # TODO: For last training, use line below and comment the one above
         # self.loss_G = self.loss[0]
 
+        # TODO: Enable at the "end"/fine-tuning of training
         self.loss =self.criterionMTL.multi_loss_contour_exist([self.out_pathes[0]],self.real_pathes, [self.real_exv[0]],Reverse_existence) #
         self.loss_G = self.loss[0]
 
@@ -516,10 +517,10 @@ class Pix2LineModel(BaseModel):
         #self.loss_G_L0 = (self.loss[0])
         # self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
         # TODO: Enable at the beginning of the training
-        self.lossEa =   ( 1.0*self.lossE[0]  + 0.01*self.lossE[1] + 0.01*self.lossE[2] + 0.01*self.lossE[3])
+        # self.lossEa =   ( 1.0*self.lossE[0]  + 0.01*self.lossE[1] + 0.01*self.lossE[2] + 0.01*self.lossE[3])
         # TODO: Enable at the "end" of training
         #  (sacrifice accuracy of higher resolution branch for overall better output)
-        # self.lossEa = self.lossE[0]
+        self.lossEa = self.lossE[0]
 
         self.lossEa.backward(retain_graph=True )
         self.optimizer_G_e .step()             # udpate G's weights

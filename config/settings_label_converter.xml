@@ -1,11 +1,11 @@
 <?xml version="1.0"?>
 <LabelMeLabelConverter> <!-- Note: It is assumed that the center of the circular images used is in (h/2 w/2) of the image data -->
 
-	<LabelData conversionType="Polar" target="SingleImg"> <!-- (convert to) conversionType: Polar, Cartesian 		target: Dir, SingleImg -->
+	<LabelData conversionType="Polar" target="Dir"> <!-- (convert to) conversionType: Polar, Cartesian 		target: Dir, SingleImg -->
 
 		<!-- Used when target="Dir"--> 
-		<SourceDir>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_08_25 case 5/TIFF_PDGT3Q3C</SourceDir>
-		<OutputDir>C:/Workdir/Develop/atlas_collab_ivus/dataset/label data/img</OutputDir>
+		<SourceDir>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_12_09 case 10/Labels_PDY7MCOS_disease</SourceDir>
+		<OutputDir>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_12_09 case 10/Labels_PDY7MCOS_disease_rect</OutputDir>
 
 		<!-- Used when target="SingleImg"-->
 		<SourceImg>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_08_25 case 5/Labels_PDGT3Q3C/image0001.json</SourceImg><!-- Include directory and image label file name -->
@@ -19,7 +19,7 @@
 
 		<ImagesDir> <!-- in the case of converting an entire directory of labels. -->
 			<Ext>tif</Ext> <!-- ext refers to the images extension: jpg, tif, png, etc -->
-			<Path>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_08_25 case 5/TIFF_PDGT3Q3C_rect</Path> <!-- path to directory to convert -->
+			<Path>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_12_09 case 10/TIFF_PDY7MCOS_rect</Path> <!-- path to directory to convert -->
 		</ImagesDir>
 
 		<SingleImg>  <!-- in the case of converting one label from a single image -->
