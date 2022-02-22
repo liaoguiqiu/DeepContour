@@ -9,11 +9,14 @@ from databufferExcel import EXCEL_saver
 from working_dir_root import Dataset_root, Output_root
 import os
 """ DeepLabv3 Model download and change the head for your prediction"""
+# pip/pip3 install --upgrade setuptools
+# pip3/pip install segmentation-models-pytorch
 from torchvision.models.segmentation.deeplabv3 import DeepLabHead
 from torchvision.models.segmentation.fcn import FCNHead
+import segmentation_models_pytorch as smp
 
-Modelkey_list=['DeeplabV3','FCN']
-Modelkey = Modelkey_list[1]
+Modelkey_list=['DeeplabV3','FCN','PAN','DeeplabV3+','Unet','Unet++']
+Modelkey = Modelkey_list[2]
 
 from torchvision import models
 
@@ -109,7 +112,7 @@ class Pix2Pix_deeplab_Model(BaseModel):
             Returns:
                 model: Returns the DeepLabv3 model with the ResNet101 backbone.
             """
-        # Modelkey_list = ['DeeplabV3', 'FCN']
+        # Modelkey_list =['DeeplabV3','FCN','Unet']
 
         if Modelkey == 'DeeplabV3':
             model = models.segmentation.deeplabv3_resnet101(pretrained=True,
@@ -123,6 +126,38 @@ class Pix2Pix_deeplab_Model(BaseModel):
             model.classifier = FCNHead(Deeplab_feature, outputchannels)
             # Set the model in training mode
             model.train()
+        if Modelkey == 'Unet':
+            model = smp.Unet(
+                encoder_name="resnet34",  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+                encoder_weights="imagenet",  # use `imagenet` pre-trained weights for encoder initialization
+                in_channels=Deeplab_input_c,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
+                classes=Deeplab_out_c,  # model output channels (number of classes in your dataset)
+            )
+        if Modelkey == 'Unet++':
+                model = smp.UnetPlusPlus(
+                    encoder_name="resnet34",  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+                    encoder_weights="imagenet",  # use `imagenet` pre-trained weights for encoder initialization
+                    in_channels=Deeplab_input_c,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
+                    classes=Deeplab_out_c,  # model output channels (number of classes in your dataset)
+                )
+        if Modelkey == 'DeeplabV3+':
+                model = smp.DeepLabV3Plus(
+                    encoder_name="resnet34",  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+                    encoder_weights="imagenet",  # use `imagenet` pre-trained weights for encoder initialization
+                    in_channels=Deeplab_input_c,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
+                    classes=Deeplab_out_c,  # model output channels (number of classes in your dataset)
+                )
+        if Modelkey == 'PAN':
+                model = smp.PAN(
+                    encoder_name="resnet34",  # choose encoder, e.g. mobilenet_v2 or efficientnet-b7
+                    encoder_weights="imagenet",  # use `imagenet` pre-trained weights for encoder initialization
+                    in_channels=Deeplab_input_c,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
+                    classes=Deeplab_out_c,  # model output channels (number of classes in your dataset)
+                )
+
+            # model.classifier = FCNHead(Deeplab_feature, outputchannels)
+            # Set the model in training mode
+        model.train()
         return model
         # return
 
@@ -244,7 +279,12 @@ class Pix2Pix_deeplab_Model(BaseModel):
         self.out_pathes = None
         self.out_exis_v0 = None
         output= self.netG( self.input_G)  # G(A)
-        self.fake_B = output['out']
+        if Modelkey == Modelkey_list[0] or Modelkey == Modelkey_list[1]:
+            self.fake_B = output['out']
+        else:
+            self.fake_B = output
+
+
         self.fake_B_1_hot = rendering.integer2onehot(self.fake_B)
         self.pix_wise =  self.fake_B
         test_time_point = time()
