@@ -50,7 +50,11 @@ def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_
     hot_real[:, :, 2] = oneHot_real[2, :, :]*1.1+oneHot_real[0, :, :]+oneHot_real[1, :, :]*0.5
 
     # saveout  = MODEL.fake_B # display encoding tranform
-    saveout = MODEL.pix_wise  # middel feature pix encoding
+
+    if MODEL.pix_wise is not None:
+        saveout = MODEL.pix_wise  # middel feature pix encoding
+    else:
+        saveout = MODEL.fake_B_1_hot
     # saveout = MODEL.fake_B_1_hot  # middel feature pix encoding
 
     # saveout = rendering.onehot2integer(MODEL.real_B_one_hot)

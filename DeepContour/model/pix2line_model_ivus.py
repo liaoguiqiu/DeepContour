@@ -21,9 +21,9 @@ from working_dir_root import Dataset_root,Output_root
 import numpy as np
 
 # Learning rate for backbone
-Coord_lr = 0.0001
-Pix_lr_lambda = 0.0001
-EXxtens_lr_lambda = 1
+Coord_lr = 0.001
+Pix_lr_lambda = 0.01
+EXxtens_lr_lambda = 10
 
 class Pix2LineModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
@@ -117,7 +117,7 @@ class Pix2LineModel(BaseModel):
             # ], lr=opt.lr, betas=(opt.beta1, 0.999))
             # Optimizer of the CEnet after backbone
             self.optimizer_G = torch.optim.Adam([
-                {'params': self.netG.Unet_back.parameters()},
+                # {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.backbone.parameters()},
                 {'params': self.netG.side_branch1.parameters()},
                 {'params': self.netG.side_branch2.parameters()},
@@ -136,10 +136,12 @@ class Pix2LineModel(BaseModel):
             # ], lr=Coord_lr, momentum=0.9)
             # Optimizer of the Unet like backbone
             self.optimizer_G_unet = None
-            self.optimizer_G_unet = torch.optim.Adam([
-                {'params': self.netG.Unet_back.parameters()},
-                {'params': self.netG.pixencoding.parameters()},
-            ], lr=Coord_lr, betas=(opt.beta1, 0.999))
+            if self.netG.UnetBack_flag == True:  # and self.swither_G<=5:
+
+                self.optimizer_G_unet = torch.optim.Adam([
+                    {'params': self.netG.Unet_back.parameters()},
+                    {'params': self.netG.pixencoding.parameters()},
+                ], lr=Coord_lr, betas=(opt.beta1, 0.999))
 
             self.optimizer_G_f = torch.optim.Adam(self.netG.fusion_layer.  parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
             self.optimizer_G_1 = torch.optim.Adam(self.netG.side_branch1.parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
