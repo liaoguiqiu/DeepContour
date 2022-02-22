@@ -21,11 +21,13 @@ class MTL_loss(object):
    def one_loss_exi(self,output1,target1,exist1,Reverse_existence): # multiply the the xistence to dilute the loss of no back scattering
            b, _, len = output1.size()
            target_scaled = F.interpolate(target1, size=len, mode='area')
+           exist1 = F.interpolate(exist1, size=len, mode='area')
+
            if (Reverse_existence == True):
                exist1 = 1- exist1
            background = (exist1 < 0.5)
            Nonebackground = (exist1 > 0.5)
-           backgroud_beta=0.1
+           backgroud_beta=0
            #TODO: the background beta should be calculated per batch, other wise some channel will be diluted unreasonabley
            # backgroud_beta = (torch.sum(Nonebackground) + 0.0001) / (torch.sum(background) + torch.sum(Nonebackground) + 0.0001)
            backgroud_mask = background * backgroud_beta + Nonebackground
@@ -38,7 +40,7 @@ class MTL_loss(object):
        num = len(output)
        loss = [None]*num
        for i in  range(num):
-           loss[i] = self.one_loss_exi(output[i],target,outexist[i],Reverse_existence)
+           loss[i] = self.one_loss_exi(output[i],target,outexist,Reverse_existence)
        return loss
    # PyTorch
    def custom_cross(self,my_pred,true,batch_size ):

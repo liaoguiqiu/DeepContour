@@ -21,7 +21,7 @@ from working_dir_root import Dataset_root,Output_root
 import numpy as np
 
 # Learning rate for backbone
-Coord_lr = 0.001
+Coord_lr = 0.00005
 Pix_lr_lambda = 0.01
 EXxtens_lr_lambda = 10
 
@@ -352,7 +352,7 @@ class Pix2LineModel(BaseModel):
 
         #LGQ special fusion loss
         #self.loss=self.criterionMTL.multi_loss([self.out_pathes0],self.real_pathes)
-        #self.loss=self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
+        # self.loss=self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)
         # 3 imput , also rely on the existence vector
 
 
@@ -364,8 +364,8 @@ class Pix2LineModel(BaseModel):
         # TODO: Enable at the "end"/fine-tuning of training
         # self.loss=self.criterionMTL.multi_loss (self.out_pathes,self.real_pathes ) #
 
-        self.loss =self.criterionMTL.multi_loss_contour_exist([self.out_pathes[0]],self.real_pathes, [self.real_exv[0]],Reverse_existence) #
-        self.loss_G = self.loss[0]
+        self.loss =self.criterionMTL.multi_loss_contour_exist(self.out_pathes ,self.real_pathes, self.real_exv,Reverse_existence) #
+        self.loss_G = ( 1.0*self.loss[0]  + 0.01*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
 
         if self.swither_G>11:
             self.swither_G = 0

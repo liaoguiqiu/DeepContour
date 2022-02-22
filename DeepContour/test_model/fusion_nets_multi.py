@@ -19,10 +19,10 @@ from dataset_ivus import Out_c,Out_c_e,object_num
 Input_c = 3  # the gray is converted into 3 channnels image
 Pixwise_c = object_num+1  #  addtional heathy layer
 Backbone_u_d = 100
-Backbone_f = 8
-CEnet_f = 8
+Backbone_f = 16
+CEnet_f = 16
 Fusion_times = 3
-
+UnetBack_flag_ACE = False
 class _BackBoneUnet(nn.Module):
     def __init__(self, input_nc=3, output_nc=256, num_downs=8, ngf=32, norm_layer=nn.BatchNorm2d, use_dropout=False):
         super(_BackBoneUnet, self).__init__()
@@ -241,7 +241,7 @@ class Fusion(nn.Module):
 class _2layerFusionNets_(nn.Module):
     # output width=((W-F+2*P )/S)+1
 
-    def __init__(self, classfy=False, UnetBack_flag=True):
+    def __init__(self, classfy=False, UnetBack_flag = UnetBack_flag_ACE ):
         super(_2layerFusionNets_, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
         self.UnetBack_flag = UnetBack_flag
