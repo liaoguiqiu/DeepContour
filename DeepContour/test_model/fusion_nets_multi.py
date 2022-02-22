@@ -19,10 +19,13 @@ from dataset_ivus import Out_c,Out_c_e,object_num
 Input_c = 3  # the gray is converted into 3 channnels image
 Pixwise_c = object_num+1  #  addtional heathy layer
 Backbone_u_d = 100
-Backbone_f = 16
-CEnet_f = 16
+Backbone_f = 8
+CEnet_f = 8
 Fusion_times = 3
-UnetBack_flag_ACE = False
+UnetBack_flag_ACE = False # disable the piramid feature backbone
+SingleBranch =-1 #-1,or 0; use All the branch 1 only use the first branch, 2 only use the second branch, 3only use the third branch
+Without_Auxiliary = False
+Without_ExP = False
 class _BackBoneUnet(nn.Module):
     def __init__(self, input_nc=3, output_nc=256, num_downs=8, ngf=32, norm_layer=nn.BatchNorm2d, use_dropout=False):
         super(_BackBoneUnet, self).__init__()
@@ -325,6 +328,24 @@ class _2layerFusionNets_(nn.Module):
         side_out3l, side_out3H = self.upsample_path(side_out3l)
         activation = nn.Sigmoid()
         out_exist =activation(out_exist)
+
+
+        # digenerate the network to a single branch
+        if SingleBranch == 1:
+            out = side_out1H
+            side_out2l = side_out1l
+            side_out3l = side_out1l
+        elif SingleBranch == 2:
+            out = side_out2H
+            side_out2l = side_out2l
+            side_out3l = side_out2l
+        elif SingleBranch == 3:
+            out = side_out3H
+            side_out2l = side_out3l
+            side_out3l = side_out3l
+
+
+
         return out, side_out1l, side_out2l, side_out3l, pix_seg, out_exist
 
         # return out,side_out,side_out2
