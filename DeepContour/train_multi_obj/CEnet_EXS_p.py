@@ -34,7 +34,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 Visdom_flag = True  # the flag of using the visdom or not
 OLG_flag = False  # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
-validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
+validation_flag = True  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  # display and save result or not
 Save_img_flag = False  # this flag determine if the reuslt will be save  in to a foler
 Continue_flag = True  # if not true, it start from scratch again
@@ -140,7 +140,7 @@ if Using_fed_model_flag == True:  # reload
 if validation_flag == True:
     Federated_learning_flag = False
 
-if validation_flag == True:
+if validation_flag == True and CE_Nets.netG.UnetBack_flag == True:
     CE_Nets.netG.Unet_back.eval()
 print(CE_Nets.netD)
 print(CE_Nets.netG)
