@@ -21,9 +21,9 @@ from working_dir_root import Dataset_root,Output_root
 import numpy as np
 
 # Learning rate for backbone
-Coord_lr = 0.00005
-Pix_lr_lambda = 0.01
-EXxtens_lr_lambda = 10
+Coord_lr = 0.00001
+Pix_lr_lambda = 1
+EXxtens_lr_lambda = 1
 
 class Pix2LineModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
@@ -310,8 +310,8 @@ class Pix2LineModel(BaseModel):
             backgroud_mask = backgroud_mask + Nonebackground*1.0
 
 
-            pix_loss2 = self.criterionL1 (self.pix_wise *backgroud_mask, self.real_B_one_hot)
-            # pix_loss2 = self.criterionL1(self.pix_wise ,self.real_B_one_hot)
+            # pix_loss2 = self.criterionL1 (self.pix_wise *backgroud_mask, self.real_B_one_hot)
+            pix_loss2 = self.criterionL1(self.pix_wise ,self.real_B_one_hot)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
             self.loss_pix =  Pix_lr_lambda * pix_loss2
@@ -356,7 +356,7 @@ class Pix2LineModel(BaseModel):
         else:
             self.loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)  #
         if Without_Auxiliary == False:
-            self.loss_G = ( 1.0*self.loss[0]  + 0.01*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
+            self.loss_G = ( 1.0*self.loss[0]  + 0.001*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
         else:
             self.loss_G = self.loss[0]
 

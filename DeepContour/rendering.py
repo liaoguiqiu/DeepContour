@@ -3,7 +3,7 @@ import torch.nn.functional as F
 import matplotlib.pyplot as plt
 import cv2
 import numpy as np
-
+from dataset_ivus import Existence_thrshold
 
 def OCT_rendering(layers, atten_s, intens, Bz=5):
     H = 64
@@ -204,7 +204,7 @@ def layers_visualized_integer_encodeing_full(layers,existence, H,reverse_exs=Tru
         for j in range(bz):
             this_layer_x = torch.arange(0, W)
             combine_exist = existence[j,l, :] * existence[j,l+1, :]
-            presence_x  = this_layer_x[torch.where(combine_exist >0.5)[0]]
+            presence_x  = this_layer_x[torch.where(combine_exist >Existence_thrshold)[0]]
 
 
             for i in presence_x:

@@ -28,7 +28,7 @@ import os
 from working_dir_root import Dataset_root, Output_root
 from validation import Validation
 from deploy.basic_trans import Basic_oper
-
+from test_model.fusion_nets_multi import ACE_model_key
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
 Visdom_flag = True  # the flag of using the visdom or not
@@ -36,14 +36,20 @@ OLG_flag = False  # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
 validation_flag = True  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  # display and save result or not
-Save_img_flag = False  # this flag determine if the reuslt will be save  in to a foler
+Save_img_flag = True  # this flag determine if the reuslt will be save  in to a foler
 Continue_flag = True  # if not true, it start from scratch again
 Federated_learning_flag = False  # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
 Using_fed_model_flag = False  # True: Fed model, false: local model
 validator = Validation()
-loadmodel_index = '_5.pth'
+loadmodel_index = '_3.pth'
+Model_key = ACE_model_key
 
-Model_key = "CEnet"
+# Model_key = "CEnet_f1_only"
+# Model_key = "CEnet_f2_only"
+# Model_key = "CEnet_no_backbone"
+# Model_key = "CEnet_no_exp"
+#Model_key = "CEnet_no_Aux"
+
 
 infinite_save_id = 0  # use this method so that the index of the image will not start from 0 again when switch the folder
 

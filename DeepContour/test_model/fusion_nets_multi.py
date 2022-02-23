@@ -16,16 +16,40 @@ import numpy as np
 import cv2
 from dataset_ivus import Out_c,Out_c_e,object_num
 
+Model_key_list = ["CEnet", #0
+                   "CEnet_f1_only",#1
+                "CEnet_f2_only",#2
+                "CEnet_no_backbone",#3
+                "CEnet_no_exp",#4
+                "CEnet_no_Aux"]#5
+##TODO:select model
+ACE_model_key = Model_key_list[0]
+################################
 Input_c = 3  # the gray is converted into 3 channnels image
 Pixwise_c = object_num+1  #  addtional heathy layer
 Backbone_u_d = 100
 Backbone_f = 8
 CEnet_f = 8
 Fusion_times = 3
-UnetBack_flag_ACE = False # disable the piramid feature backbone
+UnetBack_flag_ACE = True # disable the piramid feature backbone
 SingleBranch =-1 #-1,or 0; use All the branch 1 only use the first branch, 2 only use the second branch, 3only use the third branch
 Without_Auxiliary = False
 Without_ExP = False
+if ACE_model_key == "CEnet_f1_only":
+    SingleBranch = 1  # -1,or 0; use All the branch 1 only use the first branch,
+if ACE_model_key == "CEnet_f2_only":
+    SingleBranch = 2  # -1,or 0; use All the branch 1 only use the first branch,
+if ACE_model_key == "CEnet_no_backbone":
+    Backbone_f = 32
+    CEnet_f = 32
+    Fusion_times = 3
+    UnetBack_flag_ACE = False
+if ACE_model_key == "CEnet_no_exp":
+    Without_ExP = True
+if ACE_model_key == "CEnet_no_Aux":
+    Without_Auxiliary = True
+
+
 class _BackBoneUnet(nn.Module):
     def __init__(self, input_nc=3, output_nc=256, num_downs=8, ngf=32, norm_layer=nn.BatchNorm2d, use_dropout=False):
         super(_BackBoneUnet, self).__init__()

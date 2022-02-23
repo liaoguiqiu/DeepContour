@@ -22,13 +22,13 @@
 # working_root = "E:/Deep learning/"
 
 #this is for marcopolo linux
-working_root = "/media/icube/DATA1/deeplearning/"
+# working_root = "/media/icube/DATA1/deeplearning/"
 
 #this is for Beatriz's computer
 # working_root = "C:/Workdir/Develop/atlas_collab_ivus/"
 
 #this is for Sanat's computer
-# working_root = "/home/beatriz/Documents/Projects/atlas_collab_ivus/"
+working_root = "/home/beatriz/Documents/Projects/atlas_collab_ivus/"
 
 Dataset_root =  working_root + "dataset/"
 config_root =   working_root + "config/"
