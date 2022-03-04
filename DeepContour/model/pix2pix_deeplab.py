@@ -16,7 +16,7 @@ from torchvision.models.segmentation.fcn import FCNHead
 import segmentation_models_pytorch as smp
 
 Modelkey_list=['DeeplabV3','FCN','PAN','DeeplabV3+','Unet','Unet++']
-Modelkey = Modelkey_list[3]
+Modelkey = Modelkey_list[0]
 
 from torchvision import models
 

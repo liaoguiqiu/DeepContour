@@ -328,9 +328,12 @@ def onehot2layers(onehot):
                 break
     return layer1, layer2
 
-def onehot2layers_cut_bound(onehot): # cut the up and lower boundarys
+def onehot2layers_cut_bound(onehot,Abasence_imageH): # cut the up and lower boundarys
     C, H, W = onehot.size()
-    layers= torch.ones([2*(C-1), W], dtype=torch.long)*(H - 1)
+    layers= torch.zeros([2*(C-1), W], dtype=torch.long)+int(H *Abasence_imageH)
+    # if Abasence_imageH == False:
+    #     layers = torch.zeros([2 * (C - 1), W], dtype=torch.long) * (H - 1) +1
+
     layers =layers.cuda()
     # layer2 = np.ones(W) * (H - 1)
     for k in range(0,C-1):

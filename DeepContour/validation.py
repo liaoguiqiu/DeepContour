@@ -18,7 +18,7 @@ from databufferExcel import EXCEL_saver
 # with torch.autograd.set_detect_anomaly(True).
 from working_dir_root import Dataset_root,Output_root
 import numpy as np
-
+Abasence_imageH = 0.5 # penalize the target
 class Validation(object):
     def __init__(self):
 
@@ -56,9 +56,11 @@ class Validation(object):
 
         # MODEL.set_requires_grad(MODEL.netG, False)  # D requires no gradients when optimizing G
         # out_pathes_real = MODEL.real_pathes
-
+        if Reverse_existence == True:
+            real_exv = 1 - MODEL.real_exv[0]
         real_pathes = MODEL.real_pathes[0]
 
+        real_pathes = MODEL.real_pathes[0] *real_exv+ (1- real_exv)*Abasence_imageH
         # MODEL.validation_cnt += 1
         if MODEL.out_pathes is not None:
             out_pathes_all = MODEL.out_pathes[0]
@@ -77,11 +79,17 @@ class Validation(object):
                 out_exv[i + 1] = out_exv[i] * out_exv[i + 1]
 
             for i in range(len(out_pathes)):
-                out_pathes[i] = out_pathes[i] * out_exv[i] + (~out_exv[i])
+                This_non_exv = (~out_exv[i])
+                This_non_exv.type(torch.FloatTensor)
+                This_non_exv = This_non_exv.cuda()
+                out_pathes[i] = out_pathes[i] * out_exv[i] + This_non_exv*Abasence_imageH
+                # if Abasence_imageH == False:
+                #     out_pathes[i] = out_pathes[i] * out_exv[i]
             # MODEL.real_pathes = pathes
             # MODEL.real_exv = exis_v
+
         else:
-            out_pathes = rendering.onehot2layers_cut_bound(MODEL.fake_B_1_hot[0])
+            out_pathes = rendering.onehot2layers_cut_bound(MODEL.fake_B_1_hot[0],Abasence_imageH)
 
         # out_pathes = rendering.onehot2layers_cut_bound(MODEL.fake_B_1_hot[0])
         # MODEL.out_pathes[0][0] = out_pathes
@@ -97,6 +105,9 @@ class Validation(object):
         #     exvT = MODEL.real_exv > 0.7
         # MODEL.out_pathes[0] = MODEL.out_pathes[0] * exvP + (~exvP) # reverse the mask
         # MODEL.real_pathes = MODEL.real_pathes * exvT + (~exvT)
+        # if Abasence_imageH == False:
+        #     real_pathes = MODEL.real_pathes[0] * MODEL.real_exv[0]
+
         MODEL.L = np.zeros(len(out_pathes))
         for i in range(len(out_pathes)):
             MODEL.L[i] = cal_L(out_pathes[i], real_pathes[i]) * Resample_size

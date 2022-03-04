@@ -34,12 +34,11 @@ seed(1)
 Batch_size = 4
 Resample_size =256 # the input and label will be resampled 
 Path_length = 256
-Augment_limitation_flag = True
+Augment_limitation_flag = False
 Augment_add_lines = False
-Clip_mat_flag = True
+Clip_mat_flag = False
 random_clip_flag = False
-Random_rotate = True
-Random_vertical_shift = False
+
 Reverse_existence = True
 Existence_thrshold = 0.5
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
@@ -49,7 +48,8 @@ class myDataloader(object):
         self.OLG_flag = OLG
         self.GT = True
         self.noisyflag = False
-
+        self.Random_rotate = True
+        self.Random_vertical_shift = True
         self.save_id =0
         #Guiqiu modified for my computer
         self.com_dir =  Generator_Contour_sheath().com_dir # this dir is for the OLG
@@ -91,7 +91,11 @@ class myDataloader(object):
 
         if validation == True:
             self.noisyflag = False
-            
+            self.Random_rotate = False
+            self.Random_vertical_shift = False
+            Random_vertical_shift = False
+            Random_rotate = False
+
         self.read_all_flag=0
         self.read_all_flag2=0
         self.read_record =0
@@ -240,7 +244,7 @@ class myDataloader(object):
     def vertical_shift(self, image, pathes, exis_vec,Reverse_existence):
 
         H, W = image.shape
-        roller = np.random.random_sample() * H -H/2
+        roller = np.random.random_sample() * 2*H -H
         if Reverse_existence == True:
             use_existence = 1- exis_vec
         pathes= pathes*use_existence # mask out
@@ -248,7 +252,7 @@ class myDataloader(object):
         Bottom = np.max(pathes)
         L1 = Top
         L2 = (H-Bottom)
-        roller = np.clip(roller,-L1/2,L2/2) # half the space of shifting
+        roller = np.clip(roller,-L1*2/3,L2*2/3) # half the space of shifting
         roller = int(roller)
 
         image = np.roll(image, roller, axis=0)
@@ -285,7 +289,7 @@ class myDataloader(object):
  
         H,W = image.shape
         fliper = np.random.random_sample() * 10
-        dice = int (fliper)%3 #reduce the possibility of the flips 
+        dice = int (fliper)%2 #reduce the possibility of the flips
         if dice ==0:
             image=cv2.flip(image, 1) # flip  horizon
             #image = np.roll(image, roller, axis = 1)
@@ -520,12 +524,12 @@ class myDataloader(object):
                 #self.input_path [this_pointer ,2, :] = self.input_path [this_pointer ,1, :] 
                 #self.exis_vec  [this_pointer ,2, :] = self.exis_vec  [this_pointer ,1, :]
 
-                if Random_rotate == True:
+                if self.Random_rotate == True:
                     img_piece, self.input_path [this_pointer ,:, :],self.exis_vec [this_pointer ,:, :] =self.rolls(img_piece,self.input_path [this_pointer ,:, :],self.exis_vec [this_pointer ,:, :])  
     
                 #img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
                     img_piece, self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :] =  self.flips2(img_piece,self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :])
-                if Random_vertical_shift == True:
+                if self.Random_vertical_shift == True:
                     img_piece, self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :] =  self.vertical_shift(img_piece,self.input_path [this_pointer ,:, :],self.exis_vec[this_pointer ,:, :],Reverse_existence)
 
 

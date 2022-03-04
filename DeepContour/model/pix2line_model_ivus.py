@@ -22,8 +22,8 @@ import numpy as np
 
 # Learning rate for backbone
 Coord_lr = 0.00001
-Pix_lr_lambda = 1
-EXxtens_lr_lambda = 1
+Pix_lr_lambda = 1.0
+EXxtens_lr_lambda = 1.0
 
 class Pix2LineModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
@@ -117,7 +117,7 @@ class Pix2LineModel(BaseModel):
             # ], lr=opt.lr, betas=(opt.beta1, 0.999))
             # Optimizer of the CEnet after backbone
             self.optimizer_G = torch.optim.Adam([
-                # {'params': self.netG.Unet_back.parameters()},
+                {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.backbone.parameters()},
                 {'params': self.netG.side_branch1.parameters()},
                 {'params': self.netG.side_branch2.parameters()},
@@ -153,6 +153,8 @@ class Pix2LineModel(BaseModel):
             #     {'params': self.netG.fusion_layer_exist .parameters()}
             # ], lr=Coord_lr, betas=(opt.beta1, 0.999))
             self.optimizer_G_e = torch.optim.Adam([
+                {'params': self.netG.Unet_back.parameters()},
+
                 {'params': self.netG.backbone_e.parameters()},
                 {'params': self.netG.side_branch1e.parameters()},
                 {'params': self.netG.side_branch2e.parameters()},
@@ -305,12 +307,12 @@ class Pix2LineModel(BaseModel):
             backgroud_beta  =  torch.unsqueeze(backgroud_beta, 2)
             backgroud_beta  =  torch.unsqueeze(backgroud_beta, 3)
 
-            backgroud_mask = backgroud_mask[:, :, 0:H, 0:W] * backgroud_beta
+            backgroud_mask = background[:, :, 0:H, 0:W] * backgroud_beta + Nonebackground[:, :, 0:H, 0:W] * (1.0-backgroud_beta)
 
-            backgroud_mask = backgroud_mask + Nonebackground*1.0
+            # backgroud_mask = backgroud_mask + Nonebackground*1.0
 
 
-            # pix_loss2 = self.criterionL1 (self.pix_wise *backgroud_mask, self.real_B_one_hot)
+            # pix_loss2 = self.criterionL1 (self.pix_wise *backgroud_mask, self.real_B_one_hot*backgroud_mask)
             pix_loss2 = self.criterionL1(self.pix_wise ,self.real_B_one_hot)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)

@@ -14,7 +14,7 @@ import pandas as pd
 from collections import OrderedDict
 from dataTool.generator_contour_ivus import Save_Contour_pkl
 from working_dir_root import Dataset_root
-Train_validation_split = False  # flag for devide the data
+Train_validation_split = True  # flag for devide the data
 Train_validation_devi = 3  # all data are equally devided by thsi number
 Test_fold = 0  # use the 0 st for training, the other for validation
 Delete_outsider_flag = False
@@ -35,7 +35,7 @@ class Read_read_check_json_label(object):
 #<<<<<<< HEAD:DeepContour/dataTool/read_json_ivus.py
         #sub_folder = "animal2/"
 #=======
-        sub_folder = "6_PDO/"
+        sub_folder = "5_PDG/"
 #>>>>>>> b8bb1d19b916df000a1ab2c21c7474cf6fa38b44:dataTool/read_json_ivus.py
         self.max_presence = 5
         self.image_dir = self.database_root + "img/" + sub_folder
