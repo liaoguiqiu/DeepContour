@@ -48,6 +48,9 @@ class Basic_Operator2:
             # pass
 
         # use different strategies:
+        contoury = contoury.astype(int)
+        contourx = contourx.astype(int)
+
         ori_H, ori_W = img.shape
         points = len(contourx[1])
         new = np.zeros((H, W))
@@ -543,7 +546,7 @@ class Basic_Operator2:
         newx = x
 
         for i in range(len(newy)):
-            newy[i] = np.clip(newy[i], sy[newx[i]] - 1, H - 1)  # allow it to merge int o 1 pix
+            newy[i] = np.clip(newy[i].astype(int), sy[newx[i].astype(int) ]- 1, H - 1)  # allow it to merge int o 1 pix
 
         # width  = 30% - % 50
         newy = np.clip(newy, 0, H - 1)
@@ -955,16 +958,16 @@ class Basic_Operator2:
         while 1:
 
             if contour0y[line_it] <= (H_new - 10):
-                source_line = img1[:, contour0x[line_it]]
+                source_line = img1[:, contour0x[line_it].astype(int)]
                 newy = int(new_contoury[i])
                 iniy = int(contour0y[line_it]) - 3  # add 5 to give more high light boundaries
                 shift = int(newy - iniy)
                 if shift > 0:
-                    new[newy:H_new, new_contourx[i]] = source_line[iniy:H_new - shift]
-                    mask[newy:H_new, new_contourx[i]] = 0
+                    new[newy:H_new, new_contourx[i].astype(int)] = source_line[iniy:H_new - shift]
+                    mask[newy:H_new, new_contourx[i].astype(int)] = 0
                 else:
-                    new[newy:H_new + shift, new_contourx[i]] = source_line[iniy:H_new]
-                    mask[newy:H_new + shift, new_contourx[i]] = 0
+                    new[newy:H_new + shift, new_contourx[i].astype(int)] = source_line[iniy:H_new]
+                    mask[newy:H_new + shift, new_contourx[i].astype(int)] = 0
 
                 i += 1
                 if i > (points_new - 1):

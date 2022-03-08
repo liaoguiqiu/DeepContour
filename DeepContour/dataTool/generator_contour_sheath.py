@@ -13,6 +13,7 @@ import pickle
 from operater import Basic_Operator
 from operator2 import Basic_Operator2
 # the generator and distribution monitoring 
+from working_dir_root import Dataset_root
 
 # this is used  to communicate with trainner py
 class Communicate(object):
@@ -79,13 +80,24 @@ class Generator_Contour_sheath(object):
         self.OLG_flag =False
         self.cv_display = False
         self.origin_data = Save_Contour_pkl()
-        #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/VARY/"
-        self.image_dir ="C:/Users/u0132260/Documents/Data/ivus/img/"
-        self.pkl_dir ="C:/Users/u0132260/Documents/Data/ivus/seg label pkl/"
-        self.save_image_dir ="C:/Users/u0132260/Documents/Data/ivus/img_generate/" # this dir just save all together
-        self.save_image_dir_devi ="C:/Users/u0132260/Documents/Data/ivus/img_genetate_devi/" # this dir devide the generated images
+        # Dataset_root + "label data/"
+        # #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/VARY/"
+        # self.image_dir ="C:/Users/u0132260/Documents/Data/ivus/img/"
+        # self.pkl_dir ="C:/Users/u0132260/Documents/Data/ivus/seg label pkl/"
+        # self.save_image_dir ="C:/Users/u0132260/Documents/Data/ivus/img_generate/" # this dir just save all together
+        # self.save_image_dir_devi ="C:/Users/u0132260/Documents/Data/ivus/img_genetate_devi/" # this dir devide the generated images
+        #
+        # self.save_pkl_dir ="C:/Users/u0132260/Documents/Data/ivus/pkl_generate/"
+        data_root = Dataset_root + "label data/"
+        self.image_dir = data_root + "img/"
+        # self.pkl_dir = data_root +"seg label pkl train/"  #TODO: change this to actually use the flag!!!!
+        # self.pkl_dir = data_root + "seg label pkl/"
+        self.pkl_dir = data_root +"seg label pkl train/"
 
-        self.save_pkl_dir ="C:/Users/u0132260/Documents/Data/ivus/pkl_generate/"
+        # for normal generator
+        self.save_image_dir = data_root + "img_generate/"  # this dir just save all together
+        self.save_image_dir_devi = data_root + "img_genetate_devi/"  # this dir devide the generated images
+        self.save_pkl_dir = data_root + "pkl_generate/"
         #self.origin_data =self.origin_data.read_data(self.pkl_dir)
         #self.origin_data = []
 
@@ -106,7 +118,7 @@ class Generator_Contour_sheath(object):
         self.signal = [None]*self.folder_num
 
         # create a detail foldeer list to save the generated images
-
+        self.generate_num = 5000
         for subfold in self.all_dir_list:
             save_sub =  self. save_image_dir_devi + subfold+'/'
             if not os.path.exists(save_sub):
@@ -150,7 +162,7 @@ class Generator_Contour_sheath(object):
         file_len = len(data.img_num)
         for num in range(file_len):
                 name = data.img_num[num]
-                img_path = self.save_image_dir +  str(name) + ".jpg"
+                img_path = self.save_image_dir +  str(name) + self.image_type
                 img_or = cv2.imread(img_path)
                 img1  =   cv2.cvtColor(img_or, cv2.COLOR_BGR2GRAY)
                 H,W = img1.shape
@@ -198,7 +210,7 @@ class Generator_Contour_sheath(object):
 
             for num in range(file_len):
                 name = self.origin_data.img_num[num]
-                img_path = self.image_dir+ subfold+'/' + name + ".jpg"
+                img_path = self.image_dir+ subfold+'/' + name + self.image_type
                 img_or = cv2.imread(img_path)
                 img1  =   cv2.cvtColor(img_or, cv2.COLOR_BGR2GRAY)
                 H,W = img1.shape
@@ -353,13 +365,16 @@ class Generator_Contour_sheath(object):
 
             #change the dir firstly before read
             #saved_stastics.all_statics_dir = os.path.join(self.signalroot, subfold, 'contour.pkl')
+            imagelist = os.listdir(self.image_dir + subfold + '/')
+            _, image_type = os.path.splitext(imagelist[0])  # first image of this folder
+            self.image_type = image_type  # TODO: understand/ask Guiqiu. why making it self. ??
             this_contour_dir =  self.pkl_dir+ subfold+'/'  # for both linux and window
 
             self.origin_data =self.origin_data.read_data(this_contour_dir)  # this original data label - pkl format
             #number_i +=1
             file_len = len(self.origin_data.img_num)
 
-            repeat = int(5000/file_len) # repeat to balance
+            repeat = int(self.generate_num/file_len) # repeat to balance
             if repeat<1:
 
                 repeat = 1
@@ -370,7 +385,7 @@ class Generator_Contour_sheath(object):
 
                 for num in range(file_len):
                     name = self.origin_data.img_num[num]
-                    img_path = self.image_dir+ subfold+'/' + name + ".tif"
+                    img_path = self.image_dir+ subfold+'/' + name + self.image_type
                     img_or = cv2.imread(img_path)
                     img1  =   cv2.cvtColor(img_or, cv2.COLOR_BGR2GRAY)
                     H,W = img1.shape
@@ -447,8 +462,8 @@ class Generator_Contour_sheath(object):
                     print(str(name))
                     self.append_new_name_contour(img_id,new_cx,new_cy,self.save_pkl_dir)
                     # save them altogether 
-                    cv2.imwrite(self.save_image_dir  + str(img_id) +".jpg",combin )
-                    cv2.imwrite(self.save_image_dir_devi + subfold + '/' + str(img_id_devi) +".jpg",combin ) # save them separately
+                    cv2.imwrite(self.save_image_dir  + str(img_id) +self.image_type,combin )
+                    cv2.imwrite(self.save_image_dir_devi + subfold + '/' + str(img_id_devi) +self.image_type,combin ) # save them separately
 
 
                     # save them separetly 
