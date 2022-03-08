@@ -23,7 +23,7 @@ Model_key_list = ["CEnet", #0
                 "CEnet_no_exp",#4
                 "CEnet_no_Aux"]#5
 ##TODO:select model
-ACE_model_key = Model_key_list[0]
+ACE_model_key = Model_key_list[5]
 ################################
 Input_c = 3  # the gray is converted into 3 channnels image
 Pixwise_c = object_num+1  #  addtional heathy layer
@@ -31,7 +31,7 @@ Backbone_u_d = 100
 Backbone_f = 8
 CEnet_f = 8
 Fusion_times = 3
-UnetBack_flag_ACE = True # disable the piramid feature backbone
+UnetBack_flag_ACE = True # disable the pyramid feature backbone
 SingleBranch =-1 #-1,or 0; use All the branch 1 only use the first branch, 2 only use the second branch, 3only use the third branch
 Without_Auxiliary = False
 Without_ExP = False

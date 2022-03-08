@@ -20,7 +20,7 @@ from scipy.interpolate import interp1d
 # from test_model.fusion_nets_multi import Out_c
 # test on the deploy marcopolo
 
-Sep_Up_Low = True
+Sep_Up_Low = False
 object_num = 2
 max_presence = 1
 if Sep_Up_Low: #
@@ -31,7 +31,7 @@ else:
     Out_c_e = object_num * max_presence
 
 seed(1)
-Batch_size = 4
+Batch_size = 1
 Resample_size =256 # the input and label will be resampled 
 Path_length = 256
 Augment_limitation_flag = False
