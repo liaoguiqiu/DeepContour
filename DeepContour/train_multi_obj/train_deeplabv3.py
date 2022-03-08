@@ -35,7 +35,7 @@ Visdom_flag = False  # the flag of using the visdom or not
 OLG_flag = False  # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
 validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
-Display_fig_flag = True  # display and save result or not
+Display_fig_flag = False  # display and save result or not
 Save_img_flag = False  # this flag determine if the reuslt will be save  in to a foler
 Continue_flag = False  # if not true, it start from scratch again
 Federated_learning_flag = False  # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
@@ -142,7 +142,7 @@ if Using_fed_model_flag == True:  # reload
     MODEL.netD = cloud_interaction.reset_model_para(MODEL.netD, name='cGAND')
 if validation_flag == True:
     Federated_learning_flag = False
-
+MODEL.netG.eval()
 # if validation_flag == True:
     # MODEL.netG.Unet_back.eval()
 print(MODEL.netD)

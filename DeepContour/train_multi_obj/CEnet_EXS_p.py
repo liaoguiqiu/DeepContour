@@ -31,13 +31,13 @@ from deploy.basic_trans import Basic_oper
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
-Visdom_flag = True  # the flag of using the visdom or not
+Visdom_flag = False  # the flag of using the visdom or not
 OLG_flag = False  # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
 validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
-Display_fig_flag = True  # display and save result or not
+Display_fig_flag = False  # display and save result or not
 Save_img_flag = False  # this flag determine if the reuslt will be save  in to a foler
-Continue_flag = True  # if not true, it start from scratch again
+Continue_flag = False  # if not true, it start from scratch again
 Federated_learning_flag = False  # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
 Using_fed_model_flag = False  # True: Fed model, false: local model
 validator = Validation()
@@ -86,7 +86,7 @@ print(torch.cuda.device_count())
 print(torch.cuda.get_device_name(0))
 print(torch.cuda.is_available())
 # dataroot = "../dataset/CostMatrix/"
-torch.set_num_threads(2)
+torch.set_num_threads(1)
 
 # Guiqui 8 layers version
 # netD = gan_body._netD_8()
@@ -139,6 +139,7 @@ if Using_fed_model_flag == True:  # reload
     CE_Nets.netD = cloud_interaction.reset_model_para(CE_Nets.netD, name='cGAND')
 if validation_flag == True:
     Federated_learning_flag = False
+CE_Nets.netG.eval()
 
 if validation_flag == True:
     CE_Nets.netG.Unet_back.eval()

@@ -1,7 +1,7 @@
 import torch
 from model.base_model import BaseModel
 import model.networks as networks
-from time import time
+import time
 import rendering
 from dataset_ivus import Resample_size,Out_c,Reverse_existence # get the our channel for the prediction
 import numpy as np
@@ -16,7 +16,7 @@ from torchvision.models.segmentation.fcn import FCNHead
 import segmentation_models_pytorch as smp
 
 Modelkey_list=['DeeplabV3','FCN','PAN','DeeplabV3+','Unet','Unet++']
-Modelkey = Modelkey_list[2]
+Modelkey = Modelkey_list[5]
 
 from torchvision import models
 
@@ -275,7 +275,7 @@ class Pix2Pix_deeplab_Model(BaseModel):
 
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        start_time = time()
+        start_time = time.clock()
         self.out_pathes = None
         self.out_exis_v0 = None
         output= self.netG( self.input_G)  # G(A)
@@ -287,7 +287,7 @@ class Pix2Pix_deeplab_Model(BaseModel):
 
         self.fake_B_1_hot = rendering.integer2onehot(self.fake_B)
         self.pix_wise =  self.fake_B
-        test_time_point = time()
+        test_time_point = time.clock()
         print(" all test point time is [%f] " % (test_time_point - start_time))
 
     def backward_D(self):

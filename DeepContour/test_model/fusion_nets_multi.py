@@ -18,7 +18,7 @@ from dataset_ivus import Out_c,Out_c_e,object_num
 
 Input_c = 3  # the gray is converted into 3 channnels image
 Pixwise_c = object_num+1  #  addtional heathy layer
-Backbone_u_d = 100
+Backbone_u_d = 50
 Backbone_f = 8
 CEnet_f = 8
 Fusion_times = 3
@@ -264,13 +264,13 @@ class _2layerFusionNets_(nn.Module):
         feature = CEnet_f
         self.side_branch1 = _2LayerScale1(backboneDepth, feature)
 
-        self.side_branch2 = _2LayerScale2(backboneDepth, feature)
-        self.side_branch3 = _2LayerScale3(backboneDepth, feature)
+        # self.side_branch2 = _2LayerScale2(backboneDepth, feature)
+        # self.side_branch3 = _2LayerScale3(backboneDepth, feature)
         self.side_branch1e = _2LayerScale1(backboneDepth, feature)
 
         self.side_branch2e = _2LayerScale2(backboneDepth, feature)
         self.side_branch3e = _2LayerScale3(backboneDepth, feature)
-        self.fusion_layer = Fusion(classfy,self.side_branch1.depth,self.side_branch2.depth,self.side_branch3.depth,Fusion_times)
+        # self.fusion_layer = Fusion(classfy,self.side_branch1.depth,self.side_branch2.depth,self.side_branch3.depth,Fusion_times)
         self.fusion_layer_exist = Fusion(classfy,self.side_branch1e.depth,self.side_branch2e.depth,self.side_branch3e.depth,Fusion_times)  # an additional fusion layer for exv
         self.low_level_encoding = nn.Conv2d(self.side_branch1.depth, Out_c, (1, 3), (1, 1), (0, 1), bias=False)
 
@@ -307,19 +307,20 @@ class _2layerFusionNets_(nn.Module):
 
             pix_seg = None
         f1 = self.side_branch1(backbone_f)  # coordinates encoding
-        f2 = self.side_branch2(backbone_f)  # coordinates encoding
-        f3 = self.side_branch3(backbone_f)  # coordinates encoding
+        # f2 = self.side_branch2(backbone_f)  # coordinates encoding
+        # f3 = self.side_branch3(backbone_f)  # coordinates encoding
         f1e = self.side_branch1e(backbone_fe)  # coordinates encoding
         f2e = self.side_branch2e(backbone_fe)  # coordinates encoding
         f3e = self.side_branch3e(backbone_fe)  # coordinates encoding
-        out = self.fusion_layer(f1, f2, f3)
+        # out = self.fusion_layer(f1, f2, f3)
         out_exist = self.fusion_layer_exist(f1e, f2e, f3e)
         # out_exist = F.sigmoid(out_exist)
 
 
         side_out1l = self.low_level_encoding(f1)
-        side_out2l = self.low_level_encoding(f2)
-        side_out3l = self.low_level_encoding(f3)
+        side_out2l = side_out1l
+        side_out3l = side_out1l
+        out = side_out1l
         side_out1l, side_out1H = self.upsample_path(side_out1l)
         side_out2l, side_out2H = self.upsample_path(side_out2l)
         side_out3l, side_out3H = self.upsample_path(side_out3l)

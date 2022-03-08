@@ -9,7 +9,7 @@ import test_model.fusion_nets_multi as fusion_nets_ivus
 from test_model.loss_MTL import MTL_loss,DiceLoss
 import rendering
 from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length,Reverse_existence
-from time import time
+import time
 import torch.nn as nn
 from torch.autograd import Variable
 from databufferExcel import EXCEL_saver
@@ -120,10 +120,10 @@ class Pix2LineModel(BaseModel):
                 {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.backbone.parameters()},
                 {'params': self.netG.side_branch1.parameters()},
-                {'params': self.netG.side_branch2.parameters()},
-                {'params': self.netG.side_branch3.parameters()},
+                # {'params': self.netG.side_branch2.parameters()},
+                # {'params': self.netG.side_branch3.parameters()},
                 {'params': self.netG.low_level_encoding.parameters()},
-                {'params': self.netG.fusion_layer.parameters()},
+                # {'params': self.netG.fusion_layer.parameters()},
             ], lr=Coord_lr, betas=(opt.beta1, 0.999))
             # self.optimizer_G = torch.optim.SGD([
             #     # {'params': self.netG.Unet_back.parameters()},
@@ -141,10 +141,6 @@ class Pix2LineModel(BaseModel):
                 {'params': self.netG.pixencoding.parameters()},
             ], lr=Coord_lr, betas=(opt.beta1, 0.999))
 
-            self.optimizer_G_f = torch.optim.Adam(self.netG.fusion_layer.  parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
-            self.optimizer_G_1 = torch.optim.Adam(self.netG.side_branch1.parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
-            self.optimizer_G_2 = torch.optim.Adam(self.netG.side_branch2.parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
-            self.optimizer_G_3 = torch.optim.Adam(self.netG.side_branch3.parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
 
             # The same optimization for the 
             # self.optimizer_G_e = torch.optim.Adam([
@@ -165,11 +161,6 @@ class Pix2LineModel(BaseModel):
             #     {'params': self.netG.side_branch3e.parameters()},
             #     {'params': self.netG.fusion_layer_exist.parameters()},
             # ], lr=Coord_lr, momentum=0.9)
-            self.optimizer_E_f = torch.optim.Adam(self.netE.fusion_layer.  parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
-            self.optimizer_E_1 = torch.optim.Adam(self.netE.side_branch1.parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
-            self.optimizer_E_2 = torch.optim.Adam(self.netE.side_branch2.parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
-            self.optimizer_E_3 = torch.optim.Adam(self.netE.side_branch3.parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
-
 
 
             self.optimizer_D = torch.optim.Adam(self.netD.parameters(), lr=Coord_lr, betas=(opt.beta1, 0.999))
@@ -226,14 +217,14 @@ class Pix2LineModel(BaseModel):
 
     def forward(self,validation_flag,one_hot_render = True):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
-        start_time = time()
+        start_time =  time.clock()
         #self.out_pathes = self.netG(self.input_G) # coordinates encoding
         # this version all perdiction are in one net(shared front layer)
         self.out_pathes0, self.out_pathes1,self.out_pathes2,self.out_pathes3,self.pix_wise,self.out_exis_v0 = self.netG(self.input_G)
         self.out_pathes=[self.out_pathes0, self.out_pathes1,self.out_pathes2,self.out_pathes3]
         self.out_exis_vs = [self.out_exis_v0,self.out_exis_v0,self.out_exis_v0,self.out_exis_v0]
 
-        test_time_point = time()
+        test_time_point = time. clock()
         print (" all test point time is [%f] " % ( test_time_point - start_time))
 
         # use the same fusion method to predict the 
@@ -245,7 +236,7 @@ class Pix2LineModel(BaseModel):
             # self.fake_B=  rendering.boundary_visualized_integer_encodeing(self.out_pathes[0],Resample_size) # encode as boundary
 
 
-            self.fake_B=  rendering.layers_visualized_integer_encodeing_full(self.out_pathes[0], self. out_exis_vs[0],Resample_size,Reverse_existence) # encode as boundary
+            self.fake_B=  rendering.layers_visualized_integer_encodeing_full(self.real_pathes, self. out_exis_vs[0],Resample_size,Reverse_existence) # encode as boundary
 
 
             # self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing(self.out_pathes[0],Resample_size)
@@ -413,7 +404,9 @@ class Pix2LineModel(BaseModel):
 
 
     def optimize_parameters(self,validation_flag):
-        self.forward(validation_flag)                   # compute fake images: G(A) # seperatee the for
+        self.set_requires_grad(self.netG, False)
+        while(1):
+            self.forward(validation_flag)                   # compute fake images: G(A) # seperatee the for
         # update D
         #self.set_requires_grad(self.netD, True)  # enable backprop for D
         #self.optimizer_D.zero_grad()     # set D's gradients to zero
