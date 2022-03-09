@@ -60,8 +60,8 @@ The following steps are required in order to run CEnet:
 					  
 
 		--working dir/out/ (store trained models,outputs)
-			---Root/out/CEnet_trained
-				----Root/out/CEnet_trained/telecom
+			---working dir/out/CEnet_trained
+				----working dir/out/CEnet_trained/telecom
 
 
 
@@ -73,11 +73,11 @@ The following steps are required in order to run CEnet:
 
  should be pasted in the folder:
 
-		--Root/out/CEnet_trained
+		--working dir/out/CEnet_trained
 
 		OR
 
-		--Root/out/unet_trained
+		--working dir/out/unet_trained
 
 
 
@@ -92,7 +92,7 @@ If the name is  "/media/icube/DATA1/deeplearning/out/CEnet_trained/telecom/local
 
  should be pasted in the folder:
 
-		----Root/out/CEnet_trained/telecom
+		----working dir/out/CEnet_trained/telecom
 Train CE-net as [" chapter6-fed learning" of this instruction](https://docs.google.com/document/d/1mBG2aeF13Qqxt48tZfYnptq_DKhZpqHj/edit?usp=sharing&ouid=104923533845283983955&rtpof=true&sd=true)
 
 
