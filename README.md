@@ -18,7 +18,8 @@ The following steps are required in order to run CEnet:
         [conda install packages](https://docs.anaconda.com/anaconda/user-guide/tasks/install-packages/)
 1.  Organize all the folder dir as follows( "working dir" as reference):
 	
-	folder structure should be like this:
+folder structure should be like this:
+
 
 	-working dir(e.g. "E:deeplearning" for my windows, "/media/icube/DATA1/deeplearning/" for my linux)
 
