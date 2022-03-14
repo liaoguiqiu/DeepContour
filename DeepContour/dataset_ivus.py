@@ -501,7 +501,7 @@ class myDataloader(object):
                          
                     pathyiter  =  this_pathy[iter]
                     pathxiter  =  this_pathx [iter]
-                    exis_iter= this_exist[iter]
+                    exis_iter= this_exist[iter]*1.0
                     # change the raw annotation into new perAline coordinates and existence vecor
                     path_piece,existence_p=self.disc_vector_resample(pathyiter,exis_iter,pathxiter,H,W,self.img_size,self.img_size)
                     # when consider about  the blaank area,and use the special resize :

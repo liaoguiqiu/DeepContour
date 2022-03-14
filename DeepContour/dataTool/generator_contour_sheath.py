@@ -44,36 +44,44 @@ class Communicate(object):
 #from ImgJ_ROI2 import Read_read_check_ROI_label
 #for this function this is to save the laeyrers
 class Save_Contour_pkl(object):
-    def __init__(self ):
-        #set = Read_read_check_ROI_label()
-        #self.database_root = set.database_root
-        #check or create this path
-        #self.self_check_path_create(self.signal_data_path)
-        self.img_num= []
+    def __init__(self):
+        # set = Read_read_check_ROI_label()
+        # self.database_root = set.database_root
+        # check or create this path
+        # self.self_check_path_create(self.signal_data_path)
+        self.img_num = []
         self.contoursx = []
         self.contoursy = []
-    def self_check_path_create(self,directory):
+        self.contours_exist = []
+
+    def self_check_path_create(self, directory):
         try:
             os.stat(directory)
         except:
-            os.mkdir(directory)  
-   # add new step of all signals
-    def append_new_name_contour(self,number,this_contoursx,this_contoursy,dir):
-        #buffer
-        self.img_num.append(number)
-        self.contoursx.append(this_contoursx)
-        self.contoursy.append(this_contoursy)
+            os.mkdir(directory)
+            # add new step of all signals
 
-        #save the data 
-        save_path = dir + "seg label pkl/"
-        with open(save_path+'contours.pkl', 'wb') as f:
-            pickle.dump(self , f, pickle.HIGHEST_PROTOCOL)
+    def append_new_name_contour(self, number, this_contours_x, this_contours_y, this_contours_exist, dir):
+        # buffer
+        self.img_num.append(number)
+        self.contoursx.append(this_contours_x)
+        self.contoursy.append(this_contours_y)
+        self.contours_exist.append(this_contours_exist)
+        # TODO: check if this function is used anywhere else other than read_json. Yes! inside the generator!
+
+        # save the data
+        save_path = dir
+
+        with open(save_path + 'contours.pkl', 'wb') as f:
+            pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
         pass
-    #read from file
-    def read_data(self,base_root):
-        saved_path  = base_root   
-        self = pickle.load(open(saved_path+'contours.pkl','rb'),encoding='iso-8859-1')
+
+    # read from file
+    def read_data(self, base_root):
+        saved_path = base_root
+        self = pickle.load(open(saved_path + 'contours.pkl', 'rb'), encoding='iso-8859-1')
         return self
+
 
 class Generator_Contour_sheath(object):
     def __init__(self ):
@@ -109,7 +117,7 @@ class Generator_Contour_sheath(object):
         self.img_num= []
         self.contoursx = []
         self.contoursy = []
-
+        self.contours_exist = []
         #get all the folder
         self.all_dir_list = os.listdir(self.pkl_dir)
         self.folder_num = len(self.all_dir_list)
@@ -118,7 +126,7 @@ class Generator_Contour_sheath(object):
         self.signal = [None]*self.folder_num
 
         # create a detail foldeer list to save the generated images
-        self.generate_num = 5000
+        self.generate_num = 500
         for subfold in self.all_dir_list:
             save_sub =  self. save_image_dir_devi + subfold+'/'
             if not os.path.exists(save_sub):
@@ -145,11 +153,14 @@ class Generator_Contour_sheath(object):
             #read the folder list finished  get the folder list and all saved path
     
         #check or create this path
-    def append_new_name_contour(self,number,this_contoursx,this_contoursy,dir):
+    def append_new_name_contour(self,number,this_contoursx,this_contoursy,this_contours_exist,dir):
         #buffer
         self.img_num.append(number)
         self.contoursx.append(this_contoursx)
         self.contoursy.append(this_contoursy)
+        # self.contoursx.append(this_contours_x)
+        # self.contoursy.append(this_contours_y)
+        self.contours_exist.append(this_contours_exist)
 
         #save the data 
         save_path = dir #+ "seg label pkl/"
@@ -219,9 +230,9 @@ class Generator_Contour_sheath(object):
                 #contour0y  = self.origin_data.contoursy[num][0]
                 contourx  = self.origin_data.contoursx[num]
                 contoury  = self.origin_data.contoursy[num]
+                existence = self.origin_data.contours_exist[num]
 
-
-                # fill in the background area with H value when contour is not fully labeld , 
+                # fill in the background area with H value when contour is not fully labeld ,
                 contourx[0],contoury[0] = Basic_Operator2.re_fresh_path(contourx[0],contoury[0],H,W)
                 contourx[1],contoury[1] = Basic_Operator2.re_fresh_path(contourx[1],contoury[1],H,W)
 
@@ -454,13 +465,18 @@ class Generator_Contour_sheath(object):
                     cv2.waitKey(10)   
                     new_cx  = [None]*2
                     new_cy   = [None]*2
+                    new_exit =   [None]*2
                     new_cx[0]  = sheath_x
                     new_cy[0]  = sheath_y
                     new_cx[1]  = new_contourx
                     new_cy[1]  = new_contoury
 
+                    new_exit[0] = new_contourx < (0.95 * H_new)
+                    new_exit[1] = new_contoury < (0.95 * H_new)
+
+
                     print(str(name))
-                    self.append_new_name_contour(img_id,new_cx,new_cy,self.save_pkl_dir)
+                    self.append_new_name_contour(img_id,new_cx,new_cy,new_exit,self.save_pkl_dir)
                     # save them altogether 
                     cv2.imwrite(self.save_image_dir  + str(img_id) +self.image_type,combin )
                     cv2.imwrite(self.save_image_dir_devi + subfold + '/' + str(img_id_devi) +self.image_type,combin ) # save them separately

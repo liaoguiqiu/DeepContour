@@ -23,7 +23,7 @@ Model_key_list = ["CEnet", #0
                 "CEnet_no_exp",#4
                 "CEnet_no_Aux"]#5
 ##TODO:select model
-ACE_model_key = Model_key_list[5]
+ACE_model_key = Model_key_list[0]
 ################################
 Input_c = 3  # the gray is converted into 3 channnels image
 Pixwise_c = object_num+1  #  addtional heathy layer
