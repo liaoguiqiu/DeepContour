@@ -20,7 +20,7 @@ import os
 from working_dir_root import Dataset_root, Output_root
 from deploy.basic_trans import Basic_oper
 from scipy import signal
-
+Merge_existen_flag = False
 def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_id,Model_key):
     if(infinite_save_id > 1000):
         infinite_save_id = 1000
@@ -241,10 +241,11 @@ def display_prediction(infinite_save_id, mydata_loader, MODEL , hot, hot_real,Sa
         cv2.imwrite(this_save_dir +
                     str(infinite_save_id) + ".jpg", circular_color_real)
 
-
-    for i in range(0,len( out_pathes),2):
-        out_exv[i] =  out_exv[i] *  out_exv[i+1]
-        out_exv[i+1] =  out_exv[i] *  out_exv[i+1]
+    # Merge the existence for uper and lower boundary
+    if Merge_existen_flag == True:
+        for i in range(0,len( out_pathes),2):
+            out_exv[i] =  out_exv[i] *  out_exv[i+1]
+            out_exv[i+1] =  out_exv[i] *  out_exv[i+1]
 
 
     colorhot = (color ) * hot
