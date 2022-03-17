@@ -471,7 +471,7 @@ class Generator_Contour_sheath(object):
                     new_cx[1]  = new_contourx
                     new_cy[1]  = new_contoury
 
-                    new_exit[0] = new_contourx < (0.95 * H_new)
+                    new_exit[0] = sheath_y < (0.95 * H_new)
                     new_exit[1] = new_contoury < (0.95 * H_new)
 
 
