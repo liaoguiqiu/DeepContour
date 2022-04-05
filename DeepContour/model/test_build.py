@@ -41,6 +41,7 @@ class CGAN_creator(object):
 
 
 
+
 def find_model_using_name(model_name):
     """Import the module "models/[model_name]_model.py".
 

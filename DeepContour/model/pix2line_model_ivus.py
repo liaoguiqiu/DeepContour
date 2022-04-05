@@ -259,6 +259,7 @@ class Pix2LineModel(BaseModel):
             # self.fake_B=  rendering.layers_visualized_integer_encodeing_full(self.out_pathes[0], self. out_exis_vs[0],Resample_size,Reverse_existence) # encode as boundary
 
 
+
             # self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing(self.out_pathes[0],Resample_size)
             self.fake_B_1_hot = rendering.integer2onehot(self.fake_B )
         if self.pix_wise is None:
