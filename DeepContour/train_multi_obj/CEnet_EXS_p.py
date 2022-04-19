@@ -34,7 +34,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 Visdom_flag = True  # the flag of using the visdom or not
 OLG_flag = False  # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
-validation_flag = True  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
+validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  # display and save result or not
 Save_img_flag = True  # this flag determine if the reuslt will be save  in to a foler
 Continue_flag = True  # if not true, it start from scratch again
@@ -42,7 +42,9 @@ Federated_learning_flag = False  # true to enable the federated learning to inte
 Using_fed_model_flag = False  # True: Fed model, false: local model
 validator = Validation()
 loadmodel_index = '_2.pth'
-Model_key = ACE_model_key
+
+Model_key = "ACEnet_autoAnnotation"
+# Model_key = ACE_model_key
 
 # Model_key = "CEnet_f1_only"
 # Model_key = "CEnet_f2_only"

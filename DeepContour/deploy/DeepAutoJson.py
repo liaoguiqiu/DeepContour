@@ -184,7 +184,7 @@ class Auto_json_label(object):
         # check the cuda device
 
         # Relevant paths
-        pth_save_dir = Output_root + "CEnet_trained/"
+        pth_save_dir = Output_root + "ACEnet_autoAnnotation_trained/"
 
         # folder to auto annotate
         self.database_root = Dataset_root + "annotate/"

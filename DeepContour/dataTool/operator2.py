@@ -488,18 +488,17 @@ class Basic_Operator2:
         return newx, newy
 
     def random_sheath_contour_ivus(H, W, x, y):
-        # first need to determine whether use the origina lcountour to shift
+        # first need to determine whether use the original contour to shift
 
-        # random rol the sheath 
-
+        # random roll the sheath
         np.roll(y, int(np.random.random_sample() * len(y) - 1))
 
         dc1 = np.random.random_sample() * 10
         dc1 = int(dc1) % 2
         if dc1 == 0:  # not use the original signal
-            # inital ramdon width and height
+            # initial random width and height
 
-            # should mainly based o the sheath orginal contor
+            # should mainly based o the sheath original contour
             newy = signal.resample(y, W)
             newx = np.arange(0, W)
             r_vector = np.random.sample(20) * 10

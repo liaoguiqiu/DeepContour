@@ -513,7 +513,7 @@ class Generator_Contour_sheath(object):
                             base_contourx = np.array([contourx[more_contours[val], i] for i, val in
                                                       enumerate(new_contoury.argmin(axis=0))])
 
-                        # so the generated contour is randomly "sharp" or "soft" edged
+                        # dice is so the generated contour is randomly "sharp" or "soft" edged
                         dice = int(np.random.random_sample() * 10)
                         if dice % 2 == 0:  # sharp edge
                             sharp = True

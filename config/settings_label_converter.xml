@@ -4,13 +4,13 @@
 	<LabelData conversionType="Polar" target="Dir"> <!-- (convert to) conversionType: Polar, Cartesian 		target: Dir, SingleImg -->
 
 		<!-- Used when target="Dir"--> 
-		<SourceDir>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_12_09 case 10/Labels_PDY7MCOS_disease</SourceDir>
-		<OutputDir>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_12_09 case 10/Labels_PDY7MCOS_disease_rect</OutputDir>
+		<SourceDir>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_02_02 case 2/Labels_PD8P8EQH</SourceDir>
+		<OutputDir>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_02_02 case 2/Labels_PD8P8EQH_rect_lumen_catheter</OutputDir>
 
 		<!-- Used when target="SingleImg"-->
-		<SourceImg>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_08_25 case 5/Labels_PDGT3Q3C/image0001.json</SourceImg><!-- Include directory and image label file name -->
+		<SourceImg>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_06_24 case 3/IVUS case 03 run 1 left circumflex back to left main/Labels_PD3ZIR1E/image0001.json</SourceImg><!-- Include directory and image label file name -->
 		<OutputImg sameDir="false"> <!-- if sameDir ("true", "false") is false, fileDirPath will be use to save under a directory named conversionType-->
-			<fileDirPath>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_08_25 case 5/Labels_PDGT3Q3C_rect</fileDirPath>
+			<fileDirPath>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_06_24 case 3/IVUS case 03 run 1 left circumflex back to left main/Labels_PD3ZIR1E_rect</fileDirPath>
 		</OutputImg>
 
 	</LabelData>
@@ -19,12 +19,12 @@
 
 		<ImagesDir> <!-- in the case of converting an entire directory of labels. -->
 			<Ext>tif</Ext> <!-- ext refers to the images extension: jpg, tif, png, etc -->
-			<Path>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_12_09 case 10/TIFF_PDY7MCOS_rect</Path> <!-- path to directory to convert -->
+			<Path>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_02_02 case 2/TIFF_PD8P8EQH_rect</Path> <!-- path to directory to convert -->
 		</ImagesDir>
 
 		<SingleImg>  <!-- in the case of converting one label from a single image -->
 			<!-- path to image.ext (inclusive) to convert. ext = e.g. tif, jpg, png -->
-			<filePath>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_08_25 case 5/TIFF_PDGT3Q3C_rect/image0001.tif</filePath> 
+			<filePath>C:/Users/u0132260/Documents/Data/ATLAS-0001/2021_06_24 case 3/IVUS case 03 run 1 left circumflex back to left main/TIFF_PD3ZIR1E_rect/image0001.tif</filePath> 
 		</SingleImg>
 
 	</ImageData>

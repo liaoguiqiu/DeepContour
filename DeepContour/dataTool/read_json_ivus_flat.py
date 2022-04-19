@@ -20,6 +20,7 @@ Test_fold = 0  # use the 0 st for training, the other for validation
 Delete_outsider_flag = False
 Consider_overlapping = False
 
+
 class Read_read_check_json_label(object):
     def __init__(self):
         # self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
@@ -30,19 +31,15 @@ class Read_read_check_json_label(object):
         # self.database_root = "../../dataset/ivus/"
         self.database_root = Dataset_root + "label data/"
 
-        # self.database_root = "D:/Deep learning/dataset/label data/"
-
-        # <<<<<<< HEAD:DeepContour/dataTool/read_json_ivus.py
-        # sub_folder = "animal2/"
-        # =======
-        sub_folder = "3_PD3/"
-        # >>>>>>> b8bb1d19b916df000a1ab2c21c7474cf6fa38b44:dataTool/read_json_ivus.py
+        sub_folder = "2_PD8/"
 
         self.image_dir = self.database_root + "img/" + sub_folder
         self.json_dir = self.database_root + "label/" + sub_folder
         self.save_dir = self.database_root + "seg label pkl/" + sub_folder
         self.save_dir_train = self.database_root + "seg label pkl train/" + sub_folder
         self.save_dir_test = self.database_root + "seg label pkl test/" + sub_folder
+
+        self.max_presence = 5
 
         self.img_num = 0
 
@@ -53,8 +50,6 @@ class Read_read_check_json_label(object):
         if not os.path.exists(self.save_dir_test):
             os.makedirs(self.save_dir_test)
 
-        # self.contours_x = []  # no predefines # predefine there are 4 contours
-        # self.contours_y = []  # predefine there are 4 contours
 
         self.saver = Save_Contour_pkl()
         self.saver_train = Save_Contour_pkl()
@@ -99,7 +94,7 @@ class Read_read_check_json_label(object):
             dx = vx[j]
 
             # _img[int(dy) + 1, int(dx), :] = _img[int(dy), int(dx), :] = painter
-            _img[int(dy) + 1, dx, :] = _img[int(dy) - 1, dx, :] = _img[int(dy), dx, :] = painter
+            _img[int(dy) + 1, int(dx), :] = _img[int(dy) - 1, int(dx), :] = _img[int(dy), int(dx), :] = painter
 
         return _img
 
@@ -143,19 +138,33 @@ class Read_read_check_json_label(object):
 
                     #### Using OrderedDict for backward compatibility since index is important
                     # contours_x is initialized to match the image width for all labels (we need a value per A-line)
-                    contours_x = OrderedDict({key: np.arange(0, W) for key in self.labels_lists.keys()})
+                    # contours_x = OrderedDict({key: np.arange(0, W) for key in self.labels_lists.keys()})
+                    # Update to multi-dimension list
+                    num_label_list = len(self.labels_lists)
+                    contours_x = np.zeros((num_label_list, self.max_presence, W))
+                    # copy this one D array to the 3D array
+                    contours_x[0:num_label_list, 0:self.max_presence, :] = np.arange(0, W)
 
                     # contours_y is initialized to the image height for all A-lines
-                    contours_y = OrderedDict({key: np.ones(W) * H - 1 for key in self.labels_lists.keys()})
+                    # contours_y = OrderedDict({key: np.ones(W) * H - 1 for key in self.labels_lists.keys()})
+                    # Update to multi-dimension list
+                    contours_y = np.zeros((num_label_list, self.max_presence, W)) + H - 1
 
                     # Initialize existence vectors per label = zeros to all A-lines
-                    contours_exist = OrderedDict({key: np.zeros(W, dtype=int) for key in self.labels_lists.keys()})
+                    # contours_exist = OrderedDict({key: np.zeros(W, dtype=int) for key in self.labels_lists.keys()})
+                    # Update to multi-dimension list
+                    contours_exist = np.zeros((num_label_list, self.max_presence, W))
+
+                    # Create list to record count of each object that already appeared
+                    # i.e., duplicated count and/or broken contours
+                    obj_cnt_list = np.zeros(num_label_list)
 
                     for idx in range(num_labels):
 
-                        if [key for key, value in self.labels_lists.items() if shape[idx]['label'] in value][0] \
-                                in self.disease_labels:
-                            continue  # skip to next iteration
+                        # does not work if label in shape is not included in self.labels_lists. To do: fix bug
+                        # if [key for key, value in self.labels_lists.items() if shape[idx]['label'] in value][0] \
+                        #         in self.disease_labels:
+                        #     continue  # skip to next iteration
 
                         coordinates = np.array(shape[idx]['points'])
 
@@ -214,61 +223,51 @@ class Read_read_check_json_label(object):
                         if shape[idx]["label"].lower() in list(
                                 label for sublist in list(self.labels_lists.values()) for label in sublist):
                             current_label = \
-                                [key for key, value in self.labels_lists.items() if shape[idx]['label'] in value][0]
+                                [key for key, value in self.labels_lists.items()
+                                 if shape[idx]['label'].lower() in value][0]
 
-                            # # initialize overlap_x as empty in case there is no overlap (to use in display)
-                            # overlap_x = np.array([])
+                            # get the index number sub 1 if it is not start from 0
+                            label_index_num = int(self.labels_lists[current_label][0]) - 1
+                            repeat = int(obj_cnt_list[label_index_num])
+                            # count that this type of objects appear once again
+                            obj_cnt_list[label_index_num] = obj_cnt_list[label_index_num] + 1
 
-                            if 1 in contours_exist[current_label]:  # multiple vectors with same label
-                                # necessary to check if there are overlapping contours
-                                existing_contour_x = np.where(contours_exist[current_label] == 1)[0]
-                                overlap_x = np.intersect1d(existing_contour_x, path_xl)  # overlapped x coordinates
-
-                                # if there is an overlap --> keep contour points closer to scanning center
-                                if len(overlap_x) != 0:
-                                    new_y_overlapped = path_yl[overlap_x - path_xl[0]]
-                                    existing_y_overlapped = contours_y[current_label][overlap_x]
-                                    closer_to_center_y_overlapped = np.minimum(new_y_overlapped, existing_y_overlapped)
-
-                                    # "safe" to add y coordinates from this vector to label with existing contour with
-                                    # the same label
-                                    contours_y[current_label][path_xl] = path_yl
-
-                                    # overlap was determined before and the corresponding x coordinates can be adjusted
-                                    contours_y[current_label][overlap_x] = closer_to_center_y_overlapped
-
-                                    # change existence vector A-line for non-overlapping y coordinates
-                                    contours_exist[current_label][path_xl] = 1  # overlapping A-lines are already 1
-                                else:
-                                    # Add 1 to the A-lines where there is contour as there is no overlap
-                                    contours_exist[current_label][path_xl] = 1
-                                    contours_y[current_label][path_xl] = path_yl
-                                    # Guiqiu : do a final check if the coutour is near the imager height
-                                    contours_exist[current_label] = contours_exist[current_label] * (
-                                                contours_y[current_label] < (0.95 * H))
-                            else:
-                                # Add 1 to the A-lines where there is contour
-                                contours_exist[current_label][path_xl] = 1
-                                # contours_x[current_label] = path_xl
-                                contours_y[current_label][path_xl] = path_yl
-                                # Guiqiu : do a final check if the coutour is near the imager height
-
-                                contours_exist[current_label] = contours_exist[current_label] * (
-                                            contours_y[current_label] < (0.95 * H))
+                            contours_exist[label_index_num][repeat][path_xl] = 1
+                            contours_y[label_index_num][repeat][path_xl] = path_yl
 
                             # Check if contour is close to the image height and set existence contour to 0
                             # to handle when there is no back-scattering but the manual label was put close to H
-                            contour_y_close_h = np.where(contours_y[current_label] >= 0.96 * H)[0]
-                            contours_exist[current_label][contour_y_close_h] = 0
+                            contours_exist[label_index_num][repeat] = contours_exist[label_index_num][repeat] * (contours_y[label_index_num][repeat] < (0.95 * H))
 
                         pass
 
+                    # re-encode the annotation and reduce the dimension (flatten)
+                    if Consider_overlapping:  # if considering overlapping the contour will be encoded separately
+                        contours_y = contours_y.reshape(num_label_list * self.max_presence, W)
+                        contours_exist = contours_exist.reshape(num_label_list * self.max_presence, W)
+                        contours_x = contours_x.reshape(num_label_list * self.max_presence, W)
+                    else:
+                        contours_y = contours_y * contours_exist  # change the border value to zero
+                        contours_y = np.sum(contours_y, axis=1)
+
+                        contours_exist = np.sum(contours_exist, axis=1)
+                        contours_exist = np.clip(contours_exist, 0, 1)  # limit
+
+                        contours_y = contours_y + (H - 1) * (1 - contours_exist)
+                        contours_y = np.clip(contours_y, 0, H - 1)  # limit
+
+                        contours_x = contours_x[:, 0, :]  # just keep one dimension of x
+
                     if self.display_flag:  # for loop for display out of previous loop in case of overlap of contours
-                        for label, exist_v in contours_exist.items():
-                            if 1 in exist_v:
-                                index = list(contours_exist.keys()).index(label)
-                                img1 = self.draw_coordinates_color(img1, contours_x[label][
-                                    np.where(exist_v == 1)[0]], contours_y[label][np.where(exist_v == 1)[0]], index)
+                        for i in range(len(contours_exist[:, 0])):
+                            if 1 in contours_exist[i, :]:
+                                clr_id = i
+
+                                if Consider_overlapping:
+                                    clr_id = int(i / self.max_presence)
+
+                                # draw duplicated as the same color
+                                img1 = self.draw_coordinates_color(img1, contours_x[i], contours_y[i], int(clr_id))
 
                     # save this result
                     self.img_num = a  # TODO: why assigning a to another variable?
