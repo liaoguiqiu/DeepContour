@@ -22,7 +22,7 @@ Abasence_imageH = 0.5 # penalize the target
 class Validation(object):
     def __init__(self):
 
-        self.metrics_saver= EXCEL_saver(10)
+        self.metrics_saver= EXCEL_saver(8)
 
     def error_calculation(self,MODEL,Model_key):
         # average Jaccard index J
@@ -74,9 +74,9 @@ class Validation(object):
             out_exv_all = out_exv_all > Existence_thrshold
             out_exv = out_exv_all[0]
             # merge two exist
-            for i in range(0, len(out_pathes), 2):
-                out_exv[i] = out_exv[i] * out_exv[i + 1]
-                out_exv[i + 1] = out_exv[i] * out_exv[i + 1]
+            # for i in range(0, len(out_pathes), 2):
+            #     out_exv[i] = out_exv[i] * out_exv[i + 1]
+            #     out_exv[i + 1] = out_exv[i] * out_exv[i + 1]
 
             for i in range(len(out_pathes)):
                 This_non_exv = (~out_exv[i])

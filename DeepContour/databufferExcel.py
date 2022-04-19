@@ -9,7 +9,7 @@ import scipy.signal as signal
 import pandas as pd
 from pathlib import Path
 class EXCEL_saver(object):
-    def __init__(self, num = 10 ):
+    def __init__(self, num = 8 ):
         #self.dir = "D:/Deep learning/out/1out_img/Ori_seg_rec_Unet/"
         self.plots = np.zeros((1,num))  
         self.plots[0,:] = np.arange(num)

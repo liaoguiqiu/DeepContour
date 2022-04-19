@@ -65,7 +65,7 @@ class myDataloader(object):
 
             self.talker.pending =0 # no pending so all folder can be writed
             #self.talker.writing =2
-            self.talker.save_data(self.com_dir) # save
+            self.talker.save_data(self.com_dir) # save0
         root =Dataset_root + "For IVUS/"
 
         self.dataroot = root + "train/img/"
