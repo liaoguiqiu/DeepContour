@@ -3,7 +3,7 @@
 #all_dir_list  =  glob.glob("D:/Deep learning/dataset/original/*/*/pic_all/*.jpg")
 #all_dir_list  =  glob.glob("D:/Deep learning/dataset/label data/img/*/*.jpg")
 #all_dir_list  =  glob.glob("D:/Deep learning/dataset/label data/img_genetate_devi/*/*.jpg")
-
+#TODO: test this tsne code for new data
 from __future__ import print_function
 import time
 
