@@ -15,7 +15,22 @@ from torchvision.models.segmentation.deeplabv3 import DeepLabHead
 from torchvision.models.segmentation.fcn import FCNHead
 import segmentation_models_pytorch as smp
 
-Modelkey_list=['DeeplabV3','FCN','PAN','DeeplabV3+','Unet','Unet++']
+
+# All the dependecy for MMsegmentation
+import mmcv
+import torch
+from mmcv.runner import init_dist
+from mmcv.utils import Config, DictAction, get_git_hash
+
+from mmseg import __version__
+from mmseg.apis import set_random_seed, train_segmentor
+from mmseg.datasets import build_dataset
+from mmseg.models import build_segmentor
+from mmseg.utils import collect_env, get_root_logger
+
+
+Modelkey_list=['DeeplabV3','FCN','PAN','DeeplabV3+','Unet','Unet++','SETR']
+# SETR : Sementation tranformer
 Modelkey = Modelkey_list[0]
 
 from torchvision import models

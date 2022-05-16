@@ -394,7 +394,8 @@ class Auto_json_label(object):
 
                     # pred_coordinates is a list of lists with the points coordinates
                     for idx in range(len(pred_coordinates)):  # iterate over all the contours
-                        if existence_flags[idx]:  # if existence flag is true, there is contour
+                        #TODO:guqiu removed the constrained existence
+                        # if existence_flags[idx]:  # if existence flag is true, there is contour
                             json_data_idx = {
                                 'label': self.labels_lists[idx],
                                 'points': pred_coordinates[idx],
