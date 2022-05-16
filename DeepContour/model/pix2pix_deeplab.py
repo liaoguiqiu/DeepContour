@@ -18,12 +18,14 @@ import segmentation_models_pytorch as smp
 
 # All the dependecy for MMsegmentation
 import mmcv
-import torch
+
 from mmcv.runner import init_dist
 from mmcv.utils import Config, DictAction, get_git_hash
 
 from mmseg import __version__
-from mmseg.apis import set_random_seed, train_segmentor
+from mmseg.apis import   train_segmentor
+
+# from mmseg.apis import set_random_seed, train_segmentor
 from mmseg.datasets import build_dataset
 from mmseg.models import build_segmentor
 from mmseg.utils import collect_env, get_root_logger
@@ -277,9 +279,13 @@ class Pix2Pix_deeplab_Model(BaseModel):
         # self.real_B = realB.to(self.device)
         # self.real_B=rendering.layers_visualized_integer_encodeing(pathes,Resample_size) # this way render it as semantic map
         # self.real_B=rendering.boundary_visualized_integer_encodeing(pathes,Resample_size) # this is a way to encode it as boundary (very spars)
-        self.real_B = rendering.layers_visualized_integer_encodeing_full(pathes, exis_v, Resample_size,
-                                                                         Reverse_existence)  # this is a way to encode it as boundary (very spars)
+        # TODO: this is full one that consider the upper and lower bound
+        # self.real_B = rendering.layers_visualized_integer_encodeing_full(pathes, exis_v, Resample_size,
+        #                                                                  Reverse_existence)  # this is a way to encode it as boundary (very spars)
+        self.real_B = rendering.layers_visualized_integer_encodeing(pathes,
+                                                                    Resample_size)  # this way render it as semantic map
 
+        # self.real_B=rendering.boundary
         self.real_B_one_hot = rendering.integer2onehot(self.real_B )
 
         # LGQ add real path as creterioa for G
