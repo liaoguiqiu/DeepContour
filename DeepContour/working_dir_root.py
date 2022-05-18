@@ -19,14 +19,14 @@
 
 
 #this is for Guiqiu Windows
-working_root = "D:/Deep learning/atlas_collab_ivus/data1/"
+#working_root = "D:/Deep learning/atlas_collab_ivus/data1/"
 
 #this is for marcopolo linux
 
 # working_root = "/media/icube/DATA1/deeplearning/"
 
 # For Tania's computer
-# working_root="/media/icube/DATA1/Working dir CNN/"
+working_root="/media/icube/DATA1/Working dir CNN/"
 
 #this is for Beatriz's computer
 # working_root = "C:/Workdir/Develop/atlas_collab_ivus/"

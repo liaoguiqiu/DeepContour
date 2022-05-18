@@ -2,12 +2,15 @@ import torch
 from model.base_model import BaseModel
 import model.networks as networks
 from time import time
+import time as timeP
+
 import rendering
 from dataset_ivus import Resample_size,Out_c,Reverse_existence # get the our channel for the prediction
 import numpy as np
 from databufferExcel import EXCEL_saver
 from working_dir_root import Dataset_root, Output_root
 import os
+import os.path as osp
 """ DeepLabv3 Model download and change the head for your prediction"""
 # pip/pip3 install --upgrade setuptools
 # pip3/pip install segmentation-models-pytorch
@@ -21,19 +24,135 @@ import mmcv
 
 from mmcv.runner import init_dist
 from mmcv.utils import Config, DictAction, get_git_hash
-
+import argparse
 from mmseg import __version__
-from mmseg.apis import   train_segmentor
-
-# from mmseg.apis import set_random_seed, train_segmentor
-from mmseg.datasets import build_dataset
-from mmseg.models import build_segmentor
-from mmseg.utils import collect_env, get_root_logger
 
 
+from mmseg.apis  import set_random_seed, train_segmentor
+from mmseg.datasets  import build_dataset
+from mmseg.models  import build_segmentor
+from mmseg.utils  import   get_root_logger
+from mmseg.utils import collect_env
+from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
+
+def parse_args():
+    parser = argparse.ArgumentParser(description='Train a segmentor')
+    parser.add_argument('--config',type=str,default='../configs/SETR/SETR_MLA_DeiT_480x480_80k_pascal_context_bs_16.py', help='train config file path')
+    parser.add_argument('--work-dir', help='the dir to save logs and models')
+    parser.add_argument(
+        '--load-from', help='the checkpoint file to load weights from')
+    parser.add_argument(
+        '--resume-from', help='the checkpoint file to resume from')
+    parser.add_argument(
+        '--no-validate',
+        action='store_true',
+        help='whether not to evaluate the checkpoint during training')
+    group_gpus = parser.add_mutually_exclusive_group()
+    group_gpus.add_argument(
+        '--gpus',
+        type=int,
+        help='number of gpus to use '
+        '(only applicable to non-distributed training)')
+    group_gpus.add_argument(
+        '--gpu-ids',
+        type=int,
+        nargs='+',
+        help='ids of gpus to use '
+        '(only applicable to non-distributed training)')
+    parser.add_argument('--seed', type=int, default=None, help='random seed')
+    parser.add_argument(
+        '--deterministic',
+        action='store_true',
+        help='whether to set deterministic options for CUDNN backend.')
+    parser.add_argument(
+        '--options', nargs='+', action=DictAction, help='custom options')
+    parser.add_argument(
+        '--launcher',
+        choices=['none', 'pytorch', 'slurm', 'mpi'],
+        default='none',
+        help='job launcher')
+    parser.add_argument('--local_rank', type=int, default=0)
+    args = parser.parse_args()
+    if 'LOCAL_RANK' not in os.environ:
+        os.environ['LOCAL_RANK'] = str(args.local_rank)
+
+    return args
+args = parse_args()
+
+cfg =Config.fromfile('../configs/SETR/SETR_MLA_DeiT_480x480_80k_pascal_context_bs_16.py')
+if args.options is not None:
+    cfg.merge_from_dict(args.options)
+# set cudnn_benchmark
+if cfg.get('cudnn_benchmark', False):
+    torch.backends.cudnn.benchmark = True
+
+# work_dir is determined in this priority: CLI > segment in file > filename
+if args.work_dir is not None:
+    # update configs according to CLI args if args.work_dir is not None
+    cfg.work_dir = args.work_dir
+elif cfg.get('work_dir', None) is None:
+    # use config filename as default work_dir if cfg.work_dir is None
+    cfg.work_dir = osp.join('./work_dirs',
+                            osp.splitext(osp.basename(args.config))[0])
+if args.load_from is not None:
+    cfg.load_from = args.load_from
+if args.resume_from is not None:
+    cfg.resume_from = args.resume_from
+if args.gpu_ids is not None:
+    cfg.gpu_ids = args.gpu_ids
+else:
+    cfg.gpu_ids = range(1) if args.gpus is None else range(args.gpus)
+
+# init distributed env first, since logger depends on the dist info.
+if args.launcher == 'none':
+    distributed = False
+else:
+    distributed = True
+    init_dist(args.launcher, **cfg.dist_params)
+
+# create work_dir
+mmcv.mkdir_or_exist(osp.abspath(cfg.work_dir))
+# dump config
+cfg.dump(osp.join(cfg.work_dir, osp.basename(args.config)))
+# init the logger before other steps
+timestamp = timeP.strftime('%Y%m%d_%H%M%S', timeP.localtime())
+log_file = osp.join(cfg.work_dir, f'{timestamp}.log')
+logger = get_root_logger(log_file=log_file, log_level=cfg.log_level)
+
+# init the meta dict to record some important information such as
+# environment info and seed, which will be logged
+meta = dict()
+# log env info
+env_info_dict = collect_env()
+env_info = '\n'.join([f'{k}: {v}' for k, v in env_info_dict.items()])
+dash_line = '-' * 60 + '\n'
+logger.info('Environment info:\n' + dash_line + env_info + '\n' +
+            dash_line)
+meta['env_info'] = env_info
+
+# log some basic info
+logger.info(f'Distributed training: {distributed}')
+logger.info(f'Config:\n{cfg.pretty_text}')
+
+# set random seeds
+if args.seed is not None:
+    logger.info(f'Set random seed to {args.seed}, deterministic: '
+                f'{args.deterministic}')
+    set_random_seed(args.seed, deterministic=args.deterministic)
+cfg.seed = args.seed
+meta['seed'] = args.seed
+meta['exp_name'] = osp.basename(args.config)
+
+
+# cfg_SETR = Config.fromfile('../configs/SETR/SETR_MLA_DeiT_480x480_80k_pascal_context_bs_16.py')
+model_SETR = build_segmentor(
+                cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
+# disable the distributed training
+# model_SETR = MMDataParallel(
+#             model_SETR.cuda(cfg.gpu_ids[0]), device_ids=cfg.gpu_ids)
 Modelkey_list=['DeeplabV3','FCN','PAN','DeeplabV3+','Unet','Unet++','SETR']
 # SETR : Sementation tranformer
-Modelkey = Modelkey_list[0]
+Modelkey = Modelkey_list[6]
 
 from torchvision import models
 
@@ -171,6 +290,8 @@ class Pix2Pix_deeplab_Model(BaseModel):
                     in_channels=Deeplab_input_c,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
                     classes=Deeplab_out_c,  # model output channels (number of classes in your dataset)
                 )
+        if Modelkey == 'SETR':
+            model =  model_SETR
 
             # model.classifier = FCNHead(Deeplab_feature, outputchannels)
             # Set the model in training mode
@@ -299,7 +420,14 @@ class Pix2Pix_deeplab_Model(BaseModel):
         start_time = time()
         self.out_pathes = None
         self.out_exis_v0 = None
-        output= self.netG( self.input_G)  # G(A)
+        img_metas =0
+        Map = np.zeros ((2,3,400,400))
+        if   Modelkey == Modelkey_list[6]:
+            output = self.netG.whole_inference(   self.input_G,self.input_G , rescale = False  )  # G(A)
+
+            # output = self.netG.encode_decode(   self.input_G, self.input_G )  # G(A)
+        else:
+            output= self.netG( self.input_G)  # G(A)
         if Modelkey == Modelkey_list[0] or Modelkey == Modelkey_list[1]:
             self.fake_B = output['out']
         else:
