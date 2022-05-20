@@ -37,11 +37,11 @@ Hybrid_OLG = False  # whether  mix with online generated images and real images 
 validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  # display and save result or not
 Save_img_flag = False  # this flag determine if the reuslt will be save  in to a foler
-Continue_flag = False  # if not true, it start from scratch again
+Continue_flag = True  # if not true, it start from scratch again
 Federated_learning_flag = False  # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
 Using_fed_model_flag = False  # True: Fed model, false: local model
 validator = Validation()
-loadmodel_index = '_2.pth'
+loadmodel_index = '_3.pth'
 Model_key = ACE_model_key
 
 # Model_key = "CEnet_f1_only"
