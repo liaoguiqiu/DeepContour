@@ -5,10 +5,10 @@ _base_ = [
 ]
 norm_cfg = dict(type='BN', requires_grad=True)
 model = dict(
-    backbone=dict(img_size=480, pos_embed_interp=True, drop_rate=0., mla_channels=256,
+    backbone=dict(img_size=256, pos_embed_interp=True, drop_rate=0., mla_channels=256,
                   model_name='deit_base_distilled_path16_384', mla_index=(2, 5, 8, 11), embed_dim=768, depth=12, num_heads=12,
                   norm_cfg = dict(type='BN', requires_grad=True)),
-    decode_head=dict(img_size=480, mla_channels=256,
+    decode_head=dict(img_size=256, mla_channels=256,
                      mlahead_channels=128, num_classes=3,
                      norm_cfg = dict(type='BN', requires_grad=True)),
     auxiliary_head=[
@@ -17,7 +17,7 @@ model = dict(
             in_channels=256,
             channels=512,
             in_index=0,
-            img_size=480,
+            img_size=256,
             num_classes=3,
             align_corners=False,
             loss_decode=dict(
@@ -28,7 +28,7 @@ model = dict(
             in_channels=256,
             channels=512,
             in_index=1,
-            img_size=480,
+            img_size=256,
             num_classes=3,
             align_corners=False,
             loss_decode=dict(
@@ -39,7 +39,7 @@ model = dict(
             in_channels=256,
             channels=512,
             in_index=2,
-            img_size=480,
+            img_size=256,
             num_classes=3,
             align_corners=False,
             loss_decode=dict(
@@ -50,7 +50,7 @@ model = dict(
             in_channels=256,
             channels=512,
             in_index=3,
-            img_size=480,
+            img_size=256,
             num_classes=3,
             align_corners=False,
             loss_decode=dict(
@@ -62,6 +62,6 @@ optimizer = dict(lr=0.001, weight_decay=0.0,
                  paramwise_cfg=dict(custom_keys={'head': dict(lr_mult=10.)})
                  )
 
-test_cfg = dict(mode='slide', crop_size=(480, 480), stride=(320, 320))
+test_cfg = dict(mode='slide', crop_size=(256, 256), stride=(170, 170))
 find_unused_parameters = True
 data = dict(samples_per_gpu=2)
