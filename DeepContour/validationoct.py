@@ -92,8 +92,13 @@ class Validation(object):
             # MODEL.real_pathes = pathes
             # MODEL.real_exv = exis_v
 
-        else:
-            out_pathes = rendering.onehot2layers_cut_bound(MODEL.fake_B_1_hot[0],Abasence_imageH)
+        else: # when there is not path, revise the none with the post-processed path
+            # TODO: changed from up-lower to single bound
+            # out_pathes = rendering.onehot2layers_cut_bound(MODEL.fake_B_1_hot[0],Abasence_imageH)
+            out_pathes = rendering.onehot2layers(MODEL.fake_B_1_hot[0])
+            MODEL.out_pathes=[None]*4
+            MODEL.out_pathes[0]= out_pathes
+
 
         # out_pathes = rendering.onehot2layers_cut_bound(MODEL.fake_B_1_hot[0])
         # MODEL.out_pathes[0][0] = out_pathes
@@ -159,4 +164,6 @@ class Validation(object):
         # vector= vector.cpu().detach().numpy()
         save_dir = Output_root + "1Excel/"+Model_key+'/'
         self.metrics_saver.append_save(vector, save_dir)
+
+        return MODEL
 

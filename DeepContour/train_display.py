@@ -22,6 +22,7 @@ from deploy.basic_trans import Basic_oper
 from scipy import signal
 Merge_existen_flag = False
 def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_id,Model_key):
+    # limi the number of saved images
     if(infinite_save_id > 1000):
         infinite_save_id = 1000
 
