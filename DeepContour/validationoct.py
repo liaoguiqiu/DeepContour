@@ -97,9 +97,12 @@ class Validation(object):
             # out_pathes = rendering.onehot2layers_cut_bound(MODEL.fake_B_1_hot[0],Abasence_imageH)
             out_pathes = rendering.onehot2layers(MODEL.fake_B_1_hot[0])
             MODEL.out_pathes=[None]*4
-            MODEL.out_pathes[0]= out_pathes
-
-
+            MODEL.out_exis_vs = [None] * 4
+            MODEL.out_pathes[0]=  out_pathes.unsqueeze(0)
+            if Reverse_existence == True:
+                MODEL.out_exis_vs[0] = out_pathes> 0.5
+            else:
+                MODEL.out_exis_vs[0] = out_pathes < 0.5
         # out_pathes = rendering.onehot2layers_cut_bound(MODEL.fake_B_1_hot[0])
         # MODEL.out_pathes[0][0] = out_pathes
         # loss = MODEL.criterionMTL.multi_loss(MODEL.out_pathes,MODEL.real_pathes)
