@@ -313,6 +313,8 @@ class Pix2Pix_deeplab_Model(BaseModel):
         start_time = time()
         self.out_pathes = None
         self.out_exis_v0 = None
+        self.out_exis_vs = None
+
         img_metas =0
         Map = np.zeros ((2,3,400,400))
         if   Modelkey == Modelkey_list[6]:
@@ -326,8 +328,9 @@ class Pix2Pix_deeplab_Model(BaseModel):
         else:
             self.fake_B = output
 
-
-        self.fake_B_1_hot = rendering.integer2onehot(self.fake_B)
+        # TODO: for onehot encoding the fakeb one hot is fake_B
+        # self.fake_B_1_hot = rendering.integer2onehot(self.fake_B)
+        self.fake_B_1_hot  =   self.fake_B
         self.pix_wise =  self.fake_B
         test_time_point = time()
         print(" all test point time is [%f] " % (test_time_point - start_time))

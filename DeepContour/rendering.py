@@ -317,18 +317,18 @@ def onehot2layers(onehot):
     layer1 = np.zeros(W)
     layer2 = np.ones(W) * (H - 1)
     layers = torch.zeros([C-1, W], dtype=torch.long) + int(H)
-    for i in range(W):  # search the sheath contour  # second channel is the sheath
+    for i in range(W):  # search the sheath contour  # 1st channel is the sheath
         for j in range(H - 5):
             if (onehot[1, j, i] > 0.5 and onehot[1, j + 2, i] < 0.5):
                 layer1[i] = j
                 break
-    for i in range(W):  # search the tissue contour
+    for i in range(W):  # search the tissue contour 2nd channel
         for j in range(H - 5):
             if (onehot[2, j, i] < 0.5 and onehot[2, j + 2, i] > 0.5):
                 layer2[i] = j
                 break
-    layers[0,:] = layer1
-    layers[1,:] = layer2
+    layers[0,:] = torch.from_numpy(layer1)
+    layers[1,:] = torch.from_numpy(layer2)
     layers = layers.type(torch.FloatTensor) / (H - 1)
     layers = layers.cuda()
     return layers
