@@ -1,3 +1,7 @@
+"""
+This version of validation takes he existence vector as individual instead of pair
+"""
+
 import torch
 from model.base_model import BaseModel
 import model.networks as  networks
