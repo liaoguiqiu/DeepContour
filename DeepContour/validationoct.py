@@ -26,16 +26,16 @@ Abasence_imageH = 0.5 # penalize the target
 class Validation(object):
     def __init__(self):
 
-        self.metrics_saver= EXCEL_saver(8)
+        self.metrics_saver= EXCEL_saver(12) # bound error 2, Jacard 3, Dice 3, Prec 2, Recall 2
 
     def error_calculation(self,MODEL,Model_key):
-        # average Jaccard index J
+        # average Jaccard index J (IoU)
         def cal_J(true, predict):
             AnB = true * predict  # assume that the lable are all binary
             AuB = true + predict
             AuB = torch.clamp(AuB, 0, 1)
             s = 0.0001
-            this_j = (torch.sum(AnB) + s) / (torch.sum(AuB) + s)
+            this_j = (torch.sum(AnB) ) / (torch.sum(AuB) + s)
             return this_j
 
         # dice cofefficient
@@ -45,7 +45,7 @@ class Validation(object):
             # AuB=torch.clamp(AuB, 0, 1)
             s = 0.0001
 
-            this_d = (2 * torch.sum(AB) + s) / (torch.sum(true) + torch.sum(predict) + s)
+            this_d = (2 * torch.sum(AB) ) / (torch.sum(true) + torch.sum(predict) + s)
             return this_d
 
         def cal_L(true, predct):  # the L1 distance of one contour
@@ -57,6 +57,24 @@ class Validation(object):
             l = error.size()
             x = torch.sum(error) / l[0]
             return x
+        def cal_P (true, predict): # calculate precision
+
+            AnB = true * predict  #  True positive
+
+            s = 0.0001
+            this_p = (torch.sum(AnB) ) / (torch.sum(predict) + s)
+
+            return this_p
+        def cal_R (true, predict): # calculate Recall
+
+            AnB = true * predict  #  True positive
+            Fn =  (true) * (1-predict*1.0)  # false Negative
+            s = 0.0001
+            this_r = (torch.sum(AnB) ) / (torch.sum(AnB) + torch.sum(Fn) + s)
+
+            return this_r
+
+
 
         # MODEL.set_requires_grad(MODEL.netG, False)  # D requires no gradients when optimizing G
         # out_pathes_real = MODEL.real_pathes
@@ -95,14 +113,15 @@ class Validation(object):
         else: # when there is not path, revise the none with the post-processed path
             # TODO: changed from up-lower to single bound
             # out_pathes = rendering.onehot2layers_cut_bound(MODEL.fake_B_1_hot[0],Abasence_imageH)
-            out_pathes = rendering.onehot2layers(MODEL.fake_B_1_hot[0])
+            out_pathes, out_exv= rendering.onehot2layers(MODEL.fake_B_1_hot[0])
             MODEL.out_pathes=[None]*4
             MODEL.out_exis_vs = [None] * 4
             MODEL.out_pathes[0]=  out_pathes.unsqueeze(0)
+            # out_exv  =
             if Reverse_existence == True:
-                MODEL.out_exis_vs[0] = out_pathes> 0.5
+                MODEL.out_exis_vs[0] =1- out_exv.unsqueeze(0)
             else:
-                MODEL.out_exis_vs[0] = out_pathes < 0.5
+                MODEL.out_exis_vs[0] = out_exv.unsqueeze(0)
         # out_pathes = rendering.onehot2layers_cut_bound(MODEL.fake_B_1_hot[0])
         # MODEL.out_pathes[0][0] = out_pathes
         # loss = MODEL.criterionMTL.multi_loss(MODEL.out_pathes,MODEL.real_pathes)
@@ -120,13 +139,27 @@ class Validation(object):
         # if Abasence_imageH == False:
         #     real_pathes = MODEL.real_pathes[0] * MODEL.real_exv[0]
 
+
+
         MODEL.L = np.zeros(len(out_pathes))
         for i in range(len(out_pathes)):
             MODEL.L[i] = cal_L(out_pathes[i], real_pathes[i]) * Resample_size
             print(" L " + str(i) + '=' + str(MODEL.L[i]))
+
         # MODEL.L1 = cal_L(MODEL.out_pathes[0][0,0,cutedge:Resample_size-cutedge],MODEL.real_pathes[0,0,cutedge:Resample_size-cutedge]) * Resample_size
         # MODEL.L2 = cal_L(MODEL.out_pathes[0][0,1,cutedge:Resample_size-cutedge],MODEL.real_pathes[0,1,cutedge:Resample_size-cutedge]) * Resample_size
 
+        # Calculate the precision of presence
+        MODEL.P = np.zeros(len(out_exv))
+        for i in range(len(out_exv)):
+            MODEL.P[i] = cal_P(real_exv[i], out_exv[i])
+            print(" Precis" + str(i) + '=' + str(MODEL.P[i]))
+
+        # Calculate the recall of presence
+        MODEL.R = np.zeros(len(out_exv))
+        for i in range(len(out_exv)):
+            MODEL.R[i] = cal_R(real_exv[i], out_exv[i])
+            print(" Recall" + str(i) + '=' + str(MODEL.R[i]))
         # print (" L1 =  "  + str(MODEL.L1))
         # print (" L2 =  "  + str(MODEL.L2))
 
@@ -159,7 +192,12 @@ class Validation(object):
         # print (" D1 =  "  + str(MODEL.D1 ))
         # print (" D2 =  "  + str(MODEL.D2 ))
         # print (" D3 =  "  + str(MODEL.D3 ))
-        vector = np.append(MODEL.L, MODEL.J)
+
+
+
+        vector = np.append(MODEL.L,MODEL.P)
+        vector=np.append(vector, MODEL.R )
+        vector=np.append(vector, MODEL.J )
         vector = np.append(vector, MODEL.D)
 
         # vector = [MODEL.L1,MODEL.L2,MODEL.J1, MODEL.J2,MODEL.J3,MODEL.D1,MODEL.D2,MODEL.D3]
