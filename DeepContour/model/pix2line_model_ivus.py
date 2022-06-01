@@ -208,6 +208,8 @@ class Pix2LineModel(BaseModel):
         self.real_B=rendering.layers_visualized_integer_encodeing(pathes,Resample_size) # this way render it as semantic map
 
         # self.real_B=rendering.boundary_visualized_integer_encodeing(pathes,Resample_size) # this is a way to encode it as boundary (very spars)
+        # TODO: this  is the new way that separate the upper and lower, need to uniform all the label encoding
+
         # self.real_B=rendering.layers_visualized_integer_encodeing_full(pathes,exis_v,Resample_size,Reverse_existence) # this is a way to encode it as boundary (very spars)
         self.real_B_one_hot = rendering.integer2onehot(self.real_B)
         # self.real_B_one_hot=rendering.layers_visualized_OneHot_encodeing(pathes,Resample_size)

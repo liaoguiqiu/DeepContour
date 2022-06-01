@@ -19,7 +19,7 @@
 
 
 #this is for Guiqiu Windows
-# working_root = "E:/Deep learning/"
+#working_root = "D:/Deep learning/atlas_collab_ivus/data1/"
 
 #this is for marcopolo linux
 
@@ -33,6 +33,8 @@ working_root="/media/icube/DATA1/Working dir CNN/"
 
 #this is for Sanat's computer
 # working_root = "/home/beatriz/Documents/Projects/atlas_collab_ivus/"
+# working_root = "/home/beatriz/Documents/Projects/Deeplearning/"
+
 
 Dataset_root =  working_root + "dataset/"
 config_root =   working_root + "config/"
