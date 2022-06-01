@@ -3,6 +3,7 @@ This version of validation takes he existence vector as individual instead of pa
 """
 
 import torch
+import  math
 from model.base_model import BaseModel
 import model.networks as  networks
 from test_model import layer_body_sheath_res2
@@ -21,12 +22,14 @@ from databufferExcel import EXCEL_saver
 # expected version 2 instead. Hint: enable anomaly detection to find the operation that failed to compute its gradient,
 # with torch.autograd.set_detect_anomaly(True).
 from working_dir_root import Dataset_root,Output_root
+from scipy.spatial.distance import directed_hausdorff, cdist
+from skimage import metrics
 import numpy as np
 Abasence_imageH = 0.5 # penalize the target
 class Validation(object):
     def __init__(self):
 
-        self.metrics_saver= EXCEL_saver(12) # bound error 2, Jacard 3, Dice 3, Prec 2, Recall 2
+        self.metrics_saver= EXCEL_saver(14) # bound error 2, HDD 2, Prec 2, Recall 2, Jacard 3, Dice 3,
 
     def error_calculation(self,MODEL,Model_key):
         # average Jaccard index J (IoU)
@@ -73,6 +76,46 @@ class Validation(object):
             this_r = (torch.sum(AnB) ) / (torch.sum(AnB) + torch.sum(Fn) + s)
 
             return this_r
+        def convert_ACE_2_CE(ac,p): # Aline hight vector to coordinates sequence with exsitence vector
+            W = len(ac)
+            x = np.arange(0, W)
+            ac = ac.cpu().detach().numpy()
+            p = p.cpu().detach().numpy()
+            # select the valite coordiante
+            array = np.zeros((W, 2))
+
+            array[:, 0] = x
+            array[:, 1] = ac
+
+            # select the new x and y coordinates out with existence
+            x_e = x[ np.where( p[:] >= 0.5)] # considering existence x
+            c_e = ac[ np.where( p[:] >= 0.5)] # with existence
+
+            W_e = len(x_e)
+            array_e = np.zeros((W_e, 2))
+            array_e[:, 0] = x_e.astype(int)
+            array_e[:, 1] = c_e.astype(int)
+
+
+            return array_e
+        def cal_HDD (ct,pt,c,p ): #  Hausdorff distance
+            # TODO: chose to mask out non existence and existence
+
+            true =  convert_ACE_2_CE(ct,pt)
+            predict = convert_ACE_2_CE(c,p)
+
+            # result = metrics.hausdorff_distance (predict ,true )
+            # result = max(directed_hausdorff(true, predict)[0], directed_hausdorff(predict, true)[0])
+            result = cal_min_d (true,predict)
+            return result
+        def cal_min_d (true,predict ): #   based on spacial diatance matrix
+            # TODO:  an M*N spacial distance matrix, pair-wise distance
+            Matrix =  cdist(true, predict, 'euclidean')
+            # symatric mean:
+            Dtp = Matrix.min(axis=0)
+            Dpt = Matrix.min(axis=1)
+            result = max( np.max( Dtp), np.max(Dpt))
+            return result
 
 
 
@@ -162,6 +205,11 @@ class Validation(object):
             print(" Recall" + str(i) + '=' + str(MODEL.R[i]))
         # print (" L1 =  "  + str(MODEL.L1))
         # print (" L2 =  "  + str(MODEL.L2))
+        # Hausdorff distance
+        MODEL.HDD = np.zeros(len(out_exv))
+        for i in range(len(out_exv)):
+            MODEL.HDD[i] = cal_HDD(real_pathes[i]*Resample_size,real_exv[i],out_pathes[i] * Resample_size, out_exv[i])
+            print(" HDD" + str(i) + '=' + str(MODEL.HDD[i]))
 
         # calculate J (IOU insetion portion)
         real_b_hot = MODEL.real_B_one_hot[0]
@@ -196,6 +244,8 @@ class Validation(object):
 
 
         vector = np.append(MODEL.L,MODEL.P)
+        vector = np.append(vector,MODEL.HDD)
+
         vector=np.append(vector, MODEL.R )
         vector=np.append(vector, MODEL.J )
         vector = np.append(vector, MODEL.D)
