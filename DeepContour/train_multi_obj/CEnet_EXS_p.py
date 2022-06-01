@@ -31,17 +31,17 @@ from deploy.basic_trans import Basic_oper
 from test_model.fusion_nets_multi import ACE_model_key
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
-Visdom_flag = False  # the flag of using the visdom or not
+Visdom_flag = True  # the flag of using the visdom or not
 OLG_flag = False  # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
-validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
+validation_flag = True  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  # display and save result or not
-Save_img_flag = False  # this flag determine if the reuslt will be save  in to a foler
-Continue_flag = False  # if not true, it start from scratch again
+Save_img_flag = True  # this flag determine if the reuslt will be save  in to a foler
+Continue_flag = True  # if not true, it start from scratch again
 Federated_learning_flag = False  # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
 Using_fed_model_flag = False  # True: Fed model, false: local model
 validator = Validation()
-loadmodel_index = '_2.pth'
+loadmodel_index = '_5.pth'
 Model_key = ACE_model_key
 
 # Model_key = "CEnet_f1_only"
@@ -177,8 +177,10 @@ switcher = 0  # this determines to use only one data loader or not (if not, synt
 
 while (1):  # main infinite loop
     epoch += 1
-    if mydata_loader1.read_all_flag2 == 1 and validation_flag == True:
+    if mydata_loader1.read_all_flag2 == 1 and validation_flag == True:  # If validation is true is iterate onece in the images
         break
+    # TODO: if the recall curve is required, it will be calculated recurrently for 100 steps
+
 
     while (1):  # loop for going through data set
 

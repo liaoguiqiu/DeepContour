@@ -31,8 +31,8 @@ else:
     Out_c_e = object_num * max_presence
 
 seed(1)
-Batch_size = 2
-Resample_size =256 # the input and label will be resampled 
+Batch_size = 1
+Resample_size =256 # the input and label will be resampled
 Path_length = 256
 Augment_limitation_flag = False
 Augment_add_lines = False

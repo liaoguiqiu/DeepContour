@@ -316,17 +316,33 @@ def onehot2layers(onehot):
     C, H, W = onehot.size()
     layer1 = np.zeros(W)
     layer2 = np.ones(W) * (H - 1)
-    for i in range(W):  # search the sheath contour  # second channel is the sheath
+    layers = torch.zeros([C-1, W], dtype=torch.long) + int(H)
+    ex_v = torch.zeros([C - 1, W], dtype=torch.float)
+    ex1 = np.zeros(W)
+    ex2 = np.zeros(W)
+
+
+    for i in range(W):  # search the sheath contour  # 1st channel is the sheath
         for j in range(H - 5):
             if (onehot[1, j, i] > 0.5 and onehot[1, j + 2, i] < 0.5):
                 layer1[i] = j
+                ex1[i] = 1.0
                 break
-    for i in range(W):  # search the tissue contour
+    for i in range(W):  # search the tissue contour 2nd channel
         for j in range(H - 5):
             if (onehot[2, j, i] < 0.5 and onehot[2, j + 2, i] > 0.5):
                 layer2[i] = j
+                ex2[i] = 1.0
                 break
-    return layer1, layer2
+    layers[0,:] = torch.from_numpy(layer1)
+    layers[1,:] = torch.from_numpy(layer2)
+    layers = layers.type(torch.FloatTensor) / (H - 1)
+    ex_v[0,:]  = torch.from_numpy(ex1)
+    ex_v[1,:]  = torch.from_numpy(ex2)
+
+    layers = layers.cuda()
+    ex_v = ex_v.cuda()
+    return layers,ex_v
 
 def onehot2layers_cut_bound(onehot,Abasence_imageH): # cut the up and lower boundarys
     C, H, W = onehot.size()

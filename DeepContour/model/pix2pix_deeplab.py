@@ -2,12 +2,15 @@ import torch
 from model.base_model import BaseModel
 import model.networks as networks
 from time import time
+import time as timeP
+
 import rendering
 from dataset_ivus import Resample_size,Out_c,Reverse_existence # get the our channel for the prediction
 import numpy as np
 from databufferExcel import EXCEL_saver
 from working_dir_root import Dataset_root, Output_root
 import os
+import os.path as osp
 """ DeepLabv3 Model download and change the head for your prediction"""
 # pip/pip3 install --upgrade setuptools
 # pip3/pip install segmentation-models-pytorch
@@ -21,19 +24,28 @@ import mmcv
 
 from mmcv.runner import init_dist
 from mmcv.utils import Config, DictAction, get_git_hash
-
+import argparse
 from mmseg import __version__
-from mmseg.apis import   train_segmentor
-
-# from mmseg.apis import set_random_seed, train_segmentor
-from mmseg.datasets import build_dataset
-from mmseg.models import build_segmentor
-from mmseg.utils import collect_env, get_root_logger
 
 
+from mmseg.apis  import set_random_seed, train_segmentor
+from mmseg.datasets  import build_dataset
+from mmseg.models  import build_segmentor
+from mmseg.utils  import   get_root_logger
+from mmseg.utils import collect_env
+from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
+
+cfg =Config.fromfile('../configs/SETR/SETR_MLA_DeiT_480x480_80k_pascal_context_bs_16.py')
+
+# cfg_SETR = Config.fromfile('../configs/SETR/SETR_MLA_DeiT_480x480_80k_pascal_context_bs_16.py')
+model_SETR = build_segmentor(
+                cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
+# disable the distributed training
+# model_SETR = MMDataParallel(
+#             model_SETR.cuda(cfg.gpu_ids[0]), device_ids=cfg.gpu_ids)
 Modelkey_list=['DeeplabV3','FCN','PAN','DeeplabV3+','Unet','Unet++','SETR']
 # SETR : Sementation tranformer
-Modelkey = Modelkey_list[0]
+Modelkey = Modelkey_list[6]
 
 from torchvision import models
 
@@ -171,6 +183,8 @@ class Pix2Pix_deeplab_Model(BaseModel):
                     in_channels=Deeplab_input_c,  # model input channels (1 for gray-scale images, 3 for RGB, etc.)
                     classes=Deeplab_out_c,  # model output channels (number of classes in your dataset)
                 )
+        if Modelkey == 'SETR':
+            model =  model_SETR
 
             # model.classifier = FCNHead(Deeplab_feature, outputchannels)
             # Set the model in training mode
@@ -299,14 +313,24 @@ class Pix2Pix_deeplab_Model(BaseModel):
         start_time = time()
         self.out_pathes = None
         self.out_exis_v0 = None
-        output= self.netG( self.input_G)  # G(A)
+        self.out_exis_vs = None
+
+        img_metas =0
+        Map = np.zeros ((2,3,400,400))
+        if   Modelkey == Modelkey_list[6]:
+            output = self.netG.whole_inference(   self.input_G,self.input_G , rescale = False  )  # G(A)
+
+            # output = self.netG.encode_decode(   self.input_G, self.input_G )  # G(A)
+        else:
+            output= self.netG( self.input_G)  # G(A)
         if Modelkey == Modelkey_list[0] or Modelkey == Modelkey_list[1]:
             self.fake_B = output['out']
         else:
             self.fake_B = output
 
-
-        self.fake_B_1_hot = rendering.integer2onehot(self.fake_B)
+        # TODO: for onehot encoding the fakeb one hot is fake_B
+        # self.fake_B_1_hot = rendering.integer2onehot(self.fake_B)
+        self.fake_B_1_hot  =   self.fake_B
         self.pix_wise =  self.fake_B
         test_time_point = time()
         print(" all test point time is [%f] " % (test_time_point - start_time))
@@ -333,7 +357,9 @@ class Pix2Pix_deeplab_Model(BaseModel):
         # pred_fake = self.netD(fake_AB)
         # self.loss_G_GAN = self.criterionGAN(pred_fake, True)
         # Second, G (A) = B
-        self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+        #self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+        self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B_one_hot) * self.opt.lambda_L1
+
         # combine loss and calculate gradients
         # self.loss_G = self.loss_G_GAN + self.loss_G_L1
         self.loss_G = self.loss_G_L1
