@@ -20,9 +20,8 @@ The following steps are required in order to run CEnet:
 	
 folder structure should be like this:
 
-
-	-working dir(e.g. "E:deeplearning" for my windows, "/media/icube/DATA1/deeplearning/" for my linux)
-
+	-working dir(e.g. "E:deeplearning" for my windows, "/media/icube/DATA1/deeplearning/" for my linux)/
+	
 		--working dir/config/ (store config files,e.g. example.json)
 
 		--working dir/dataset/ (everything about data)

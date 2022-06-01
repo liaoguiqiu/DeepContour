@@ -22,8 +22,8 @@ import numpy as np
 
 # Learning rate for backbone
 Coord_lr = 0.00001
-Pix_lr_lambda = 1.0
-EXxtens_lr_lambda = 1.0
+Pix_lr_lambda = 10.0
+EXxtens_lr_lambda = 10.0
 
 class Pix2LineModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
@@ -117,7 +117,7 @@ class Pix2LineModel(BaseModel):
             # ], lr=opt.lr, betas=(opt.beta1, 0.999))
             # Optimizer of the CEnet after backbone
             self.optimizer_G = torch.optim.Adam([
-                {'params': self.netG.Unet_back.parameters()},
+                # {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.backbone.parameters()},
                 {'params': self.netG.side_branch1.parameters()},
                 {'params': self.netG.side_branch2.parameters()},
@@ -153,7 +153,7 @@ class Pix2LineModel(BaseModel):
             #     {'params': self.netG.fusion_layer_exist .parameters()}
             # ], lr=Coord_lr, betas=(opt.beta1, 0.999))
             self.optimizer_G_e = torch.optim.Adam([
-                {'params': self.netG.Unet_back.parameters()},
+                # {'params': self.netG.Unet_back.parameters()},
 
                 {'params': self.netG.backbone_e.parameters()},
                 {'params': self.netG.side_branch1e.parameters()},
@@ -203,9 +203,14 @@ class Pix2LineModel(BaseModel):
         self.real_A = realA.to(self.device)
 
         #self.real_B = realB.to(self.device)
-        # self.real_B=rendering.layers_visualized_integer_encodeing(pathes,Resample_size) # this way render it as semantic map
+        # this for the old OCT that has no sepearation on the Upper and lower boundaries
+
+        self.real_B=rendering.layers_visualized_integer_encodeing(pathes,Resample_size) # this way render it as semantic map
+
         # self.real_B=rendering.boundary_visualized_integer_encodeing(pathes,Resample_size) # this is a way to encode it as boundary (very spars)
-        self.real_B=rendering.layers_visualized_integer_encodeing_full(pathes,exis_v,Resample_size,Reverse_existence) # this is a way to encode it as boundary (very spars)
+        # TODO: this  is the new way that separate the upper and lower, need to uniform all the label encoding
+
+        # self.real_B=rendering.layers_visualized_integer_encodeing_full(pathes,exis_v,Resample_size,Reverse_existence) # this is a way to encode it as boundary (very spars)
         self.real_B_one_hot = rendering.integer2onehot(self.real_B)
         # self.real_B_one_hot=rendering.layers_visualized_OneHot_encodeing(pathes,Resample_size)
 
@@ -245,11 +250,16 @@ class Pix2LineModel(BaseModel):
         if (validation_flag == True):
              self.mask_with_exist()
         if (one_hot_render == True):
-            # self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes[0],Resample_size) # encode as semantic map
+
+
+
+            #TODO: this  is the old way that without separating the upper and lower
+            self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes[0],Resample_size) # encode as semantic map
             # self.fake_B=  rendering.boundary_visualized_integer_encodeing(self.out_pathes[0],Resample_size) # encode as boundary
 
+            # TODO: this  is the new way that separate the upper and lower, need to uniform all the label encoding
+            # self.fake_B=  rendering.layers_visualized_integer_encodeing_full(self.out_pathes[0], self. out_exis_vs[0],Resample_size,Reverse_existence) # encode as boundary
 
-            self.fake_B=  rendering.layers_visualized_integer_encodeing_full(self.out_pathes[0], self. out_exis_vs[0],Resample_size,Reverse_existence) # encode as boundary
 
 
             # self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing(self.out_pathes[0],Resample_size)

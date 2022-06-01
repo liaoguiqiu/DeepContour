@@ -20,8 +20,9 @@ import os
 from working_dir_root import Dataset_root, Output_root
 from deploy.basic_trans import Basic_oper
 from scipy import signal
-
+Merge_existen_flag = False
 def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_id,Model_key):
+    # limi the number of saved images
     if(infinite_save_id > 1000):
         infinite_save_id = 1000
 
@@ -189,8 +190,23 @@ def display_prediction_exis(infinite_save_id, mydata_loader, save_out):  # displ
     color[:, :, 0] = color[:, :, 1] = color[:, :, 2] = show2
 
     for i in range(len(save_out)):
+        this_presence_mask =   color[:, :, 0] *0 +1
+        if Reverse_existence == True:
+            this_ext = (Resample_size-save_out[i])/Resample_size
+        else:
+            this_ext = save_out[i]/Resample_size
+
+        Existence_2D= this_ext.reshape(( 1, this_ext.size))
+
+        this_presence_mask = this_presence_mask * Existence_2D * 254
+        this_presence_mask = cv2.applyColorMap(this_presence_mask.astype(numpy.uint8), cv2.COLORMAP_JET)
+        super_imposed_mask= cv2.addWeighted(this_presence_mask, 0.3, color.astype(numpy.uint8), 0.7, 0)
         this_coordinate = signal.resample(save_out[i], Resample_size)
         color = draw_coordinates_color(color, this_coordinate, int(i/max_presence))
+        # Create local presence focusing map:
+        cv2.imshow('Existence Mask' + str(i), super_imposed_mask.astype(numpy.uint8))
+        Mask_cir =    Basic_oper.tranfer_frome_rec2cir2(super_imposed_mask)
+        cv2.imshow('Existence Mask circ' + str(i), Mask_cir.astype(numpy.uint8))
 
     # show3 = numpy.append(show1,show2,axis=1) # cascade
     show4 = numpy.append(color1, color, axis=1)  # cascade
@@ -241,10 +257,11 @@ def display_prediction(infinite_save_id, mydata_loader, MODEL , hot, hot_real,Sa
         cv2.imwrite(this_save_dir +
                     str(infinite_save_id) + ".jpg", circular_color_real)
 
-
-    for i in range(0,len( out_pathes),2):
-        out_exv[i] =  out_exv[i] *  out_exv[i+1]
-        out_exv[i+1] =  out_exv[i] *  out_exv[i+1]
+    # Merge the existence for uper and lower boundary
+    if Merge_existen_flag == True:
+        for i in range(0,len( out_pathes),2):
+            out_exv[i] =  out_exv[i] *  out_exv[i+1]
+            out_exv[i+1] =  out_exv[i] *  out_exv[i+1]
 
 
     colorhot = (color ) * hot

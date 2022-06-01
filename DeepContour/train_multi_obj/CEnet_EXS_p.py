@@ -26,7 +26,7 @@ import os
 # from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 # switch to another data loader for the IVUS, whih will have both the position and existence vector
 from working_dir_root import Dataset_root, Output_root
-from validation import Validation
+from validationoct import Validation
 from deploy.basic_trans import Basic_oper
 from test_model.fusion_nets_multi import ACE_model_key
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -41,7 +41,7 @@ Continue_flag = True  # if not true, it start from scratch again
 Federated_learning_flag = False  # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
 Using_fed_model_flag = False  # True: Fed model, false: local model
 validator = Validation()
-loadmodel_index = '_2.pth'
+loadmodel_index = '_5.pth'
 Model_key = ACE_model_key
 
 # Model_key = "CEnet_f1_only"
@@ -177,8 +177,10 @@ switcher = 0  # this determines to use only one data loader or not (if not, synt
 
 while (1):  # main infinite loop
     epoch += 1
-    if mydata_loader1.read_all_flag2 == 1 and validation_flag == True:
+    if mydata_loader1.read_all_flag2 == 1 and validation_flag == True:  # If validation is true is iterate onece in the images
         break
+    # TODO: if the recall curve is required, it will be calculated recurrently for 100 steps
+
 
     while (1):  # loop for going through data set
 

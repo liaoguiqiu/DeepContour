@@ -20,7 +20,7 @@ from scipy.interpolate import interp1d
 # from test_model.fusion_nets_multi import Out_c
 # test on the deploy marcopolo
 
-Sep_Up_Low = True
+Sep_Up_Low = False
 object_num = 2
 max_presence = 1
 if Sep_Up_Low: #
@@ -31,8 +31,8 @@ else:
     Out_c_e = object_num * max_presence
 
 seed(1)
-Batch_size = 4
-Resample_size =256 # the input and label will be resampled 
+Batch_size = 1
+Resample_size =256 # the input and label will be resampled
 Path_length = 256
 Augment_limitation_flag = False
 Augment_add_lines = False
@@ -65,7 +65,7 @@ class myDataloader(object):
 
             self.talker.pending =0 # no pending so all folder can be writed
             #self.talker.writing =2
-            self.talker.save_data(self.com_dir) # save
+            self.talker.save_data(self.com_dir) # save0
         root =Dataset_root + "For IVUS/"
 
         self.dataroot = root + "train/img/"
@@ -501,7 +501,7 @@ class myDataloader(object):
                          
                     pathyiter  =  this_pathy[iter]
                     pathxiter  =  this_pathx [iter]
-                    exis_iter= this_exist[iter]
+                    exis_iter= this_exist[iter]*1.0
                     # change the raw annotation into new perAline coordinates and existence vecor
                     path_piece,existence_p=self.disc_vector_resample(pathyiter,exis_iter,pathxiter,H,W,self.img_size,self.img_size)
                     # when consider about  the blaank area,and use the special resize :
