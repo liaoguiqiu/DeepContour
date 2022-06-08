@@ -347,6 +347,8 @@ def onehot2layers(onehot):
 def onehot2layers_cut_bound(onehot,Abasence_imageH): # cut the up and lower boundarys
     C, H, W = onehot.size()
     layers= torch.zeros([2*(C-1), W], dtype=torch.long)+int(H *Abasence_imageH)
+    ex_v= torch.zeros([2*(C-1), W], dtype=torch.float)
+
     # if Abasence_imageH == False:
     #     layers = torch.zeros([2 * (C - 1), W], dtype=torch.long) * (H - 1) +1
 
@@ -357,17 +359,20 @@ def onehot2layers_cut_bound(onehot,Abasence_imageH): # cut the up and lower boun
             for j in range(H - 5): # ignore the first background layer
                 if (onehot[k+1, j, i] < 0.5 and onehot[k+1, j + 2, i] > 0.5):
                     layers[2*k,i] = j
+                    ex_v [2*k,i] =  1.0
                     break
             for j in range(layers[2*k,i],H - 5):  # ignore the first background layer
                 if (onehot[k + 1, j, i] > 0.5 and onehot[k + 1, j + 2, i] < 0.5):
                     layers[2 * k+1, i] = j
+                    ex_v [2*k+1,i] =  1.0
                     break
 
     # out = out.type(torch.FloatTensor)
     layers=layers.type(torch.FloatTensor)/(H-1)
     layers =layers.cuda()
+    ex_v = ex_v.cuda()
 
-    return layers
+    return layers,ex_v
 def pytorch_test():
     H = 300
     I0 = 400

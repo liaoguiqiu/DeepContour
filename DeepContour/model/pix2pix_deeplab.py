@@ -1,3 +1,14 @@
+
+# All the dependecy for MMsegmentation
+# import mmcv
+
+# from mmcv.runner import init_dist
+# import argparse
+# from mmseg import __version__
+#
+#
+
+
 import torch
 from model.base_model import BaseModel
 import model.networks as networks
@@ -5,7 +16,7 @@ from time import time
 import time as timeP
 
 import rendering
-from dataset_ivus import Resample_size,Out_c,Reverse_existence # get the our channel for the prediction
+from dataset_ivus import Resample_size,Out_c,Reverse_existence, Sep_Up_Low # get the our channel for the prediction
 import numpy as np
 from databufferExcel import EXCEL_saver
 from working_dir_root import Dataset_root, Output_root
@@ -19,36 +30,27 @@ from torchvision.models.segmentation.fcn import FCNHead
 import segmentation_models_pytorch as smp
 
 
-# All the dependecy for MMsegmentation
-import mmcv
 
-from mmcv.runner import init_dist
-from mmcv.utils import Config, DictAction, get_git_hash
-import argparse
-from mmseg import __version__
-
-
-from mmseg.apis  import set_random_seed, train_segmentor
-from mmseg.datasets  import build_dataset
-from mmseg.models  import build_segmentor
-from mmseg.utils  import   get_root_logger
-from mmseg.utils import collect_env
-from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
-
-cfg =Config.fromfile('../configs/SETR/SETR_MLA_DeiT_480x480_80k_pascal_context_bs_16.py')
-
-# cfg_SETR = Config.fromfile('../configs/SETR/SETR_MLA_DeiT_480x480_80k_pascal_context_bs_16.py')
-model_SETR = build_segmentor(
-                cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
 # disable the distributed training
 # model_SETR = MMDataParallel(
 #             model_SETR.cuda(cfg.gpu_ids[0]), device_ids=cfg.gpu_ids)
 Modelkey_list=['DeeplabV3','FCN','PAN','DeeplabV3+','Unet','Unet++','SETR']
 # SETR : Sementation tranformer
 Modelkey = Modelkey_list[6]
+if Modelkey == 'SETR':
+    from mmcv.utils import Config, DictAction, get_git_hash
+# from mmseg.apis  import set_random_seed, train_segmentor
+# from mmseg.datasets  import build_dataset
+    from mmseg.models  import build_segmentor
+# from mmseg.utils  import   get_root_logger
+# from mmseg.utils import collect_env
+# from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
+    from torchvision import models
+    cfg =Config.fromfile('../configs/SETR/SETR_MLA_DeiT_480x480_80k_pascal_context_bs_16.py')
 
-from torchvision import models
-
+    # cfg_SETR = Config.fromfile('../configs/SETR/SETR_MLA_DeiT_480x480_80k_pascal_context_bs_16.py')
+    model_SETR = build_segmentor(
+                    cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
 Deeplab_feature = 2048
 Deeplab_out_c = Out_c # depends on the data channel
 Deeplab_out_c = 1
@@ -296,8 +298,12 @@ class Pix2Pix_deeplab_Model(BaseModel):
         # TODO: this is full one that consider the upper and lower bound
         # self.real_B = rendering.layers_visualized_integer_encodeing_full(pathes, exis_v, Resample_size,
         #                                                                  Reverse_existence)  # this is a way to encode it as boundary (very spars)
-        self.real_B = rendering.layers_visualized_integer_encodeing(pathes,
-                                                                    Resample_size)  # this way render it as semantic map
+        # self.real_B = rendering.layers_visualized_integer_encodeing(pathes,
+        #                                                             Resample_size)  # this way render it as semantic map
+        if Sep_Up_Low == False:
+            self.real_B=rendering.layers_visualized_integer_encodeing(pathes,Resample_size) # this way render it as semantic map
+        else:
+            self.real_B=rendering.layers_visualized_integer_encodeing_full(pathes,exis_v,Resample_size,Reverse_existence) # this is a way to encode it as boundary (very spars)
 
         # self.real_B=rendering.boundary
         self.real_B_one_hot = rendering.integer2onehot(self.real_B )

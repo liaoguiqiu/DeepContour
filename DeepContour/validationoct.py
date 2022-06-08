@@ -12,7 +12,7 @@ import test_model.fusion_nets_multi as fusion_nets_ivus
 
 from test_model.loss_MTL import MTL_loss,DiceLoss
 import rendering
-from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length,Reverse_existence,Existence_thrshold
+from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length,Reverse_existence,Existence_thrshold,Sep_Up_Low
 from time import time
 import torch.nn as nn
 from torch.autograd import Variable
@@ -28,27 +28,31 @@ import numpy as np
 Abasence_imageH = 0.5 # penalize the target
 class Validation(object):
     def __init__(self):
-
-        self.metrics_saver= EXCEL_saver(14) # bound error 2, HDD 2, Prec 2, Recall 2, Jacard 3, Dice 3,
-
+        if Sep_Up_Low == False :
+            self.metrics_saver= EXCEL_saver(14) # bound error 2, HDD 2, Prec 2, Recall 2, Jacard 3, Dice 3,
+        else:
+            self.metrics_saver = EXCEL_saver(24)  # bound error 4, HDD 4, Prec 4, Recall 4, Jacard 3, Dice 3,, overall J + D 2
     def error_calculation(self,MODEL,Model_key):
         # average Jaccard index J (IoU)
-        def cal_J(true, predict):
+        def cal_J(true, predict,thre=0.5):
+            predict = predict >  thre
+
             AnB = true * predict  # assume that the lable are all binary
             AuB = true + predict
             AuB = torch.clamp(AuB, 0, 1)
             s = 0.0001
-            this_j = (torch.sum(AnB) ) / (torch.sum(AuB) + s)
+            this_j = (torch.sum(AnB) +s) / (torch.sum(AuB) + s)
             return this_j
 
         # dice cofefficient
-        def cal_D(true, predict):
+        def cal_D(true, predict,thre=0.5):
+            predict = predict >  thre
             AB = true * predict  # assume that the lable are all binary
             # AuB = true+predict
             # AuB=torch.clamp(AuB, 0, 1)
             s = 0.0001
 
-            this_d = (2 * torch.sum(AB) ) / (torch.sum(true) + torch.sum(predict) + s)
+            this_d = (2 * torch.sum(AB) +s ) / (torch.sum(true) + torch.sum(predict) + s)
             return this_d
 
         def cal_L(true, predct):  # the L1 distance of one contour
@@ -97,7 +101,7 @@ class Validation(object):
             array_e[:, 1] = c_e.astype(int)
 
 
-            return array_e
+            return array
         def cal_HDD (ct,pt,c,p ): #  Hausdorff distance
             # TODO: chose to mask out non existence and existence
 
@@ -155,8 +159,10 @@ class Validation(object):
 
         else: # when there is not path, revise the none with the post-processed path
             # TODO: changed from up-lower to single bound
-            # out_pathes = rendering.onehot2layers_cut_bound(MODEL.fake_B_1_hot[0],Abasence_imageH)
-            out_pathes, out_exv= rendering.onehot2layers(MODEL.fake_B_1_hot[0])
+            if Sep_Up_Low == True:
+                out_pathes , out_exv= rendering.onehot2layers_cut_bound(MODEL.fake_B_1_hot[0],Abasence_imageH)
+            else:
+                out_pathes, out_exv= rendering.onehot2layers(MODEL.fake_B_1_hot[0])
             MODEL.out_pathes=[None]*4
             MODEL.out_exis_vs = [None] * 4
             MODEL.out_pathes[0]=  out_pathes.unsqueeze(0)
@@ -223,6 +229,9 @@ class Validation(object):
         for i in range(len(real_b_hot)):
             MODEL.D[i] = cal_D(real_b_hot[i], fake_b_hot[i])
             print(" D " + str(i) + '=' + str(MODEL.D[i]))
+        MODEL.OverJD = np.zeros(2)
+        MODEL.OverJD [0] = cal_J(real_b_hot, fake_b_hot)
+        MODEL.OverJD[1] = cal_D(real_b_hot, fake_b_hot)
         # # this is the format of hot map
         # #out  = torch.zeros([bz,3, H,W], dtype=torch.float)
         # MODEL.J1 = cal_J(real_b_hot[0,0,:,cutedge:Resample_size-cutedge],fake_b_hot[0,0,:,cutedge:Resample_size-cutedge])
@@ -244,11 +253,14 @@ class Validation(object):
 
 
         vector = np.append(MODEL.L,MODEL.P)
-        vector = np.append(vector,MODEL.HDD)
 
         vector=np.append(vector, MODEL.R )
+        vector = np.append(vector,MODEL.HDD)
+
         vector=np.append(vector, MODEL.J )
         vector = np.append(vector, MODEL.D)
+        vector = np.append(vector, MODEL.OverJD)
+
 
         # vector = [MODEL.L1,MODEL.L2,MODEL.J1, MODEL.J2,MODEL.J3,MODEL.D1,MODEL.D2,MODEL.D3]
         # vector = torch.stack(vector)

@@ -8,7 +8,7 @@ import test_model.fusion_nets_multi as fusion_nets_ivus
 from test_model.fusion_nets_multi import Without_Auxiliary,Without_ExP
 from test_model.loss_MTL import MTL_loss,DiceLoss
 import rendering
-from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length,Reverse_existence
+from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length,Reverse_existence,Sep_Up_Low
 from time import time
 import torch.nn as nn
 from torch.autograd import Variable
@@ -205,7 +205,10 @@ class Pix2LineModel(BaseModel):
         #self.real_B = realB.to(self.device)
         # this for the old OCT that has no sepearation on the Upper and lower boundaries
 
-        self.real_B=rendering.layers_visualized_integer_encodeing(pathes,Resample_size) # this way render it as semantic map
+        if Sep_Up_Low == False:
+            self.real_B=rendering.layers_visualized_integer_encodeing(pathes,Resample_size) # this way render it as semantic map
+        else:
+            self.real_B=rendering.layers_visualized_integer_encodeing_full(pathes,exis_v,Resample_size,Reverse_existence) # this is a way to encode it as boundary (very spars)
 
         # self.real_B=rendering.boundary_visualized_integer_encodeing(pathes,Resample_size) # this is a way to encode it as boundary (very spars)
         # TODO: this  is the new way that separate the upper and lower, need to uniform all the label encoding
@@ -254,11 +257,12 @@ class Pix2LineModel(BaseModel):
 
 
             #TODO: this  is the old way that without separating the upper and lower
-            self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes[0],Resample_size) # encode as semantic map
+            if Sep_Up_Low == False:
+                self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes[0],Resample_size) # encode as semantic map
             # self.fake_B=  rendering.boundary_visualized_integer_encodeing(self.out_pathes[0],Resample_size) # encode as boundary
-
+            else:
             # TODO: this  is the new way that separate the upper and lower, need to uniform all the label encoding
-            # self.fake_B=  rendering.layers_visualized_integer_encodeing_full(self.out_pathes[0], self. out_exis_vs[0],Resample_size,Reverse_existence) # encode as boundary
+                self.fake_B=  rendering.layers_visualized_integer_encodeing_full(self.out_pathes[0], self. out_exis_vs[0],Resample_size,Reverse_existence) # encode as boundary
 
 
 

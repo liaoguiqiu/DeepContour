@@ -35,7 +35,7 @@ class Read_read_check_json_label(object):
 #<<<<<<< HEAD:DeepContour/dataTool/read_json_ivus.py
         #sub_folder = "animal2/"
 #=======
-        sub_folder = "5_PDG/"
+        sub_folder = "IVUS/5_PDG/"
 #>>>>>>> b8bb1d19b916df000a1ab2c21c7474cf6fa38b44:dataTool/read_json_ivus.py
         self.max_presence = 5
         self.image_dir = self.database_root + "img/" + sub_folder
