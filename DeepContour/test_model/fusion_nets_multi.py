@@ -280,8 +280,8 @@ class _2layerFusionNets_(nn.Module):
                                                    final=True)
             # self.backbone = _BackBonelayer(unetf)
             # self.backbone_e = _BackBonelayer(unetf)
-            self.backbone = _BackBonelayer(Pixwise_c)
-            self.backbone_e = _BackBonelayer(Pixwise_c)
+            self.backbone = _BackBonelayer(inputd=Pixwise_c+unetf)
+            self.backbone_e = _BackBonelayer(inputd=Pixwise_c+unetf)
 
         else:
             self.backbone = _BackBonelayer()
@@ -324,11 +324,16 @@ class _2layerFusionNets_(nn.Module):
             # pix_seg=unet_f # one feature backbone
             # backbone_f = self.backbone(unet_f)
             # backbone_fe = self.backbone_e(unet_f)
-            backbone_f = self.backbone(pix_seg)
-            backbone_fe = self.backbone_e(pix_seg)
+            # cat the raw feature and tje encoded one together
+            feature_cat = torch.cat([unet_f, pix_seg], 1)
+            # backbone_f = self.backbone(pix_seg)
+            backbone_f = self.backbone(feature_cat)
+
+            backbone_fe = self.backbone_e(feature_cat)
 
 
         else:
+
             backbone_f = self.backbone(x)
             backbone_fe = self.backbone_e(x)
 
