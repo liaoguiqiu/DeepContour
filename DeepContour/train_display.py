@@ -176,7 +176,6 @@ def display_prediction_exis(infinite_save_id, mydata_loader, save_out):  # displ
     path2 = numpy.clip(path2, 0, Resample_size - 1)
     color1 = numpy.zeros((show1.shape[0], show1.shape[1], 3))
     color1[:, :, 0] = color1[:, :, 1] = color1[:, :, 2] = show1
-
     for i in range(len(path2)):
         color1 = draw_coordinates_color(color1, path2[i], int(i/max_presence))
 
@@ -188,7 +187,7 @@ def display_prediction_exis(infinite_save_id, mydata_loader, save_out):  # displ
     save_out = numpy.clip(save_out, 0, Resample_size - 1)
     color = numpy.zeros((show2.shape[0], show2.shape[1], 3))
     color[:, :, 0] = color[:, :, 1] = color[:, :, 2] = show2
-
+    origin_color = color*1.0
     for i in range(len(save_out)):
         this_presence_mask =   color[:, :, 0] *0 +1
         if Reverse_existence == True:
@@ -200,7 +199,7 @@ def display_prediction_exis(infinite_save_id, mydata_loader, save_out):  # displ
 
         this_presence_mask = this_presence_mask * Existence_2D * 254
         this_presence_mask = cv2.applyColorMap(this_presence_mask.astype(numpy.uint8), cv2.COLORMAP_JET)
-        super_imposed_mask= cv2.addWeighted(this_presence_mask, 0.3, color.astype(numpy.uint8), 0.7, 0)
+        super_imposed_mask= cv2.addWeighted(this_presence_mask, 0.3, origin_color.astype(numpy.uint8), 0.7, 0)
         this_coordinate = signal.resample(save_out[i], Resample_size)
         color = draw_coordinates_color(color, this_coordinate, int(i/max_presence))
         # Create local presence focusing map:

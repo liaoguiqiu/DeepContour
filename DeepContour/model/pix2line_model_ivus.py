@@ -22,8 +22,8 @@ import numpy as np
 
 # Learning rate for backbone
 Coord_lr = 0.00001
-Pix_lr_lambda = 10.0
-EXxtens_lr_lambda = 10.0
+Pix_lr_lambda = 100.0
+EXxtens_lr_lambda = 100.0
 
 class Pix2LineModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
