@@ -47,7 +47,7 @@ class myDataloader(object):
     def __init__(self, batch_size,image_size,path_size,validation= False,OLG=False):
         self.OLG_flag = OLG
         self.GT = True
-        self.noisyflag = False
+        self.noisyflag = True
         self.Random_rotate = True
         self.Random_vertical_shift = True
         self.save_id =0
@@ -487,7 +487,7 @@ class myDataloader(object):
 
                     #img_piece = self.gray_scale_augmentation (img_piece)
                     #img_piece= Basic_Operator.add_speckle_or_not(img_piece)
-                    img_piece= Basic_Operator.add_noise_or_not(img_piece)
+                    # img_piece= Basic_Operator.add_noise_or_not(img_piece)
                     #img_piece = Basic_Operator.add_gap_or_not(img_piece)
                     #img_piece  = self . noisy( "gauss_noise" ,  img_piece)
                     #img_piece  = self . noisy( "s&p" ,  img_piece )

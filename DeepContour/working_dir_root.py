@@ -33,7 +33,7 @@
 
 #this is for Sanat's computer
 # working_root = "/home/beatriz/Documents/Projects/atlas_collab_ivus/"
-working_root = "/Documents/Projects/Deeplearning/"
+working_root = "/home/beatriz/Documents/Projects/Deeplearning/"
 
 
 Dataset_root =  working_root + "dataset/"
