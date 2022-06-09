@@ -42,7 +42,7 @@ Save_img_flag = True  # this flag determine if the reuslt will be save  in to a 
 Continue_flag = True  # if not true, it start from scratch again
 Federated_learning_flag = False  # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
 Using_fed_model_flag = False  # True: Fed model, false: local model
-loadmodel_index = '_5.pth'
+loadmodel_index = '_2.pth'
 from model.pix2pix_deeplab import Modelkey
 
 
@@ -134,7 +134,7 @@ if Continue_flag == True:
     # 2. overwrite entries in the existing state dict
     model_dict.update(pretrained_dict_trim)
     # 3. load the new state dict
-    MODEL.netD.load_state_dict(model_dict)
+    # MODEL.netD.load_state_dict(model_dict)
 
 
     # MODEL.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))

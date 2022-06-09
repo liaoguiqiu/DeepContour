@@ -141,7 +141,7 @@ def draw_coordinates_color(img1 ,vy ,color):
 
 
         img1[int(dy ) +1 ,j ,: ] =img1[int(dy) ,j ,: ] =painter
-        img1[int(dy ) -1 ,j ,: ] =img1[int(dy ) -2 ,j ,: ] =painter
+        img1[int(dy ) -1 ,j ,: ] =painter
 
         # img1[int(dy)+1,dx,:]=img1[int(dy)-1,dx,:]=img1[int(dy),dx,:]=painter
 
@@ -268,11 +268,18 @@ def display_prediction(infinite_save_id, mydata_loader, MODEL , hot, hot_real,Sa
     for i in range(len( out_pathes)):
         out_pathes[i] = out_pathes[i] * out_exv[i]
         this_coordinate = signal.resample( out_pathes[i], Resample_size)
-        colorhot = draw_coordinates_color(colorhot, this_coordinate, int(i/max_presence)) # same color for duplication
-        color = draw_coordinates_color(color, this_coordinate,
+        # colorhot = draw_coordinates_color(colorhot, this_coordinate, int(i/max_presence)) # same color for duplication
+        if Model_key == "CEnet": # sepearte the upper and lower
+            color = draw_coordinates_color(color, this_coordinate,
                                           int(i / max_presence))  # same color for duplication
+            colorhot = draw_coordinates_color(colorhot, this_coordinate,
+                                          int(i / max_presence))  # same color for duplication
+        else:
+            color = draw_coordinates_color(color, this_coordinate,
+                                           int(i / max_presence/2)*2)  # same color for duplication
+            colorhot = draw_coordinates_color(colorhot, this_coordinate,
+                                           int(i / max_presence/2)*2)  # same color for duplication
 
-    colorhot  =numpy.clip(colorhot,1,254)
     # sheath = signal.resample( out_pathes[0], Resample_size)
     # tissue = signal.resample( out_pathes[1], Resample_size)
 

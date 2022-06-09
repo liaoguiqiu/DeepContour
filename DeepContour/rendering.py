@@ -312,7 +312,7 @@ def onehot2integer(onehot):
     return out
 
 
-def onehot2layers(onehot):
+def onehot2layers(onehot,thre = 0.3):
     C, H, W = onehot.size()
     layer1 = np.zeros(W)
     layer2 = np.ones(W) * (H - 1)
@@ -324,13 +324,13 @@ def onehot2layers(onehot):
 
     for i in range(W):  # search the sheath contour  # 1st channel is the sheath
         for j in range(H - 5):
-            if (onehot[1, j, i] > 0.5 and onehot[1, j + 2, i] < 0.5):
+            if (onehot[1, j, i] > thre and onehot[1, j + 2, i] <thre):
                 layer1[i] = j
                 ex1[i] = 1.0
                 break
     for i in range(W):  # search the tissue contour 2nd channel
         for j in range(H - 5):
-            if (onehot[2, j, i] < 0.5 and onehot[2, j + 2, i] > 0.5):
+            if (onehot[2, j, i] < thre and onehot[2, j + 2, i] > thre):
                 layer2[i] = j
                 ex2[i] = 1.0
                 break
@@ -344,7 +344,7 @@ def onehot2layers(onehot):
     ex_v = ex_v.cuda()
     return layers,ex_v
 
-def onehot2layers_cut_bound(onehot,Abasence_imageH): # cut the up and lower boundarys
+def onehot2layers_cut_bound(onehot,Abasence_imageH,thre=0.3): # cut the up and lower boundarys
     C, H, W = onehot.size()
     layers= torch.zeros([2*(C-1), W], dtype=torch.long)+int(H *Abasence_imageH)
     ex_v= torch.zeros([2*(C-1), W], dtype=torch.float)
@@ -357,12 +357,12 @@ def onehot2layers_cut_bound(onehot,Abasence_imageH): # cut the up and lower boun
     for k in range(0,C-1):
         for i in range(W):  # search the sheath contour  # second channel is the sheath
             for j in range(H - 5): # ignore the first background layer
-                if (onehot[k+1, j, i] < 0.5 and onehot[k+1, j + 2, i] > 0.5):
+                if (onehot[k+1, j, i] < thre and onehot[k+1, j + 2, i] > thre):
                     layers[2*k,i] = j
                     ex_v [2*k,i] =  1.0
                     break
             for j in range(layers[2*k,i],H - 5):  # ignore the first background layer
-                if (onehot[k + 1, j, i] > 0.5 and onehot[k + 1, j + 2, i] < 0.5):
+                if (onehot[k + 1, j, i] > thre and onehot[k + 1, j + 2, i] < thre):
                     layers[2 * k+1, i] = j
                     ex_v [2*k+1,i] =  1.0
                     break

@@ -16,7 +16,7 @@ from time import time
 import time as timeP
 
 import rendering
-from dataset_ivus import Resample_size,Out_c,Reverse_existence, Sep_Up_Low # get the our channel for the prediction
+from dataset_ivus import Resample_size,Out_c,Reverse_existence, Sep_Up_Low,object_num # get the our channel for the prediction
 import numpy as np
 from databufferExcel import EXCEL_saver
 from working_dir_root import Dataset_root, Output_root
@@ -29,14 +29,14 @@ from torchvision.models.segmentation.deeplabv3 import DeepLabHead
 from torchvision.models.segmentation.fcn import FCNHead
 import segmentation_models_pytorch as smp
 
-
+from torchvision import models
 
 # disable the distributed training
 # model_SETR = MMDataParallel(
 #             model_SETR.cuda(cfg.gpu_ids[0]), device_ids=cfg.gpu_ids)
 Modelkey_list=['DeeplabV3','FCN','PAN','DeeplabV3+','Unet','Unet++','SETR']
 # SETR : Sementation tranformer
-Modelkey = Modelkey_list[6]
+Modelkey = Modelkey_list[4]
 if Modelkey == 'SETR':
     from mmcv.utils import Config, DictAction, get_git_hash
 # from mmseg.apis  import set_random_seed, train_segmentor
@@ -45,15 +45,15 @@ if Modelkey == 'SETR':
 # from mmseg.utils  import   get_root_logger
 # from mmseg.utils import collect_env
 # from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
-    from torchvision import models
     cfg =Config.fromfile('../configs/SETR/SETR_MLA_DeiT_480x480_80k_pascal_context_bs_16.py')
 
     # cfg_SETR = Config.fromfile('../configs/SETR/SETR_MLA_DeiT_480x480_80k_pascal_context_bs_16.py')
     model_SETR = build_segmentor(
                     cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
 Deeplab_feature = 2048
-Deeplab_out_c = Out_c # depends on the data channel
-Deeplab_out_c = 1
+Deeplab_out_c = object_num +1 # depends on the data channel, add the background channel
+Net_D_outC = 1
+# Deeplab_out_c = 1
 Deeplab_input_c = 3
 Convert_Unet_to_layer = False  # the flag for convert the unet to laer
 
@@ -114,7 +114,7 @@ class Pix2Pix_deeplab_Model(BaseModel):
         # self.netG = networks.define_G(opt.input_nc, opt.output_nc, opt.ngf, opt.netG, opt.norm,
         #                               not opt.no_dropout, opt.init_type, opt.init_gain, self.gpu_ids)
         if self.isTrain:  # define a discriminator; conditional GANs need to take both input and output images; Therefore, #channels for D is input_nc + output_nc
-            self.netD = networks.define_D(Deeplab_input_c + Deeplab_out_c, opt.ndf, opt.netD,
+            self.netD = networks.define_D(Deeplab_input_c + Net_D_outC, opt.ndf, opt.netD,
                                           opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids)
 
         if self.isTrain:
