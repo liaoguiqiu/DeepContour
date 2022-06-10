@@ -320,6 +320,8 @@ class _2layerFusionNets_(nn.Module):
         if self.UnetBack_flag == True:
             unet_f = self.Unet_back(x)
             pix_seg = self.pixencoding(unet_f)  # use the Unet features to predict a pix wise segmentation
+            activation = nn.Sigmoid()
+            pix_seg = activation(pix_seg)
             # pix_seg = F.sigmoid(pix_seg)  # TODO: comment/uncomment here to change sigmoid function
             # pix_seg=unet_f # one feature backbone
             # backbone_f = self.backbone(unet_f)

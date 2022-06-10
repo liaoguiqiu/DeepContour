@@ -34,7 +34,7 @@ class Validation(object):
             self.metrics_saver = EXCEL_saver(24)  # bound error 4, HDD 4, Prec 4, Recall 4, Jacard 3, Dice 3,, overall J + D 2
     def error_calculation(self,MODEL,Model_key):
         # average Jaccard index J (IoU)
-        def cal_J(true, predict,thre=0.3):
+        def cal_J(true, predict,thre=0.5):
             predict = predict >  thre
 
             AnB = true * predict  # assume that the lable are all binary
@@ -45,7 +45,7 @@ class Validation(object):
             return this_j
 
         # dice cofefficient
-        def cal_D(true, predict,thre=0.3):
+        def cal_D(true, predict,thre=0.5):
             predict = predict >  thre
             AB = true * predict  # assume that the lable are all binary
             # AuB = true+predict
