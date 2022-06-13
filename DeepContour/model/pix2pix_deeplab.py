@@ -51,7 +51,7 @@ if Modelkey == 'SETR':
     model_SETR = build_segmentor(
                     cfg.model, train_cfg=None, test_cfg=cfg.test_cfg)
 Deeplab_feature = 2048
-Deeplab_out_c = object_num +1 # depends on the data channel, add the background channel
+Deeplab_out_c =  1 # depends on the data channel, add the background channel
 Net_D_outC = 1
 # Deeplab_out_c = 1
 Deeplab_input_c = 3
@@ -335,8 +335,8 @@ class Pix2Pix_deeplab_Model(BaseModel):
             self.fake_B = output
 
         # TODO: for onehot encoding the fakeb one hot is fake_B
-        # self.fake_B_1_hot = rendering.integer2onehot(self.fake_B)
-        self.fake_B_1_hot  =   self.fake_B
+        self.fake_B_1_hot = rendering.integer2onehot(self.fake_B)
+        # self.fake_B_1_hot  =   self.fake_B
         self.pix_wise =  self.fake_B
         test_time_point = time()
         print(" all test point time is [%f] " % (test_time_point - start_time))
@@ -364,7 +364,7 @@ class Pix2Pix_deeplab_Model(BaseModel):
         # self.loss_G_GAN = self.criterionGAN(pred_fake, True)
         # Second, G (A) = B
         #self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
-        self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B_one_hot) * self.opt.lambda_L1
+        self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
 
         # combine loss and calculate gradients
         # self.loss_G = self.loss_G_GAN + self.loss_G_L1

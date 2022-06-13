@@ -42,7 +42,7 @@ Save_img_flag = True  # this flag determine if the reuslt will be save  in to a 
 Continue_flag = True  # if not true, it start from scratch again
 Federated_learning_flag = False  # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
 Using_fed_model_flag = False  # True: Fed model, false: local model
-loadmodel_index = '_2.pth'
+loadmodel_index = '_5.pth'
 from model.pix2pix_deeplab import Modelkey
 
 

@@ -208,7 +208,7 @@ def layers_visualized_integer_encodeing_full(layers,existence, H,reverse_exs=Tru
 
 
             for i in presence_x:
-                out[j, 0, torch.arange(layers[j,l,i],layers[j,l+1,i]), i] =  (l + 2) / layer_n
+                out[j, 0, torch.arange(layers[j,l,i]-2,layers[j,l+1,i]+2), i] =  (l + 2) / layer_n
     # out   =( out  -0.5)/0.5
     out = out.cuda()
     return out
@@ -344,7 +344,7 @@ def onehot2layers(onehot,thre = 0.3):
     ex_v = ex_v.cuda()
     return layers,ex_v
 
-def onehot2layers_cut_bound(onehot,Abasence_imageH,thre=0.3): # cut the up and lower boundarys
+def onehot2layers_cut_bound(onehot,Abasence_imageH,thre=0.1): # cut the up and lower boundarys
     C, H, W = onehot.size()
     layers= torch.zeros([2*(C-1), W], dtype=torch.long)+int(H *Abasence_imageH)
     ex_v= torch.zeros([2*(C-1), W], dtype=torch.float)

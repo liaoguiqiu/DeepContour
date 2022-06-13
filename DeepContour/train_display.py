@@ -34,21 +34,7 @@ def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_
     color1 = numpy.zeros((show1.shape[0], show1.shape[1], 3))
     color1[:, :, 0] = color1[:, :, 1] = color1[:, :, 2] = show1[:, :]
 
-    oneHot = MODEL.fake_B_1_hot[0, :, :, :].cpu().detach().numpy()
 
-    hot = numpy.ones((oneHot.shape[1], oneHot.shape[2], 3))
-    # change the background to no back ground mask
-    #dilute the mask
-    hot[:, :, 0] = oneHot[0, :, :]
-    hot[:, :, 1] = oneHot[1, :, :]*1.1+ oneHot[0, :, :]+ oneHot[2, :, :]*0.5
-    hot[:, :, 2] = oneHot[2, :, :]*1.1+oneHot[0, :, :] + oneHot[1, :, :]*0.5
-
-    oneHot_real = MODEL.real_B_one_hot[0, :, :, :].cpu().detach().numpy()
-
-    hot_real = numpy.ones((oneHot.shape[1], oneHot.shape[2], 3))
-    hot_real[:, :, 0] = oneHot_real[0, :, :]
-    hot_real[:, :, 1] = oneHot_real[1, :, :]*1.1+oneHot_real[0, :, :] + oneHot_real[2, :, :]*0.5
-    hot_real[:, :, 2] = oneHot_real[2, :, :]*1.1+oneHot_real[0, :, :]+oneHot_real[1, :, :]*0.5
 
     # saveout  = MODEL.fake_B # display encoding tranform
 
@@ -68,9 +54,26 @@ def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_
         color[:, :, 1] =  numpy.clip(show2[1, :, :], 1, 254)
         color[:, :, 2] =  numpy.clip(show2[2, :, :], 1, 254)
     else:
-        color = numpy.zeros((show2.shape[1], show2.shape[2]))
-        color[:,:] =  numpy.clip(show2[0, :, :], 1, 254)
+        color = numpy.zeros((show2.shape[1], show2.shape[2],3))
+        color[:, :, 0] = numpy.clip(show2[0, :, :], 1, 254)
+        color[:, :, 1] = numpy.clip(show2[0, :, :], 1, 254)
+        color[:, :, 2] = numpy.clip(show2[0, :, :], 1, 254)
 
+    oneHot = color
+
+    hot = numpy.zeros((show2.shape[1], show2.shape[2],3))
+    # change the background to no back ground mask
+    # dilute the mask
+    hot[:, :, 0] = oneHot[ :, :,0]
+    hot[:, :, 1] = oneHot[:, :,1] * 1.1 + oneHot[ :, :,0] + oneHot[ :, :,2] * 0.5
+    hot[:, :, 2] = oneHot[  :, :,2] * 1.1 + oneHot[ :, :,0] + oneHot[  :, :,1] * 0.5
+
+    oneHot_real = MODEL.real_B_one_hot[0, :, :, :].cpu().detach().numpy()
+
+    hot_real = numpy.zeros((show2.shape[1], show2.shape[2],3))
+    hot_real[:, :, 0] = oneHot_real[0, :, :]
+    hot_real[:, :, 1] = oneHot_real[1, :, :]*1.1+oneHot_real[0, :, :] + oneHot_real[2, :, :]*0.5
+    hot_real[:, :, 2] = oneHot_real[2, :, :]*1.1+oneHot_real[0, :, :]+oneHot_real[1, :, :]*0.5
 
     # for i in range ( len(path2)):
     #    color = draw_coordinates_color(color,path2[i],i)

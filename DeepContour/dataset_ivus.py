@@ -21,7 +21,7 @@ from scipy.interpolate import interp1d
 # test on the deploy marcopolo
 
 Sep_Up_Low = True # the label is encoded as separeted upper and lower boundary or not
-object_num = 2
+object_num = 1
 max_presence = 1
 if Sep_Up_Low: #
     Out_c = 2*object_num* max_presence   # depends on the bondaried to be preicted

@@ -9,7 +9,7 @@ model = dict(
                   model_name='deit_base_distilled_path16_384', mla_index=(2, 5, 8, 11), embed_dim=768, depth=12, num_heads=12,
                   norm_cfg = dict(type='BN', requires_grad=True)),
     decode_head=dict(img_size=256, mla_channels=256,
-                     mlahead_channels=128, num_classes=3,
+                     mlahead_channels=128, num_classes=1,
                      norm_cfg = dict(type='BN', requires_grad=True)),
     auxiliary_head=[
         dict(
@@ -18,7 +18,7 @@ model = dict(
             channels=512,
             in_index=0,
             img_size=256,
-            num_classes=3,
+            num_classes=1,
             align_corners=False,
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4),
@@ -29,7 +29,7 @@ model = dict(
             channels=512,
             in_index=1,
             img_size=256,
-            num_classes=3,
+            num_classes=1,
             align_corners=False,
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4),
@@ -40,7 +40,7 @@ model = dict(
             channels=512,
             in_index=2,
             img_size=256,
-            num_classes=3,
+            num_classes=1,
             align_corners=False,
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4),
@@ -51,7 +51,7 @@ model = dict(
             channels=512,
             in_index=3,
             img_size=256,
-            num_classes=3,
+            num_classes=1,
             align_corners=False,
             loss_decode=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4),
