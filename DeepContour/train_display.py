@@ -21,6 +21,14 @@ from working_dir_root import Dataset_root, Output_root
 from deploy.basic_trans import Basic_oper
 from scipy import signal
 Merge_existen_flag = False
+
+def save_img_to_folder(this_save_dir,ID,img):
+    # this_save_dir = Output_root + "1out_img/" + Model_key + "/ground_circ/"
+    if not os.path.exists(this_save_dir):
+        os.makedirs(this_save_dir)
+    cv2.imwrite(this_save_dir +
+                str(ID) + ".jpg", img)
+
 def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_id,Model_key):
     # limi the number of saved images
     if(infinite_save_id > 1000):
@@ -34,7 +42,21 @@ def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_
     color1 = numpy.zeros((show1.shape[0], show1.shape[1], 3))
     color1[:, :, 0] = color1[:, :, 1] = color1[:, :, 2] = show1[:, :]
 
+    oneHot = MODEL.fake_B_1_hot[0, :, :, :].cpu().detach().numpy()
 
+    hot = numpy.ones((oneHot.shape[1], oneHot.shape[2], 3))
+    # change the background to no back ground mask
+    #dilute the mask
+    hot[:, :, 0] = oneHot[0, :, :]
+    hot[:, :, 1] = oneHot[1, :, :]*1.1+ oneHot[0, :, :]+ oneHot[2, :, :]*0.5
+    hot[:, :, 2] = oneHot[2, :, :]*1.1+oneHot[0, :, :] + oneHot[1, :, :]*0.5
+
+    oneHot_real = MODEL.real_B_one_hot[0, :, :, :].cpu().detach().numpy()
+
+    hot_real = numpy.ones((oneHot.shape[1], oneHot.shape[2], 3))
+    hot_real[:, :, 0] = oneHot_real[0, :, :]
+    hot_real[:, :, 1] = oneHot_real[1, :, :]*1.1+oneHot_real[0, :, :] + oneHot_real[2, :, :]*0.5
+    hot_real[:, :, 2] = oneHot_real[2, :, :]*1.1+oneHot_real[0, :, :]+oneHot_real[1, :, :]*0.5
 
     # saveout  = MODEL.fake_B # display encoding tranform
 
@@ -54,26 +76,9 @@ def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_
         color[:, :, 1] =  numpy.clip(show2[1, :, :], 1, 254)
         color[:, :, 2] =  numpy.clip(show2[2, :, :], 1, 254)
     else:
-        color = numpy.zeros((show2.shape[1], show2.shape[2],3))
-        color[:, :, 0] = numpy.clip(show2[0, :, :], 1, 254)
-        color[:, :, 1] = numpy.clip(show2[0, :, :], 1, 254)
-        color[:, :, 2] = numpy.clip(show2[0, :, :], 1, 254)
+        color = numpy.zeros((show2.shape[1], show2.shape[2]))
+        color[:,:] =  numpy.clip(show2[0, :, :], 1, 254)
 
-    oneHot = color
-
-    hot = numpy.zeros((show2.shape[1], show2.shape[2],3))
-    # change the background to no back ground mask
-    # dilute the mask
-    hot[:, :, 0] = oneHot[ :, :,0]
-    hot[:, :, 1] = oneHot[:, :,1] * 1.1 + oneHot[ :, :,0] + oneHot[ :, :,2] * 0.5
-    hot[:, :, 2] = oneHot[  :, :,2] * 1.1 + oneHot[ :, :,0] + oneHot[  :, :,1] * 0.5
-
-    oneHot_real = MODEL.real_B_one_hot[0, :, :, :].cpu().detach().numpy()
-
-    hot_real = numpy.zeros((show2.shape[1], show2.shape[2],3))
-    hot_real[:, :, 0] = oneHot_real[0, :, :]
-    hot_real[:, :, 1] = oneHot_real[1, :, :]*1.1+oneHot_real[0, :, :] + oneHot_real[2, :, :]*0.5
-    hot_real[:, :, 2] = oneHot_real[2, :, :]*1.1+oneHot_real[0, :, :]+oneHot_real[1, :, :]*0.5
 
     # for i in range ( len(path2)):
     #    color = draw_coordinates_color(color,path2[i],i)
@@ -118,8 +123,8 @@ def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_
 
 
     display_prediction(infinite_save_id, mydata_loader, MODEL , hot, hot_real, Save_img_flag,Model_key)
-    if (MODEL.out_exis_v0 is not None):
-        display_prediction_exis(infinite_save_id, mydata_loader, MODEL.out_exis_v0)
+    if (MODEL.out_exis_vs[0] is not None):
+        display_prediction_exis(infinite_save_id, mydata_loader,  MODEL.out_exis_vs[0],Save_img_flag,Model_key)
     return
 # 3 functions to drae the results in real time
 def draw_coordinates_color(img1 ,vy ,color):
@@ -171,7 +176,7 @@ def draw_coordinates_color_s(img1 ,vy0 ,vy1):
     return img1
 
 
-def display_prediction_exis(infinite_save_id, mydata_loader, save_out):  # display in coordinates form
+def display_prediction_exis(infinite_save_id, mydata_loader, save_out,Save_img_flag,Model_key):  # display in coordinates form
     gray2 = (mydata_loader.input_image[0, 0, :, :] * 104) + 104
     show1 = gray2.astype(float)
     path2 = mydata_loader.exis_vec[0, :] * Resample_size
@@ -179,7 +184,6 @@ def display_prediction_exis(infinite_save_id, mydata_loader, save_out):  # displ
     path2 = numpy.clip(path2, 0, Resample_size - 1)
     color1 = numpy.zeros((show1.shape[0], show1.shape[1], 3))
     color1[:, :, 0] = color1[:, :, 1] = color1[:, :, 2] = show1
-
     for i in range(len(path2)):
         color1 = draw_coordinates_color(color1, path2[i], int(i/max_presence))
 
@@ -191,7 +195,7 @@ def display_prediction_exis(infinite_save_id, mydata_loader, save_out):  # displ
     save_out = numpy.clip(save_out, 0, Resample_size - 1)
     color = numpy.zeros((show2.shape[0], show2.shape[1], 3))
     color[:, :, 0] = color[:, :, 1] = color[:, :, 2] = show2
-
+    origin_color = color*1.0
     for i in range(len(save_out)):
         this_presence_mask =   color[:, :, 0] *0 +1
         if Reverse_existence == True:
@@ -203,13 +207,22 @@ def display_prediction_exis(infinite_save_id, mydata_loader, save_out):  # displ
 
         this_presence_mask = this_presence_mask * Existence_2D * 254
         this_presence_mask = cv2.applyColorMap(this_presence_mask.astype(numpy.uint8), cv2.COLORMAP_JET)
-        super_imposed_mask= cv2.addWeighted(this_presence_mask, 0.3, color.astype(numpy.uint8), 0.7, 0)
+        super_imposed_mask= cv2.addWeighted(this_presence_mask, 0.3, origin_color.astype(numpy.uint8), 0.7, 0)
         this_coordinate = signal.resample(save_out[i], Resample_size)
         color = draw_coordinates_color(color, this_coordinate, int(i/max_presence))
         # Create local presence focusing map:
-        cv2.imshow('Existence Mask' + str(i), super_imposed_mask.astype(numpy.uint8))
+        Displayimg_title = 'Existence Mask' + str(i)
+        cv2.imshow(Displayimg_title, super_imposed_mask.astype(numpy.uint8))
+        if Save_img_flag == True:
+            this_save_dir = Output_root + "1out_img/" + Model_key + '/'+Displayimg_title + '/'
+            save_img_to_folder(this_save_dir, infinite_save_id, super_imposed_mask)
         Mask_cir =    Basic_oper.tranfer_frome_rec2cir2(super_imposed_mask)
-        cv2.imshow('Existence Mask circ' + str(i), Mask_cir.astype(numpy.uint8))
+
+        Displayimg_title = 'Existence Mask circ'  + str(i)
+        cv2.imshow(Displayimg_title, Mask_cir.astype(numpy.uint8))
+        if Save_img_flag == True:
+            this_save_dir = Output_root + "1out_img/" + Model_key + '/'+Displayimg_title + '/'
+            save_img_to_folder(this_save_dir, infinite_save_id, Mask_cir)
 
     # show3 = numpy.append(show1,show2,axis=1) # cascade
     show4 = numpy.append(color1, color, axis=1)  # cascade
@@ -299,10 +312,11 @@ def display_prediction(infinite_save_id, mydata_loader, MODEL , hot, hot_real,Sa
     circular2 = Basic_oper.tranfer_frome_rec2cir2(color2)
     if Save_img_flag == True:
         this_save_dir = Output_root + "1out_img/"+Model_key+"/Ori_seg_rec_line/"
-        if not os.path.exists(this_save_dir):
-            os.makedirs(this_save_dir)
-        cv2.imwrite(this_save_dir +
-                    str(infinite_save_id) + ".jpg", show4)
+        save_img_to_folder(this_save_dir,infinite_save_id,show4)
+        # if not os.path.exists(this_save_dir):
+        #     os.makedirs(this_save_dir)
+        # cv2.imwrite(this_save_dir +
+        #             str(infinite_save_id) + ".jpg", show4)
 
     cv2.imshow('Deeplearning one 2', show4.astype(numpy.uint8))
 

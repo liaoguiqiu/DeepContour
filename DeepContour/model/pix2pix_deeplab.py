@@ -36,7 +36,7 @@ from torchvision import models
 #             model_SETR.cuda(cfg.gpu_ids[0]), device_ids=cfg.gpu_ids)
 Modelkey_list=['DeeplabV3','FCN','PAN','DeeplabV3+','Unet','Unet++','SETR']
 # SETR : Sementation tranformer
-Modelkey = Modelkey_list[4]
+Modelkey = Modelkey_list[6]
 if Modelkey == 'SETR':
     from mmcv.utils import Config, DictAction, get_git_hash
 # from mmseg.apis  import set_random_seed, train_segmentor
