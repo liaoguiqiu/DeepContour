@@ -4,9 +4,9 @@ _base_ = [
     '../_base_/schedules/schedule_80k.py'
 ]
 model = dict(
-    backbone=dict(img_size=480, pos_embed_interp=True, drop_rate=0.,
+    backbone=dict(img_size=256, pos_embed_interp=True, drop_rate=0.,
                   mla_channels=256, mla_index=(5, 11, 17, 23)),
-    decode_head=dict(img_size=480, mla_channels=256,
+    decode_head=dict(img_size=256, mla_channels=256,
                      mlahead_channels=128, num_classes=60),
     auxiliary_head=[
         dict(
@@ -14,7 +14,7 @@ model = dict(
             in_channels=256,
             channels=512,
             in_index=0,
-            img_size=480,
+            img_size=256,
             num_classes=60,
             align_corners=False,
             loss_decode=dict(
@@ -24,7 +24,7 @@ model = dict(
             in_channels=256,
             channels=512,
             in_index=1,
-            img_size=480,
+            img_size=256,
             num_classes=60,
             align_corners=False,
             loss_decode=dict(
@@ -34,7 +34,7 @@ model = dict(
             in_channels=256,
             channels=512,
             in_index=2,
-            img_size=480,
+            img_size=256,
             num_classes=60,
             align_corners=False,
             loss_decode=dict(
@@ -44,7 +44,7 @@ model = dict(
             in_channels=256,
             channels=512,
             in_index=3,
-            img_size=480,
+            img_size=256,
             num_classes=60,
             align_corners=False,
             loss_decode=dict(
