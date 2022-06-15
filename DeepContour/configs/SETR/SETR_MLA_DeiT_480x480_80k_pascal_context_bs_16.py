@@ -63,5 +63,5 @@ optimizer = dict(lr=0.001, weight_decay=0.0,
                  )
 
 test_cfg = dict(mode='slide', crop_size=(256, 256), stride=(170, 170))
-find_unused_parameters = True
-data = dict(samples_per_gpu=2)
+find_unused_parameters = False
+data = dict(samples_per_gpu=1)

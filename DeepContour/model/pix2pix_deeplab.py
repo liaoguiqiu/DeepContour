@@ -36,7 +36,7 @@ from torchvision import models
 #             model_SETR.cuda(cfg.gpu_ids[0]), device_ids=cfg.gpu_ids)
 Modelkey_list=['DeeplabV3','FCN','PAN','DeeplabV3+','Unet','Unet++','SETR']
 # SETR : Sementation tranformer
-Modelkey = Modelkey_list[6]
+Modelkey = Modelkey_list[3]
 if Modelkey == 'SETR':
     from mmcv.utils import Config, DictAction, get_git_hash
 # from mmseg.apis  import set_random_seed, train_segmentor
@@ -45,7 +45,9 @@ if Modelkey == 'SETR':
 # from mmseg.utils  import   get_root_logger
 # from mmseg.utils import collect_env
 # from mmcv.parallel import MMDataParallel, MMDistributedDataParallel
+#     SETR_MLA_480x480_80k_pascal_context_bs_8
     cfg =Config.fromfile('../configs/SETR/SETR_MLA_DeiT_480x480_80k_pascal_context_bs_16.py')
+#     cfg =Config.fromfile('../configs/SETR/SETR_MLA_480x480_80k_pascal_context_bs_8.py')
 
     # cfg_SETR = Config.fromfile('../configs/SETR/SETR_MLA_DeiT_480x480_80k_pascal_context_bs_16.py')
     model_SETR = build_segmentor(
@@ -121,6 +123,7 @@ class Pix2Pix_deeplab_Model(BaseModel):
             # define loss functions
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
             self.criterionL1 = torch.nn.L1Loss()
+            self.customeBCE = torch.nn.BCELoss()
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizer_D = torch.optim.Adam(self.netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
@@ -329,11 +332,13 @@ class Pix2Pix_deeplab_Model(BaseModel):
             # output = self.netG.encode_decode(   self.input_G, self.input_G )  # G(A)
         else:
             output= self.netG( self.input_G)  # G(A)
+
         if Modelkey == Modelkey_list[0] or Modelkey == Modelkey_list[1]:
             self.fake_B = output['out']
         else:
             self.fake_B = output
-
+        activation = torch.nn.Sigmoid()
+        self.fake_B = activation(self.fake_B)
         # TODO: for onehot encoding the fakeb one hot is fake_B
         self.fake_B_1_hot = rendering.integer2onehot(self.fake_B)
         # self.fake_B_1_hot  =   self.fake_B
@@ -364,8 +369,8 @@ class Pix2Pix_deeplab_Model(BaseModel):
         # self.loss_G_GAN = self.criterionGAN(pred_fake, True)
         # Second, G (A) = B
         #self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
-        self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
-
+        # self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
+        self.loss_G_L1 = self.customeBCE(self.fake_B, self.real_B) * self.opt.lambda_L1
         # combine loss and calculate gradients
         # self.loss_G = self.loss_G_GAN + self.loss_G_L1
         self.loss_G = self.loss_G_L1

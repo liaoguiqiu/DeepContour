@@ -40,7 +40,7 @@ Clip_mat_flag = False
 random_clip_flag = False
 
 Reverse_existence = True
-Existence_thrshold = 0.5
+Existence_thrshold = 0.7
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
 
 class myDataloader(object):

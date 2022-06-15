@@ -208,7 +208,7 @@ def layers_visualized_integer_encodeing_full(layers,existence, H,reverse_exs=Tru
 
 
             for i in presence_x:
-                out[j, 0, torch.arange(layers[j,l,i]-2,layers[j,l+1,i]+2), i] =  (l + 2) / layer_n
+                out[j, 0, torch.arange(layers[j,l,i]-4,layers[j,l+1,i]+4), i] =  (l + 2) / layer_n
     # out   =( out  -0.5)/0.5
     out = out.cuda()
     return out

@@ -22,8 +22,8 @@ import numpy as np
 
 # Learning rate for backbone
 Coord_lr = 0.000001
-Pix_lr_lambda = 10.0
-EXxtens_lr_lambda = 100.0
+Pix_lr_lambda = 100.0
+EXxtens_lr_lambda = 10.0
 
 class Pix2LineModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
@@ -117,7 +117,7 @@ class Pix2LineModel(BaseModel):
             # ], lr=opt.lr, betas=(opt.beta1, 0.999))
             # Optimizer of the CEnet after backbone
             self.optimizer_G = torch.optim.Adam([
-                # {'params': self.netG.Unet_back.parameters()},
+                {'params': self.netG.Unet_back.parameters()},
                 {'params': self.netG.backbone.parameters()},
                 {'params': self.netG.side_branch1.parameters()},
                 {'params': self.netG.side_branch2.parameters()},
@@ -374,7 +374,7 @@ class Pix2LineModel(BaseModel):
         else:
             self.loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)  #
         if Without_Auxiliary == False:
-            self.loss_G = ( 1.0*self.loss[0]  + 0.001*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
+            self.loss_G = ( 1.0*self.loss[0]  + 0.0001*self.loss[1] + 0.0001*self.loss[2] + 0.0001*self.loss[3])
         else:
             self.loss_G = self.loss[0]
 

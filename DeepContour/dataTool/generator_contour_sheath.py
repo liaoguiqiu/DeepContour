@@ -86,7 +86,7 @@ class Save_Contour_pkl(object):
 class Generator_Contour_sheath(object):
     def __init__(self ):
         self.OLG_flag =False
-        self.cv_display = False
+        self.cv_display = True
         self.origin_data = Save_Contour_pkl()
         # Dataset_root + "label data/"
         # #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/VARY/"
@@ -126,7 +126,7 @@ class Generator_Contour_sheath(object):
         self.signal = [None]*self.folder_num
 
         # create a detail foldeer list to save the generated images
-        self.generate_num = 500
+        self.generate_num = 5000
         for subfold in self.all_dir_list:
             save_sub =  self. save_image_dir_devi + subfold+'/'
             if not os.path.exists(save_sub):
