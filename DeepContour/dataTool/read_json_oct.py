@@ -38,7 +38,7 @@ class Read_read_check_json_label(object):
         # sub_folder = "capsule_sample/"
 
         # Tania's computer
-        sub_folder="polyp video 1 rotated/"
+        sub_folder="healthy/"
 #>>>>>>> b8bb1d19b916df000a1ab2c21c7474cf6fa38b44:dataTool/read_json_ivus.py
         self.max_presence = 9
         self.image_dir = self.database_root + "img/" + sub_folder
@@ -65,7 +65,7 @@ class Read_read_check_json_label(object):
         self.display_flag = True
         # hard ecodeing the index number to ensure the index is correspondng tp a specificlly value
         self.labels_lists = {
-            'catheter': ['1', 'catheter', 'test'],
+            'catheter': ['1', 'catheter','Catheter', 'test'],
             'lumen': ['2', 'vessel', 'lumen','tissue'],
             # 'wire': ['3','guide-wire', 'guidewire'],
             # 'media': ['4','vessel (media)', 'vessel(media)', 'media'],

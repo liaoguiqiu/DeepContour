@@ -20,7 +20,7 @@ from scipy.interpolate import interp1d
 # from test_model.fusion_nets_multi import Out_c
 # test on the deploy marcopolo
 
-Sep_Up_Low = True # the label is encoded as separeted upper and lower boundary or not
+Sep_Up_Low = False # the label is encoded as separeted upper and lower boundary or not
 object_num = 2
 max_presence = 1
 if Sep_Up_Low: #

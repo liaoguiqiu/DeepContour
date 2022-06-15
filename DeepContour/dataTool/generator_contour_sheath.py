@@ -86,7 +86,7 @@ class Save_Contour_pkl(object):
 class Generator_Contour_sheath(object):
     def __init__(self ):
         self.OLG_flag =False
-        self.cv_display = False
+        self.cv_display = True
         self.origin_data = Save_Contour_pkl()
         # Dataset_root + "label data/"
         # #self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/VARY/"
@@ -126,7 +126,7 @@ class Generator_Contour_sheath(object):
         self.signal = [None]*self.folder_num
 
         # create a detail foldeer list to save the generated images
-        self.generate_num = 500
+        self.generate_num = 5000
         for subfold in self.all_dir_list:
             save_sub =  self. save_image_dir_devi + subfold+'/'
             if not os.path.exists(save_sub):
@@ -405,8 +405,8 @@ class Generator_Contour_sheath(object):
                     #contour0y  = self.origin_data.contoursy[num][0]
                     contourx  = self.origin_data.contoursx[num]
                     contoury  = self.origin_data.contoursy[num]
-                
 
+                    # contourx[0], contoury[0] = Basic_Operator2.re_fresh_path(contourx[0], contoury[0], H, W)
                     # draw this original contour 
                     display = Basic_Operator.draw_coordinates_color(img_or,contourx[0],contoury[0],1) # draw the sheath
                     display = Basic_Operator.draw_coordinates_color(img_or,contourx[1],contoury[1],2) # draw the tissue
@@ -478,7 +478,7 @@ class Generator_Contour_sheath(object):
                     print(str(name))
                     self.append_new_name_contour(img_id,new_cx,new_cy,new_exit,self.save_pkl_dir)
                     # save them altogether 
-                    cv2.imwrite(self.save_image_dir  + str(img_id) +self.image_type,combin )
+                    cv2.imwrite(self.save_image_dir  + str(img_id) +self.image_type,combin.astype(np.uint8) )
                     cv2.imwrite(self.save_image_dir_devi + subfold + '/' + str(img_id_devi) +self.image_type,combin ) # save them separately
 
 

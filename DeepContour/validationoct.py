@@ -29,7 +29,7 @@ Abasence_imageH = 0.5 # penalize the target
 class Validation(object):
     def __init__(self):
         if Sep_Up_Low == False :
-            self.metrics_saver= EXCEL_saver(14) # bound error 2, HDD 2, Prec 2, Recall 2, Jacard 3, Dice 3,
+            self.metrics_saver= EXCEL_saver(16) # bound error 2, HDD 2, Prec 2, Recall 2, Jacard 3, Dice 3,
         else:
             self.metrics_saver = EXCEL_saver(24)  # bound error 4, HDD 4, Prec 4, Recall 4, Jacard 3, Dice 3,, overall J + D 2
     def error_calculation(self,MODEL,Model_key):

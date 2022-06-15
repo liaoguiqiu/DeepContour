@@ -35,7 +35,7 @@ class Read_read_check_json_label(object):
 #<<<<<<< HEAD:DeepContour/dataTool/read_json_ivus.py
         #sub_folder = "animal2/"
 #=======
-        sub_folder = "IVUS/5_PDG/"
+        sub_folder = "healthy/"
 #>>>>>>> b8bb1d19b916df000a1ab2c21c7474cf6fa38b44:dataTool/read_json_ivus.py
         self.max_presence = 5
         self.image_dir = self.database_root + "img/" + sub_folder
@@ -62,37 +62,37 @@ class Read_read_check_json_label(object):
 
         self.display_flag = True
 
-        # self.labels_lists = {
-        #     'catheter': ['1', 'catheter', 'test'],
-        #     'lumen': ['2', 'vessel', 'lumen'],
-        #     'wire': ['3','guide-wire', 'guidewire'],
-        #     'media': ['4','vessel (media)', 'vessel(media)', 'media'],
-        #     'branch': ['5','vessel(side-branch)', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
-        #                'side-branch', 'sidebranch', 'bifurcation'],
-        #     'stent': ['6','stent'],
-        #     'plaque': ['7','plaque'],
-        #     'calcium': ['8','calcification', 'calcium'],
-        # }
+        self.labels_lists = {
+            'catheter': ['1', 'catheter','Catheter', 'test'],
+            'lumen': ['2', 'vessel', 'lumen'],
+            # 'wire': ['3','guide-wire', 'guidewire'],
+            # 'media': ['4','vessel (media)', 'vessel(media)', 'media'],
+            # 'branch': ['5','vessel(side-branch)', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
+            #            'side-branch', 'sidebranch', 'bifurcation'],
+            # 'stent': ['6','stent'],
+            # 'plaque': ['7','plaque'],
+            # 'calcium': ['8','calcification', 'calcium'],
+        }
 
         # hard ecodeing the index number to ensure the index is correspondng tp a specificlly value
-        self.labels_lists = {
-            # 'catheter_u': ['1', 'catheter_u', 'test'],
-            # 'catheter_l': ['2', 'catheter_l', 'test'],
-            # 'lumen_u': ['3', 'lumen_u', 'lumen'],
-            # 'lumen_l': ['4', 'lumen_l', 'lumen'],
-            # 'wire_u': ['5', 'wire_u', 'guidewire'],
-            # 'wire_l': ['6', 'wire_l', 'guidewire'],
-            # 'media_u': ['7', 'media_u', 'vessel(media)', 'media'],
-            # 'media_l': ['8', 'media_l', 'vessel(media)', 'media'],
-            # 'branch_u': ['9', 'branch_u', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
-            #            'side-branch', 'sidebranch', 'bifurcation'],
-            # 'branch_l': ['10', 'branch_l', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
-            #            'side-branch', 'sidebranch', 'bifurcation'],
-            'plaque_u': ['1', 'plaque_u'],
-            'plaque_l': ['2', 'plaque_l'],
-            'calcium_u': ['3', 'calcium_u', 'calcium'],
-            'calcium_l': ['4', 'calcium_l', 'calcium'],
-        }
+        # self.labels_lists = {
+        #     # 'catheter_u': ['1', 'catheter_u', 'test'],
+        #     # 'catheter_l': ['2', 'catheter_l', 'test'],
+        #     # 'lumen_u': ['3', 'lumen_u', 'lumen'],
+        #     # 'lumen_l': ['4', 'lumen_l', 'lumen'],
+        #     # 'wire_u': ['5', 'wire_u', 'guidewire'],
+        #     # 'wire_l': ['6', 'wire_l', 'guidewire'],
+        #     # 'media_u': ['7', 'media_u', 'vessel(media)', 'media'],
+        #     # 'media_l': ['8', 'media_l', 'vessel(media)', 'media'],
+        #     # 'branch_u': ['9', 'branch_u', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
+        #     #            'side-branch', 'sidebranch', 'bifurcation'],
+        #     # 'branch_l': ['10', 'branch_l', 'vessel (side-branch)', 'vessel(sidebranch)', 'vessel (sidebranch)',
+        #     #            'side-branch', 'sidebranch', 'bifurcation'],
+        #     'plaque_u': ['1', 'plaque_u'],
+        #     'plaque_l': ['2', 'plaque_l'],
+        #     'calcium_u': ['3', 'calcium_u', 'calcium'],
+        #     'calcium_l': ['4', 'calcium_l', 'calcium'],
+        # }
 
         self.disease_labels = ['plaque', 'calcium']
 

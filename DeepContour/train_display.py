@@ -100,7 +100,7 @@ def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_
 
     cv2.imshow('Deeplearning one', show4.astype(numpy.uint8))
     if Save_img_flag == True:
-        this_save_dir = Output_root + "1out_img/"+Model_key+"/Ori_seg_rec/"
+        this_save_dir = Output_root + "1out_img/"+Model_key+"/seg_rec_mask/"
         if not os.path.exists(this_save_dir):
             os.makedirs(this_save_dir)
         cv2.imwrite(this_save_dir +
@@ -123,7 +123,7 @@ def train_display(MODEL,realA,mydata_loader,Save_img_flag,read_id,infinite_save_
 
 
     display_prediction(infinite_save_id, mydata_loader, MODEL , hot, hot_real, Save_img_flag,Model_key)
-    if (MODEL.out_exis_vs[0] is not None):
+    if (MODEL.out_exis_vs is not None):
         display_prediction_exis(infinite_save_id, mydata_loader,  MODEL.out_exis_vs[0],Save_img_flag,Model_key)
     return
 # 3 functions to drae the results in real time
@@ -267,12 +267,38 @@ def display_prediction(infinite_save_id, mydata_loader, MODEL , hot, hot_real,Sa
     circular_color_real = Basic_oper.tranfer_frome_rec2cir2(colorhot_real)
     cv2.imshow('color real cir', circular_color_real.astype(numpy.uint8))
     if Save_img_flag == True:
-        this_save_dir = Output_root + "1out_img/"+Model_key+"/ground_circ/"
+        this_save_dir = Output_root + "1out_img/" + Model_key + '/' + "ground_rect_color_noline" + '/'
+        save_img_to_folder(this_save_dir, infinite_save_id, colorhot_real)
+    if Save_img_flag == True:
+        this_save_dir = Output_root + "1out_img/"+Model_key+"/ground_circ_color_noline/"
         if not os.path.exists(this_save_dir):
             os.makedirs(this_save_dir)
         cv2.imwrite(this_save_dir +
                     str(infinite_save_id) + ".jpg", circular_color_real)
+    Ground_rec_color_line = colorhot_real*1
+    Ground_rec_color_line_combin = colorhot_real*1
+    for i in range(len(path2)):
 
+
+        # colorhot = draw_coordinates_color(colorhot, this_coordinate, int(i/max_presence)) # same color for duplication
+
+        # if Model_key == "CEnet": # sepearte the upper and lower
+        Ground_rec_color_line = draw_coordinates_color(Ground_rec_color_line, path2[i],
+                                       int(i / max_presence))  # same color for duplication
+        Ground_rec_color_line_combin = draw_coordinates_color(Ground_rec_color_line_combin, path2[i],
+                                                          int(i / max_presence / 2) * 2)  # same color for duplication
+    Ground_cir_color_line = Basic_oper.tranfer_frome_rec2cir2(Ground_rec_color_line)
+    Ground_cir_color_line_combin = Basic_oper.tranfer_frome_rec2cir2(Ground_rec_color_line_combin)
+
+    if Save_img_flag == True:
+        this_save_dir = Output_root + "1out_img/" + Model_key + '/' + "Ground_rec_color_line" + '/'
+        save_img_to_folder(this_save_dir, infinite_save_id, Ground_rec_color_line)
+        this_save_dir = Output_root + "1out_img/" + Model_key + '/' + "Ground_rec_color_line_combin" + '/'
+        save_img_to_folder(this_save_dir, infinite_save_id, Ground_rec_color_line_combin)
+        this_save_dir = Output_root + "1out_img/" + Model_key + '/' + "Ground_cir_color_line" + '/'
+        save_img_to_folder(this_save_dir, infinite_save_id, Ground_cir_color_line)
+        this_save_dir = Output_root + "1out_img/" + Model_key + '/' + "Ground_cir_color_line_combin" + '/'
+        save_img_to_folder(this_save_dir, infinite_save_id, Ground_cir_color_line_combin)
     # Merge the existence for uper and lower boundary
     if Merge_existen_flag == True:
         for i in range(0,len( out_pathes),2):
@@ -281,19 +307,22 @@ def display_prediction(infinite_save_id, mydata_loader, MODEL , hot, hot_real,Sa
 
 
     colorhot = (color ) * hot
+    color_c = color*1
+    colorhot_c = colorhot*1
     for i in range(len( out_pathes)):
         out_pathes[i] = out_pathes[i] * out_exv[i]
         this_coordinate = signal.resample( out_pathes[i], Resample_size)
         # colorhot = draw_coordinates_color(colorhot, this_coordinate, int(i/max_presence)) # same color for duplication
-        if Model_key == "CEnet": # sepearte the upper and lower
-            color = draw_coordinates_color(color, this_coordinate,
-                                          int(i / max_presence))  # same color for duplication
-            colorhot = draw_coordinates_color(colorhot, this_coordinate,
-                                          int(i / max_presence))  # same color for duplication
-        else:
-            color = draw_coordinates_color(color, this_coordinate,
-                                           int(i / max_presence/2)*2)  # same color for duplication
-            colorhot = draw_coordinates_color(colorhot, this_coordinate,
+
+        # if Model_key == "CEnet": # sepearte the upper and lower
+        color = draw_coordinates_color(color, this_coordinate,
+                                      int(i / max_presence))  # same color for duplication
+        colorhot = draw_coordinates_color(colorhot, this_coordinate,
+                                      int(i / max_presence))  # same color for duplication
+        # else:
+        color_c = draw_coordinates_color(color_c, this_coordinate,
+                                       int(i / max_presence/2)*2)  # same color for duplication
+        colorhot_c = draw_coordinates_color(colorhot_c, this_coordinate,
                                            int(i / max_presence/2)*2)  # same color for duplication
 
     # sheath = signal.resample( out_pathes[0], Resample_size)
@@ -310,8 +339,9 @@ def display_prediction(infinite_save_id, mydata_loader, MODEL , hot, hot_real,Sa
     show4 = numpy.append(color1, color, axis=1)  # cascade
     circular1 = Basic_oper.tranfer_frome_rec2cir2(color)
     circular2 = Basic_oper.tranfer_frome_rec2cir2(color2)
+    circular2_c = Basic_oper.tranfer_frome_rec2cir2(colorhot_c)
     if Save_img_flag == True:
-        this_save_dir = Output_root + "1out_img/"+Model_key+"/Ori_seg_rec_line/"
+        this_save_dir = Output_root + "1out_img/"+Model_key+"/Ori+seg_rec_line/"
         save_img_to_folder(this_save_dir,infinite_save_id,show4)
         # if not os.path.exists(this_save_dir):
         #     os.makedirs(this_save_dir)
@@ -323,16 +353,22 @@ def display_prediction(infinite_save_id, mydata_loader, MODEL , hot, hot_real,Sa
     cv2.imshow('Deeplearning circ', circular1.astype(numpy.uint8))
     cv2.imshow('Deeplearning circ2', circular2.astype(numpy.uint8))
     if Save_img_flag == True:
-        this_save_dir = Output_root + "1out_img/"+Model_key+"/Ori_seg_rec_2/"
+        this_save_dir = Output_root + "1out_img/"+Model_key+"/ seg_cir_line_separate/"
         if not os.path.exists(this_save_dir):
             os.makedirs(this_save_dir)
         cv2.imwrite(this_save_dir +
                     str(infinite_save_id) + ".jpg", circular2)
+    if Save_img_flag == True:
+        this_save_dir = Output_root + "1out_img/" + Model_key + '/' + " seg_cir_line_combine" + '/'
+        save_img_to_folder(this_save_dir, infinite_save_id, circular2_c)
     cv2.imshow('Deeplearning color', color2.astype(numpy.uint8))
     cv2.imshow('  color real', color_real.astype(numpy.uint8))
     if Save_img_flag == True:
-        this_save_dir = Output_root + "1out_img/"+Model_key+"/seg_rec_color2/"
+        this_save_dir = Output_root + "1out_img/"+Model_key+"/seg_rec_color_seperate/"
         if not os.path.exists(this_save_dir):
             os.makedirs(this_save_dir)
         cv2.imwrite(this_save_dir +
                     str(infinite_save_id) + ".jpg", color2)
+    if Save_img_flag == True:
+        this_save_dir = Output_root + "1out_img/" + Model_key + '/' + "seg_rec_color_combine" + '/'
+        save_img_to_folder(this_save_dir, infinite_save_id, colorhot_c)

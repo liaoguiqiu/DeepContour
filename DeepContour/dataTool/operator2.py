@@ -109,11 +109,11 @@ class Basic_Operator2:
                 sourimg = np.zeros((ori_H, 50))
                 # calculate the with between 2 bondaries
                 py1_py2 = contoury[1] - contoury[0]
-                max_d = int(0.7 * np.max(py1_py2))
+                max_d = int(0.5 * np.max(py1_py2))
                 sourimg = np.zeros((max_d, W))  # create a block based on the area
 
                 while (1):
-                    if (contoury[1][index] - contoury[0][index]) > max_d + 5:
+                    if (contoury[1][index] - contoury[0][index]) > max_d :
                         sourimg[:, source_i] = img[int(contoury[0][index]):int(contoury[0][index]) + max_d,
                                                contourx[1][index]]
                         # TODO: Ask GUIQIU! Why using catheter contour for the rows and lumen contour for the columns?
@@ -815,7 +815,11 @@ class Basic_Operator2:
             source_line = img1[:, contour0x[line_it]]
             # directly_fillinnew
             newy = int(new_contoury[i])
-            iniy = int(contour0y[line_it]) + 5  # add 5 to give more high light bondaries
+            if (newy > 0.96 *H):
+                new[0:newy, i] = img1[0:newy, i]
+                continue
+
+            iniy = int(contour0y[line_it])   # add 5 to give more high light bondaries
             shift = int(newy - iniy)
             if shift < 0:
                 new[0:newy, i] = source_line[-shift:iniy]
