@@ -327,8 +327,8 @@ class Pix2LineModel(BaseModel):
 
 
             # pix_loss2 = self.criterionL1 (self.pix_wise *backgroud_mask, self.real_B_one_hot*backgroud_mask)
-            # pix_loss2 = self.criterionL1(self.pix_wise ,self.real_B_one_hot)
-            pix_loss2 = self.customeBCE(self.pix_wise ,self.real_B_one_hot)
+            pix_loss2 = self.criterionL1(self.pix_wise ,self.real_B_one_hot)
+            # pix_loss2 = self.customeBCE(self.pix_wise ,self.real_B_one_hot)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
             self.loss_pix =  Pix_lr_lambda * pix_loss2

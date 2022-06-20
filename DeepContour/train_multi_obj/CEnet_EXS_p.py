@@ -41,7 +41,7 @@ Continue_flag = True  # if not true, it start from scratch again
 Federated_learning_flag = False  # true to enable the federated learning to interact with cloud, otherwise use the conventional solo learning
 Using_fed_model_flag = False  # True: Fed model, false: local model
 validator = Validation()
-loadmodel_index = '_2.pth'
+loadmodel_index = '_5.pth'
 Model_key = ACE_model_key
 
 # Model_key = "CEnet_f1_only"
