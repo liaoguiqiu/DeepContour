@@ -1,8 +1,9 @@
-# DeepContour
+# DeepContour (run with ROS)
 This package provides an implementation of the training/inference/autoannotation pipeline of CEnet
 v2.0. This is a model that can be either deployed with or without other feature extraction 
 backbones (i.e. resnet/vgg/PF..). 
 . For simplicity the bottom model after any backbone(top model) as Coordinates Encoding Networks(CEnet) or Aline Coordinates Encoding Networks (ACEnet)
+
 ## First time setup
 
 The following steps are required in order to run CEnet:
