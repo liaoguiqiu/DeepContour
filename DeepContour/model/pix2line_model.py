@@ -10,11 +10,6 @@ from time import time
 import torch.nn as nn
 from torch.autograd import Variable
 
-#torch.autograd.set_detect_anomaly(True) # Fix for problem: RuntimeError: one of the variables needed for gradient
-# computation has been modified by an inplace operation: [torch.cuda.FloatTensor [1024]] is at version 3;
-# expected version 2 instead. Hint: enable anomaly detection to find the operation that failed to compute its gradient,
-# with torch.autograd.set_detect_anomaly(True).
-
 
 class Pix2LineModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
@@ -81,7 +76,6 @@ class Pix2LineModel(BaseModel):
             # define loss functions
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
             self.criterionL1 = torch.nn.L1Loss()
-
             # LGQ add another loss for G
             self.criterionMTL= MTL_loss()
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
@@ -104,10 +98,6 @@ class Pix2LineModel(BaseModel):
         self.displayloss1=0
         self.displayloss2=0
         self.displayloss3=0
-        self.loss_G_L1 =torch.tensor(0,dtype=torch.float)
-        self.loss_G_L2 =torch.tensor(0,dtype=torch.float)
-        self.loss_G_L3 =torch.tensor(0,dtype=torch.float)
-
 
     def validation_init(self):
         self.L1 = 0
@@ -202,8 +192,6 @@ class Pix2LineModel(BaseModel):
 
         #self.real_B = realB.to(self.device)
         self.real_B=rendering.layers_visualized_integer_encodeing(pathes,Resample_size)
-        self.real_B_one_hot=rendering.layers_visualized_OneHot_encodeing(pathes,Resample_size)
-
         # LGQ add real path as creterioa for G
         self.real_pathes = pathes
         self.input_G  = inputG
@@ -211,12 +199,25 @@ class Pix2LineModel(BaseModel):
         self.input_G  = input_G 
  
 
+    def forward_for_deploy(self):
+        """Run forward pass; called by both functions <optimize_parameters> and <test>."""
+        start_time = time()
+        # self.out_pathes = self.netG(self.input_G) # coordinates encoding
+        f1, self.out_pathes1, self.path_long1 = self.netG.side_branch1(self.input_G)  # coordinates encoding
 
+        f2, self.out_pathes2, self.path_long2 = self.netG.side_branch2(self.input_G)  # coordinates encoding
+        f3, self.out_pathes3, self.path_long3 = self.netG.side_branch3(self.input_G)  # coordinates encoding
+        self.out_pathes0 = self.netG.fuse_forward(f1, f2, f3)
+
+        self.out_pathes = [self.out_pathes0, self.out_pathes1, self.out_pathes2, self.out_pathes3]
+        test_time_point = time()
+        print(" all test point time is [%f] " % (test_time_point - start_time))
     def forward(self):
         """Run forward pass; called by both functions <optimize_parameters> and <test>."""
         start_time = time()
         #self.out_pathes = self.netG(self.input_G) # coordinates encoding
-        f1,self.out_pathes1,self.path_long1 = self.netG.side_branch1 (self.input_G) # coordinates encoding  
+        f1,self.out_pathes1,self.path_long1 = self.netG.side_branch1 (self.input_G) # coordinates encoding
+        
         f2,self.out_pathes2,self.path_long2 = self.netG.side_branch2 (self.input_G) # coordinates encoding
         f3,self.out_pathes3,self.path_long3 = self.netG.side_branch3 (self.input_G) # coordinates encoding
         self.out_pathes0 =self.netG. fuse_forward( f1,f2,f3)
@@ -224,8 +225,11 @@ class Pix2LineModel(BaseModel):
         print (" all test point time is [%f] " % ( test_time_point - start_time))
         self.out_pathes = [self.out_pathes0,self.out_pathes1,self.out_pathes2,self.out_pathes3]
 
-        self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes3,Resample_size)
-        self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing  (self.out_pathes3,Resample_size)
+
+
+
+        self.fake_B=  rendering.layers_visualized_integer_encodeing (self.out_pathes3,Resample_size) 
+        self.fake_B_1_hot = rendering.layers_visualized_OneHot_encodeing  (self.out_pathes3,Resample_size) 
         #self.fake_B = self.netG(self.real_A)  # G(A)
 
     def backward_D(self):
@@ -247,17 +251,17 @@ class Pix2LineModel(BaseModel):
         # First, G(A) should fake the discriminator
         self.optimizer_G.zero_grad()        # set G's gradients to zero
 
-        #self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
-        #self.set_requires_grad(self.netG, False)  # D requires no gradients when optimizing G
+        self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
+        self.set_requires_grad(self.netG, False)  # D requires no gradients when optimizing G
         # just remain the upsample fusion parameter to optimization 
-        # self.set_requires_grad(self.netG.side_branch1, False)  # D requires no gradients when optimizing G
-        # self.set_requires_grad(self.netG.side_branch2, False)  # D requires no gradients when optimizing G
-        # self.set_requires_grad(self.netG.side_branch3, False)  # D requires no gradients when optimizing G
-        # self.set_requires_grad(self.netG.side_branch1.fullout, True)  # D requires no gradients when optimizing G
-        # self.set_requires_grad(self.netG.side_branch2.fullout, True)  # D requires no gradients when optimizing G
-        # self.set_requires_grad(self.netG.side_branch3.fullout, True)  # D requires no gradients when optimizing G
-        # self.set_requires_grad(self.netG.fusion_layer , True)  # D requires no gradients when optimizing G
-        self.set_requires_grad(self.netG, True)
+        #self.set_requires_grad(self.netG.side_branch1, False)  # D requires no gradients when optimizing G
+        #self.set_requires_grad(self.netG.side_branch2, False)  # D requires no gradients when optimizing G
+        #self.set_requires_grad(self.netG.side_branch3, False)  # D requires no gradients when optimizing G
+        #self.set_requires_grad(self.netG.side_branch1.fullout, True)  # D requires no gradients when optimizing G
+        #self.set_requires_grad(self.netG.side_branch2.fullout, True)  # D requires no gradients when optimizing G
+        #self.set_requires_grad(self.netG.side_branch3.fullout, True)  # D requires no gradients when optimizing G
+        self.set_requires_grad(self.netG.fusion_layer , True)  # D requires no gradients when optimizing G
+
 
 
         fake_AB = torch.cat((self.real_A, self.fake_B), 1)
@@ -273,10 +277,10 @@ class Pix2LineModel(BaseModel):
         #self.loss_G_L1 =( 1.0*loss[0]  + 0.02*loss[1] + 0.02*loss[2]+ 0.02*loss[3]+ 0.02*loss[4]+ 0.02*loss[5])*self.opt.lambda_L1
         #self.loss_G_L1_2 = 0.5*loss[0] 
         #self.loss_G_L1 =( 1.0*loss[0]  +   0.01*loss[1] + 0.01*loss[2] +0.01*loss[3]  )*self.opt.lambda_L1
-        # self.loss_G_L0 =( self.loss[0]    )*self.opt.lambda_L1
-        self.loss_G_L0 = (self.loss[0])
-        # self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
-        self.loss_G =   self.loss_G_L0
+        self.loss_G_L0 =( self.loss[0]    )*self.opt.lambda_L1
+         
+        self.loss_G =0* self.loss_G_GAN + self.loss_G_L0
+        #self.loss_G =   self.loss_G_L1
 
         self.loss_G.backward(retain_graph=True)
         #self.optimizer_G.step()             # udpate G's weights
@@ -337,7 +341,7 @@ class Pix2LineModel(BaseModel):
         
         self.loss_G_L3 =  loss3[0] 
         #self.loss_G_L3.backward(retain_graph=True)
-        self.loss_G_L3.backward( retain_graph=True)
+        self.loss_G_L3.backward( )
 
         self.optimizer_G_3.step()             # udpate G's weights
 
@@ -350,15 +354,15 @@ class Pix2LineModel(BaseModel):
         self.optimizer_D.step()          # update D's weights
         # update G
 
-
-        # self.backward_G_1()                   # calculate graidents for G
-        #
-        # self.backward_G_2()                   # calculate graidents for G
-        #
-        # self.backward_G_3()                   # calculate graidents for G
         self.backward_G()                   # calculate graidents for G
 
+        self.backward_G_1()                   # calculate graidents for G
+
+        self.backward_G_2()                   # calculate graidents for G
+
+        self.backward_G_3()                   # calculate graidents for G
         self.displayloss0 = self.loss_G_L0. data.mean()
+
         self.displayloss1 = self.loss_G_L1. data.mean()
         self.displayloss2 = self.loss_G_L2. data.mean()
         self.displayloss3 = self.loss_G_L3. data.mean()

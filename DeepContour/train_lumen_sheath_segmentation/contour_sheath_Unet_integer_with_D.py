@@ -9,7 +9,7 @@ from torch.autograd import Variable
  
 from model import cGAN_build # the mmodel
  
-# import layer_body_sheath # the model
+import layer_body_sheath # the model
 import arg_parse
 #import imagenet
 from analy import MY_ANALYSIS
@@ -17,37 +17,24 @@ from analy import Save_signal_enum
 import cv2
 import numpy
 from image_trans import BaseTransform  
-# from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
-from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
-
-from dataTool.generator_contour_ivus import Generator_Contour_sheath
+from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate 
 import rendering
 
 
 import os
-#from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
-from dataset_ivus  import myDataloader,Batch_size,Resample_size, Path_length
-
+from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
-# Switch control for the Visdom or Not
-Visdom_flag  = False  # the flag of using the visdom or not
-OLG_flag = True    # flag of training with on line generating or not
-Hybrid_OLG = True  # whether  mix with online generated images and real images for training
-validation_flag = True  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
-Display_fig_flag = True  #  display and save result or not 
-Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler 
-Continue_flag = True  # if not true, it start from scratch again
-from working_dir_root import Dataset_root,Output_root
-
+Visdom_flag  = False 
+Display_fig_flag = True
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 #infinite saving term
 infinite_save_id =0
-loadmodel_index = '_2.pth'
-pth_save_dir = Output_root + "Unet_trained/"
 
+pth_save_dir = "../out/sheathCGAN/"
+pth_save_dir = "../out/deep_layers/"
 
 if not os.path.exists(pth_save_dir):
     os.makedirs(pth_save_dir)
@@ -126,7 +113,7 @@ def weights_init(m):
 #netD = gan_body._netD_8()
 
 #Guiqiu Resnet version
-# netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
+netD = layer_body_sheath._netD_8_multiscal_fusion300_layer()
 gancreator = cGAN_build.CGAN_creator() # the Cgan for the segmentation 
 GANmodel= gancreator.creat_cgan()  #  G and D are created here 
 #netD = gan_body._netD_Resnet()
@@ -137,12 +124,10 @@ GANmodel= gancreator.creat_cgan()  #  G and D are created here
 #netD.apply(weights_init)
 GANmodel.netD.apply(weights_init)
 GANmodel.netG.apply(weights_init)
-if Continue_flag == True:
+if opt.netD != '':
     #netD.load_state_dict(torch.load(opt.netD))
-    GANmodel.netG.load_state_dict(torch.load(pth_save_dir + 'cGANG_epoch' + loadmodel_index))
-
-    GANmodel.netD.load_state_dict(torch.load(pth_save_dir + 'cGAND_epoch' + loadmodel_index))
-
+    GANmodel.netG.load_state_dict(torch.load('../out/deep_layers/cGANG_epoch_1.pth'))
+    GANmodel.netD.load_state_dict(torch.load('../out/deep_layers/cGAND_epoch_1.pth'))
 
 print(GANmodel.netD)
 print(GANmodel.netG)
@@ -162,7 +147,7 @@ fake_label = 0
 
 if opt.cuda:
     print("CUDA TRUE")
-    # netD.cuda()
+    netD.cuda()
     #netG.cuda()
     criterion.cuda()
     input, label = input.cuda(), label.cuda()
@@ -173,7 +158,7 @@ fixed_noise = Variable(fixed_noise)
 
 # setup optimizer
 #optimizerG = optim.Adam(netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
-# optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
+optimizerD = optim.Adam(netD.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999),weight_decay =2e-4 )
 #optimizerD = optim.SGD(netD.parameters(), lr=opt.lr,momentum= 0.9, weight_decay =2e-4 )
 
 
@@ -187,10 +172,7 @@ epoch=0
 #transform = BaseTransform(  Resample_size,(104/256.0, 117/256.0, 123/256.0))
 #transform = BaseTransform(  Resample_size,[104])  #gray scale data
 iteration_num =0
-# the first data loader  OLG=OLG_flag depends on this lag for the onlien e generating 
-mydata_loader1 = myDataloader(Batch_size,Resample_size,Path_length,validation = validation_flag,OLG=OLG_flag)
-# the second one will be a offline one for sure 
-mydata_loader2 = myDataloader(Batch_size,Resample_size,Path_length,validation = validation_flag,OLG=False)
+mydata_loader = myDataloader (Batch_size,Resample_size,Path_length)
 def draw_coordinates_color(img1,vy,color):
         
         if color ==0:
@@ -213,32 +195,19 @@ def draw_coordinates_color(img1,vy,color):
 
 
         return img1
-
-
-switcher = 0
 while(1):
     epoch+= 1
-    if mydata_loader1.read_all_flag2 == 1 and validation_flag ==True:
-        break
     #almost 900 pictures
     while(1):
         iteration_num +=1
         read_id+=1
-        if (mydata_loader1.read_all_flag ==1):
+        if (mydata_loader.read_all_flag ==1):
             read_id =0
-            mydata_loader1.read_all_flag =0
+            mydata_loader.read_all_flag =0
             break
-         #----switch between synthetic data  and  original data 
-        if switcher==0:
-           mydata_loader1 .read_a_batch()
-           mydata_loader =mydata_loader1 
-           if validation_flag == False and Hybrid_OLG == True   :
-                switcher=1
-        else:
-           switcher =0
-           mydata_loader =mydata_loader2 .read_a_batch()
-           mydata_loader =mydata_loader2  
 
+
+        mydata_loader .read_a_batch()
         #change to 3 chanels
         ini_input = mydata_loader.input_image
         real =  torch.from_numpy(numpy.float32(ini_input)) 
@@ -281,17 +250,9 @@ while(1):
         realB =  rendering.layers_visualized_integer_encodeing(labelv,Resample_size)
 
         GANmodel.update_learning_rate()    # update learning rates in the beginning of every epoch.
-        GANmodel.set_input(realA,realB,labelv)         # unpack data from dataset and apply preprocessing
+        GANmodel.set_input(realA,realB)         # unpack data from dataset and apply preprocessing
+        GANmodel.optimize_parameters()   # calculate loss functions, get gradients, update network weights
 
-        if validation_flag == True :
-            GANmodel.forward()
-            GANmodel.error_calculation()
-            D_x =  0
-            G_x =  0
-        else:
-            GANmodel.optimize_parameters()   # calculate loss functions, get gradients, update network weights
-            D_x = GANmodel.loss_D.data.mean()
-            G_x = GANmodel.loss_G.data.mean()
          
         #outputall = netD(inputv)
         #outputall =  outputall[:,:,0,:]
@@ -319,7 +280,8 @@ while(1):
 
         
         #errD_real.backward()
-        
+        D_x = GANmodel.loss_D.data.mean()
+        G_x = GANmodel.loss_G.data.mean()
 
         #D_x1 = errD_real1.data.mean()
         #D_x2 = errD_real2.data.mean()
@@ -368,12 +330,12 @@ while(1):
                  
             saveout  = GANmodel.fake_B
             
-            show2 =  saveout[0,0,:,:].cpu().detach().numpy()*255
-            show2 = numpy.clip(show2,1,254)
+            show2 =  saveout[0,0,:,:].cpu().detach().numpy()*255 
+
             
             color  = numpy.zeros((show2.shape[0],show2.shape[1],3))
-            color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2
-
+            color[:,:,0]  =color[:,:,1] = color[:,:,2] = show2  
+         
            
 
             #for i in range ( len(path2)):
@@ -394,7 +356,7 @@ while(1):
             cv2.imshow('real',show5.astype(numpy.uint8)) 
 
             infinite_save_id += 1
-            if cv2.waitKey(10) & 0xFF == ord('q'):
+            if cv2.waitKey(1) & 0xFF == ord('q'):
               break
     # do checkpointing
     #torch.save(netG.state_dict(), '%s/netG_epoch_%d.pth' % (opt.outf, epoch))

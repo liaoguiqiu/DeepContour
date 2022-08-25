@@ -1,7 +1,6 @@
 # the run py script for sheal and contour detection, 5th October 2020 update
 # this uses the encodinhg tranform to use discriminator
 # update on 26th July 
-#Setup the training
 import torch.nn as nn
 import torch.utils.data
 from torch.autograd import Variable
@@ -14,7 +13,6 @@ import cv2
 import numpy
 import rendering
 from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
-from dataTool.generator_contour_ivus import Generator_Contour_sheath
 
 import os
 from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
@@ -22,13 +20,13 @@ from deploy.basic_trans import Basic_oper
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 # Switch control for the Visdom or Not
-Visdom_flag  = True  # the flag of using the visdom or not
+Visdom_flag  = False  # the flag of using the visdom or not
 OLG_flag = False    # flag of training with on line generating or not
 Hybrid_OLG = False  # whether  mix with online generated images and real images for training
 validation_flag = False  # flag to stop the gradient, and, testing mode which will calculate matrics for validation
 Display_fig_flag = True  #  display and save result or not 
 Save_img_flag  = False # this flag determine if the reuslt will be save  in to a foler 
-Continue_flag = True   # if not true, it start from scratch again
+Continue_flag = True   # if not true, it start from scratch again 
 
 infinite_save_id =0 # use this method so that the index of the image will not start from 0 again when switch the folder    
 
@@ -36,8 +34,7 @@ if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter
     plotter = VisdomLinePlotter(env_name='path finding training Plots')
 
-# pth_save_dir = "C:/Workdir/Develop/atlas_collab/out/sheathCGAN_coordinates3/"
-pth_save_dir = "../../out/sheathCGAN_coordinates3/"
+pth_save_dir = "../out/sheathCGAN_coordinates3/"
 #pth_save_dir = "../out/deep_layers/"
 
 if not os.path.exists(pth_save_dir):
@@ -195,8 +192,8 @@ CE_Nets.netD.apply(weights_init)
 CE_Nets.netG.apply(weights_init)
 if Continue_flag == True:
     #netD.load_state_dict(torch.load(opt.netD))
-    CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_5.pth'))
-    CE_Nets.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_5.pth'))
+    CE_Nets.netG.load_state_dict(torch.load(pth_save_dir+'cGANG_epoch_4.pth'))
+    CE_Nets.netD.load_state_dict(torch.load(pth_save_dir+'cGAND_epoch_4.pth'))
     #CE_Nets.netG.side_branch1. load_state_dict(torch.load(pth_save_dir+'cGANG_branch1_epoch_1.pth'))
 
 print(CE_Nets.netD)

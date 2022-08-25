@@ -11,7 +11,7 @@ from torch.autograd import Variable
 #import gan_body 
 from model import cGAN_build # the mmodel
  
-# import layer_body_sheath # the model
+import layer_body_sheath # the model
 import arg_parse
 #import imagenet
 from analy import MY_ANALYSIS
@@ -19,19 +19,17 @@ from analy import Save_signal_enum
 import cv2
 import numpy
 from image_trans import BaseTransform  
-# from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate
+from generator_contour import Generator_Contour,Save_Contour_pkl,Communicate 
 import rendering
-validation_flag = False
+validation_flag = True
 
 
 import os
-#from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
-from dataset_ivus import myDataloader,Batch_size,Resample_size, Path_length
-
+from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 Continue_flag = False
 # Switch control for the Visdom or Not
-Visdom_flag  = False 
+Visdom_flag  = True 
 Display_fig_flag = True
 if Visdom_flag == True:
     from analy_visdom import VisdomLinePlotter

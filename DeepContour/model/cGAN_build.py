@@ -1,7 +1,3 @@
-# this is the conditional GAN for Unets based generator
-# the generator is the CEnets, the discriminator is the same as  CENET
-#
-
 import time
 import torch
 from model.options.train_options import TrainOptions

@@ -12,15 +12,15 @@ import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
 from torch.autograd import Variable
- 
+import gan_body
 import arg_parse
-#import imagenet
+import imagenet
 from analy import MY_ANALYSIS
 from analy import Save_signal_enum
 import cv2
 import numpy
 from image_trans import BaseTransform  
-from dataTool.generator_contour import Generator_Contour,Save_Contour_pkl
+from generator_contour import Generator_Contour,Save_Contour_pkl
 import matplotlib.pyplot as plt
 from scipy import signal 
 from scipy.signal import find_peaks
@@ -73,36 +73,17 @@ class Basic_oper(object):
         circular = circular.astype(np.uint8)
         #polar_image=cv2.rotate(polar_image,rotateCode = 0) 
         return circular
-    def tranfer_frome_rec2cir2(color, padding_H =1, res = 500):
-        color = cv2.resize(color, (res,res), interpolation=cv2.INTER_AREA)
-        
-
-        if color.ndim ==3:
-            
-            H,W_ini,_ = color.shape
-            H,W,_ = color.shape
-            padding = np.zeros((padding_H,W_ini,3))
-
-            color  = np.append(padding,color,axis=0)
-
-        else:
-            H,W_ini  = color.shape
-            H,W = color.shape
-            padding = np.zeros((padding_H,W_ini))
-
-            color  = np.append(padding,color,axis=0)
-
-         
-        value =  H/2
-        color2=cv2.rotate(color,rotateCode = 2)
+    def tranfer_frome_rec2cir2(color):
+        H,W,_ = color.shape
+        value = np.sqrt(((H/4.0)**2.0)+((W/4.0)**2.0))
+        color=cv2.rotate(color,rotateCode = 2) 
         #value = 200
         #circular = cv2.linearPolar(new_frame, (new_frame.shape[1]/2 , new_frame.shape[0]/2), 
         #                               200, cv2.WARP_INVERSE_MAP)
-        circular = np.zeros((H,W_ini,3))
-        circular = cv2.linearPolar(color2,(W/2, H/2), value, cv2.WARP_INVERSE_MAP)
+        circular = cv2.linearPolar(color,(W/2, H/2), value, cv2.WARP_INVERSE_MAP)
 
-        circular2 = circular.astype(np.uint8)
+        circular = circular.astype(np.uint8)
         #polar_image=cv2.rotate(polar_image,rotateCode = 0) 
-        return circular2
+        return circular
 
 

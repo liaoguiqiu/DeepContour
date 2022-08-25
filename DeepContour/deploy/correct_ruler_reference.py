@@ -1,19 +1,15 @@
 import cv2
-import math
 import numpy as np
-import os
-import random 
-from zipfile import ZipFile
 import scipy.signal as signal
-import pandas as pd
-from DeepAutoJson import Auto_json_label
+# import pandas as pd
+from deploy.DeepAutoJson import Auto_json_label
 import matplotlib
 matplotlib.use('TkAgg')
 from scipy.ndimage import gaussian_filter1d
 
-import matplotlib.pyplot as plt
+from dataset_sheath import Resample_size
 
-from dataset_sheath import myDataloader,Batch_size,Resample_size, Path_length
+
 def draw_coordinates_color(img1,vy,color):
         
         if color ==0:
@@ -43,8 +39,9 @@ class Find_shadow(object):
         self.folder_num = 0
         self.database_root = " "
         #self.save_root  = "D:/PhD/trying/tradition_method/OCT/sheath registration/pairB/with ruler/correct2/"
-        self.save_root  = "D:/PhD/trying/tradition_method/OCT/sheath registration/pairC/ruler/2_correct/"
-        self.save_root  = "D:/PhD/trying/tradition_method/OCT/sheath registration/pairD/ref_correct/"
+        # self.save_root  = "D:/PhD/trying/tradition_method/OCT/sheath registration/pairC/ruler/2_correct/"
+        self.save_root  = "/home/icube/OCT_projects/Contour_project/pairD/ref_correct/"
+        # self.save_root  = "../pairD/ref_correct/"
 
 
         #self.database_root = "D:/Deep learning/dataset/original/animal_tissue/1/"
@@ -52,8 +49,9 @@ class Find_shadow(object):
         self.auto_label = Auto_json_label()
 
         self.f_downsample_factor = 93
-        self.all_dir = "D:/PhD/trying/tradition_method/OCT/sheath registration/pairC/ruler/2_/"
-        self.all_dir = "D:/PhD/trying/tradition_method/OCT/sheath registration/pairD/ref_/"
+        # self.all_dir = "D:/PhD/trying/tradition_method/OCT/sheath registration/pairC/ruler/2_/"
+        self.all_dir = "/home/icube/OCT_projects/Contour_project/pairD/ref_/"
+        # self.all_dir = "../pairD/ref_/"
 
         self.image_dir   = self.database_root + "pic/"
         self.json_dir =  self.database_root + "label/" # for this class sthis dir ist save the modified json 

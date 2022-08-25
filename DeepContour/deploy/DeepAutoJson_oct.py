@@ -232,7 +232,7 @@ class Auto_json_label(object):
         self.CE_Nets = Model_creator.creat_nets()  # one is for the contour cordinates
 
         # for the detection just use the Gnets
-        self.CE_Nets.netG.load_state_dict(torch.load(pth_save_dir + 'cGANG_epoch_1.pth'))
+        self.CE_Nets.netG.load_state_dict(torch.load(pth_save_dir + 'cGANG_epoch_5.pth'))
         self.CE_Nets.netG.cuda()
 
         self.CE_Nets.netG.Unet_back.eval()
@@ -323,15 +323,19 @@ class Auto_json_label(object):
 
         # initialize img_draw
         img_draw = img_piece.astype(np.uint8)
+        out_pix = self.CE_Nets.pix_wise[0].cpu().detach().numpy()*254
+        img_draw[:,:,0] = out_pix[0,:,:]
+        img_draw[:,:,1] = out_pix[1,:,:]
+        img_draw[:,:,2] = out_pix[2,:,:]
 
         # draw path for all contours
-        for i in range(len(existences)):
-            draw_path_i = pathes[i] * H_s * mask[i] + (1 - mask[i]) * H_s
+        #for i in range(len(existences)):
+           # draw_path_i = pathes[i] * H_s * mask[i] + (1 - mask[i]) * H_s
 
-            img_draw = draw_coordinates_color(img_draw, draw_path_i, i)
+           # img_draw = draw_coordinates_color(img_draw, draw_path_i, i)
 
-        cv2.imshow('predicted contours from auto annotation', img_draw.astype(np.uint8))
-        cv2.waitKey(1)
+        #cv2.imshow('predicted contours from auto annotation', img_draw.astype(np.uint8))
+        #cv2.waitKey(1)
 
         # pathes = numpy.clip(pathes,0,1)
         # pathes = pathes*H/Resample_size

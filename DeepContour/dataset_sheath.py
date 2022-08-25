@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 import os
 from analy import MY_ANALYSIS
-from dataTool.generator_contour import  Generator_Contour,Save_Contour_pkl,Communicate
+from generator_contour import  Generator_Contour,Save_Contour_pkl,Generator_Contour_layers,Communicate
 from analy import Save_signal_enum
 from scipy import signal 
 from image_trans import BaseTransform  
@@ -15,22 +15,18 @@ from basic_operator import Basic_Operator
 
 seed(1)
 Batch_size = 1
-Resample_size =256 # the input and label will be resampled 
+Resample_size =256
 Path_length = 256
 Augment_limitation_flag = False
 Augment_add_lines = False
 Clip_mat_flag = False
 random_clip_flag = False
-Random_rotate = True
 transform = BaseTransform(  Resample_size,[104])  #gray scale data
 
 class myDataloader(object):
     def __init__(self, batch_size,image_size,path_size,validation= False,OLG=False):
         self.OLG_flag = OLG
-        self. GT = True
-        self.save_id =0
-        #Guiqiu modified for my computer
-        self.com_dir = "../../dataset/telecom/" # this dir is for the OLG
+        self.com_dir = "../dataset/telecom/" # this dir is for the OLG
          # initial lizt the 
         self.talker = Communicate()
         self.talker=self.talker.read_data(self.com_dir)
@@ -39,26 +35,23 @@ class myDataloader(object):
         else:
             self.talker.training =2
 
-
         self.talker.pending =0 # no pending so all folder can be writed
         #self.talker.writing =2 
         self.talker.save_data(self.com_dir) # save
 
-        root = "D:/Deep learning/dataset/For IVUS/"
 
-        self.dataroot = root + "train/img/"
-        self.signalroot =root + "train/label/"
+        self.dataroot = "../dataset/For_contour_sheath_train/train/pic/"
+        self.signalroot ="../dataset/For_contour_sheath_train/train/label/" 
         if self.OLG_flag == True:
-           self.dataroot = root + "train_OLG/img/"
-           self.signalroot =root + "train_OLG/label/" 
+           self.dataroot = "../dataset/For_contour_sheath_train/train_OLG/pic/"
+           self.signalroot ="../dataset/For_contour_sheath_train/train_OLG/label/" 
 
 
         if validation  == True :
             self.OLG_flag = False
-            self.dataroot = root + "test/img/"
-            self.signalroot =root + "test/label/" 
-        else: 
-            self.GT = True  # for  trianing the GT should always be true
+            self.dataroot = "../dataset/For_contour_sheath_train/test/pic/"
+            self.signalroot ="../dataset/For_contour_sheath_train/test/label/" 
+        
         
 
 
@@ -152,33 +145,16 @@ class myDataloader(object):
     def gray_scale_augmentation(self,orig_gray) :
         random_scale = 0.3 + (1.5  - 0.3) * np.random.random_sample()
         random_bias =   (np.random.random_sample() -0.5)*40
-        aug_gray = orig_gray * random_scale +random_bias
+        aug_gray = orig_gray * random_scale -random_bias
         aug_gray = np.clip(aug_gray, a_min = 0, a_max = 254)
 
         return aug_gray
     def nonelinear_scale_augmentation(self,orig_gray) :
-        gamma  = np.random.random_sample()*0.6 +0.4
+        random_scale = 0.7 + (1.5  - 0.7) * np.random.random_sample()
+        aug_gray = orig_gray.astype(float) * orig_gray.astype(float)/100.0*random_scale
+        aug_gray = np.clip(aug_gray, a_min = 0, a_max = 254)
 
-        mask = (orig_gray >50)* gamma
-        mask2=  (orig_gray <50) *1
-        
-         
-        aug_gray =  mask * orig_gray + mask2 * orig_gray 
-
-        #aug_gray = np.array(255*(orig_gray.astype(float) / 255) ** gamma, dtype = 'uint8') 
-        #random_scale = 0.7 + (1.0  - 0.7) * np.random.random_sample()
-        ##aug_gray = orig_gray.astype(float) * orig_gray.astype(float)/100.0*random_scale
-        #aug_gray = orig_gray.astype(float) /1.3
-
-        aug_gray = np.clip(aug_gray/2, a_min = 0, a_max = 254)
-        Dice = int( np.random.random_sample()*10)
-        if Dice % 10 ==0 :
-            return orig_gray
-
-            
-
-        else:
-            return  aug_gray
+        return aug_gray
     def random_min_clip_by_row(self,min1,min2,mat):
          rand= np.random.random_sample()
          rand = rand * (min2-min1) +min1
@@ -210,7 +186,7 @@ class myDataloader(object):
 
 
         return image,pathes 
-    def flips(self,image,pathes):    #upside down
+    def flips(self,image,pathes):
  
         H,W = image.shape
         fliper = np.random.random_sample() * 10
@@ -223,7 +199,7 @@ class myDataloader(object):
 
 
         return image,pathes 
-    def flips2(self,image,pathes):  # left to right
+    def flips2(self,image,pathes):
  
         H,W = image.shape
         fliper = np.random.random_sample() * 10
@@ -245,17 +221,15 @@ class myDataloader(object):
                 #img_piece = this_gray[:,this_pathx[0]:this_pathx[clen-1]]
                 # no crop blank version 
         factor=W2/W
-       
-
          
         this_pathy =  signal.resample(py, int(clen*factor))#resample the path
         #resample 
         this_pathy =  this_pathy*H2/H#unifrom
         # first determine the lef piece
-        pathl = np.zeros(int(px[0]*factor))+ 1.11*H2
+        pathl = np.zeros(int(px[0]*factor))+ 1.01*H2
         len1 = len(this_pathy)
         len2 = len(pathl)
-        pathr = np.zeros(W2-len1-len2) + 1.11*H2
+        pathr = np.zeros(W2-len1-len2) + 1.01*H2
         path_piece = np.append(pathl,this_pathy,axis=0)
         path_piece = np.append(path_piece,pathr,axis=0)
 
@@ -263,9 +237,6 @@ class myDataloader(object):
         #however because the label software can not label the leftmost and the rightmost points,
         #so it will be given a max value,  I crop the edge of the label, remember to crop the image correspondingly .
 
-         # conver the blank value to extrem high value
-        mask = path_piece >(H2-5)
-        path_piece = path_piece + mask * H2*0.2
         #path_piece = signal.resample(path_piece[3:W2-3], W2)
         return path_piece
 
@@ -310,9 +281,7 @@ class myDataloader(object):
                 this_folder_list  = self.folder_list[self.folder_pointer]
         #read_end  = self.read_record+ self.batch_size
                 this_signal = self.signal[self.folder_pointer]
-                #thisfolder_len =  len (this_signal.img_num)
-                thisfolder_len =  len (this_folder_list)
-
+                thisfolder_len =  len (this_signal.img_num)
 
         #for i in range(read_start, read_end):
             #this_pointer = i -read_start
@@ -327,7 +296,7 @@ class myDataloader(object):
                 Image_ID = str(Image_ID_str)
             else:
                 Image_ID = int(Image_ID_str)
-            self.save_id= Image_ID
+
             #start to read image and paths to fill in the input bach
             this_image_path = this_folder_list[i] # read saved path
             this_img = cv2.imread(this_image_path)
@@ -340,16 +309,12 @@ class myDataloader(object):
             #Path_Index_list = Path_Index_list.astype(str)
 
             try:
-                if self.GT == False:
-                    Path_Index = 0 # just use the first path
-                else:
-                    Path_Index = Path_Index_list.index(Image_ID)
+                Path_Index = Path_Index_list.index(Image_ID)
             except ValueError:
                 print(Image_ID_str + "not path exsting")
 
-            else:
-                if self.GT == True:
-                    Path_Index = Path_Index_list.index(Image_ID)  
+            else:             
+                Path_Index = Path_Index_list.index(Image_ID)  
                 #for layers train alll  the x and y are list
                 this_pathx = this_signal.contoursx[Path_Index]
                 this_pathy = this_signal.contoursy[Path_Index]
@@ -357,7 +322,7 @@ class myDataloader(object):
                 #path2 =  signal.resample(this_path, self.path_size)#resample the path
                 # concreate the image batch and path
                 this_gray  =   cv2.cvtColor(this_img, cv2.COLOR_BGR2GRAY)
-                #this_gray  = this_gray[0:600,:]   # used to crop the image for IVUS image
+                
                 # imag augmentation
                 if Augment_limitation_flag== True:
                     if  random_clip_flag == True:
@@ -368,7 +333,7 @@ class myDataloader(object):
                         this_gray  = np . clip( this_gray , clip_limitation,255) # change the clip value depend on the ID
                 if Augment_add_lines== True:
                     this_gray  = self.add_lines_to_matrix( this_gray  )
-                #this_gray = self.nonelinear_scale_augmentation(this_gray)
+                #this_gray = self.gray_scale_augmentation(this_gray)
                 H,W = this_gray.shape
                 c_num = len(this_pathx)
 
@@ -379,13 +344,11 @@ class myDataloader(object):
                 img_piece = this_gray #[60:H,:] 
                 img_piece = cv2.resize(img_piece, (self.img_size,self.img_size), interpolation=cv2.INTER_AREA)
                 if self.noisyflag == True:
-                    img_piece = self.nonelinear_scale_augmentation(img_piece)
-
-                    #img_piece = self.gray_scale_augmentation (img_piece)
-                    #img_piece= Basic_Operator.add_speckle_or_not(img_piece)
+                    img_piece = self.gray_scale_augmentation (img_piece)
+                    img_piece= Basic_Operator.add_speckle_or_not(img_piece)
                     #img_piece= Basic_Operator.add_noise_or_not(img_piece)
                     img_piece = Basic_Operator.add_gap_or_not(img_piece)
-                    img_piece  = self . noisy( "gauss_noise" ,  img_piece)
+                    #img_piece  = self . noisy( "blur" ,  img_piece )
                     #img_piece  = self . noisy( "s&p" ,  img_piece )
 
                     #img_piece  = self . noisy( "speckle" ,  img_piece )
@@ -420,9 +383,8 @@ class myDataloader(object):
                     self.input_path [this_pointer ,iter, :] = path_piece
 
                 #path_piece   = np.clip(path_piece,0,self.img_size)
-                if Random_rotate == True:
-                    img_piece, self.input_path [this_pointer ,:, :] = self.rolls(img_piece,self.input_path [this_pointer ,:, :])  
-                #img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
+                img_piece, self.input_path [this_pointer ,:, :] = self.rolls(img_piece,self.input_path [this_pointer ,:, :])
+                img_piece, self.input_path [this_pointer ,:, :] = self.flips(img_piece,self.input_path [this_pointer ,:, :])
                 img_piece, self.input_path [this_pointer ,:, :] = self.flips2(img_piece,self.input_path [this_pointer ,:, :])
 
 

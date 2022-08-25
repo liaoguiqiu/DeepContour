@@ -23,7 +23,7 @@ Model_key_list = ["CEnet", #0
                 "CEnet_no_exp",#4
                 "CEnet_no_Aux"]#5
 ##TODO:select model
-ACE_model_key = Model_key_list[3]
+ACE_model_key = Model_key_list[0]
 ################################
 Input_c = 3  # the gray is converted into 3 channnels image
 Pixwise_c = object_num+1  #  addtional heathy layer
@@ -280,8 +280,10 @@ class _2layerFusionNets_(nn.Module):
                                                    final=True)
             # self.backbone = _BackBonelayer(unetf)
             # self.backbone_e = _BackBonelayer(unetf)
-            self.backbone = _BackBonelayer(inputd=Pixwise_c+unetf)
-            self.backbone_e = _BackBonelayer(inputd=Pixwise_c+unetf)
+            # self.backbone = _BackBonelayer(inputd=Pixwise_c+unetf)
+            # self.backbone_e = _BackBonelayer(inputd=Pixwise_c+unetf)
+            self.backbone = _BackBonelayer(inputd=Pixwise_c )
+            self.backbone_e = _BackBonelayer(inputd=Pixwise_c  )
 
         else:
             self.backbone = _BackBonelayer()
@@ -327,11 +329,11 @@ class _2layerFusionNets_(nn.Module):
             # backbone_f = self.backbone(unet_f)
             # backbone_fe = self.backbone_e(unet_f)
             # cat the raw feature and tje encoded one together
-            feature_cat = torch.cat([unet_f*0, pix_seg], 1)
-            # backbone_f = self.backbone(pix_seg)
-            backbone_f = self.backbone(feature_cat)
+            # feature_cat = torch.cat([unet_f, pix_seg], 1)
+            backbone_f = self.backbone(pix_seg)
+            # backbone_f = self.backbone(feature_cat)
 
-            backbone_fe = self.backbone_e(feature_cat)
+            backbone_fe = self.backbone_e(pix_seg)
 
 
         else:

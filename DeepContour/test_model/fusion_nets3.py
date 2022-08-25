@@ -10,6 +10,7 @@ import numpy as np
 import cv2
 
 
+
 class _2LayerScale1(nn.Module):
 #output width=((W-F+2*P )/S)+1
 
@@ -60,10 +61,12 @@ class _2LayerScale1(nn.Module):
         #     #nn.BatchNorm2d(1),
         #     #nn.LeakyReLU(0.1,inplace=True)
         #                                            )
-        self. low_scale_out = nn.Sequential(         
+        self. low_scale_out = nn.Sequential(
+              
              nn.Conv2d(feature, 2 ,(1,1), (1,1), (0,0), bias=False) #2*64           
              #nn.BatchNorm2d(1),
              #nn.LeakyReLU(0.1,inplace=True)
+               
                                  )
     def forward(self, x):
 
@@ -310,23 +313,13 @@ class _2layerFusionNets_(nn.Module):
     def __init__(self):
         super(_2layerFusionNets_, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
-       
+   
         self.side_branch1  =  _2LayerScale1()
          
         self.side_branch2  =  _2LayerScale2()  
         self.side_branch3  =  _2LayerScale3()   
         self.fusion_layer = Fusion( )
-    def upsample_path(side_out_low):
-        side_out_long = nn.functional.interpolate(side_out_low, size=(1, Path_length), mode='bilinear') 
-
-        local_bz,num,_,local_l = side_out_low.size() 
-        side_out_low = side_out_low.view(-1,num,local_l).squeeze(1)# squess before fully connected 
-        #local_bz,_,num,local_l = side_out_low.size() 
-        #side_out_low = side_out_low.view(-1,num,local_l).squeeze(1)# squess before fully connected
-        local_bz,num,_,local_l = side_out_long.size() 
-        side_out_long = side_out_long.view(-1,num,local_l).squeeze(1)# squess before fully connected 
-        return side_out_long
-
+         
     def fuse_forward(self,side_out1,side_out2,side_out3):
          
         out = self.fusion_layer( side_out1,side_out2,side_out3)
@@ -335,7 +328,7 @@ class _2layerFusionNets_(nn.Module):
 
         return out 
     def forward(self, x):
-        side_out1=self.side_branch1 (x) #
+      
          
         return out,side_out1l ,side_out2l,side_out3l
         
