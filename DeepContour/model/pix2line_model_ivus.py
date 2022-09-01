@@ -373,7 +373,7 @@ class Pix2LineModel(BaseModel):
         else:
             self.loss = self.criterionMTL.multi_loss(self.out_pathes,self.real_pathes)  #
         if Without_Auxiliary == False:
-            # self.loss_G = ( 1.0*self.loss[0]  + 0.001*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
+            self.loss_G = ( 1.0*self.loss[0]  + 0.001*self.loss[1] + 0.001*self.loss[2] + 0.001*self.loss[3])
             self.loss_G = self.loss[0]
 
         else:

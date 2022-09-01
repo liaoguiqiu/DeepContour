@@ -307,6 +307,7 @@ def display_prediction(infinite_save_id, mydata_loader, MODEL , hot, hot_real,Sa
 
 
     colorhot = (color ) * hot
+    colorhot = numpy.clip(colorhot,1,254)
     color_c = color*1
     colorhot_c = colorhot*1
     for i in range(len( out_pathes)):
@@ -340,6 +341,7 @@ def display_prediction(infinite_save_id, mydata_loader, MODEL , hot, hot_real,Sa
     circular1 = Basic_oper.tranfer_frome_rec2cir2(color)
     circular2 = Basic_oper.tranfer_frome_rec2cir2(color2)
     circular2_c = Basic_oper.tranfer_frome_rec2cir2(colorhot_c)
+    # colorhot = numpy.clip(colorhot, 1, 254)
     if Save_img_flag == True:
         this_save_dir = Output_root + "1out_img/"+Model_key+"/Ori+seg_rec_line/"
         save_img_to_folder(this_save_dir,infinite_save_id,show4)
