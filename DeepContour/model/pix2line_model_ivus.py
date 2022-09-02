@@ -21,10 +21,10 @@ from working_dir_root import Dataset_root,Output_root
 import numpy as np
 
 # Learning rate for backbone
-Coord_lr = 0.00001
+Coord_lr = 0.0001
 Pix_lr_lambda = 100.0
 EXxtens_lr_lambda = 10.0
-
+Disable_bottom_model = True
 class Pix2LineModel(BaseModel):
     """ This class implements the pix2pix model, for learning a mapping from input images to output images given paired data.
 
@@ -272,6 +272,7 @@ class Pix2LineModel(BaseModel):
             self.pix_wise = self.fake_B
         #self.fake_B = self.netG(self.real_A)  # G(A)
 
+
     def backward_D(self):
         """Calculate GAN loss for the discriminator"""
         # Fake; stop backprop to the generator by detaching fake_B
@@ -327,8 +328,8 @@ class Pix2LineModel(BaseModel):
 
 
             # pix_loss2 = self.criterionL1 (self.pix_wise *backgroud_mask, self.real_B_one_hot*backgroud_mask)
-            pix_loss2 = self.criterionL1(self.pix_wise ,self.real_B_one_hot)
-            # pix_loss2 = self.customeBCE(self.pix_wise ,self.real_B_one_hot)
+            # pix_loss2 = self.criterionL1(self.pix_wise ,self.real_B_one_hot)
+            pix_loss2 = self.customeBCE(self.pix_wise ,self.real_B_one_hot)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
             # pix_loss = self.criterionL1 (self.pix_wise *(self.real_B>0.1+3)/4.0, self.real_B)
             self.loss_pix =  Pix_lr_lambda * pix_loss2

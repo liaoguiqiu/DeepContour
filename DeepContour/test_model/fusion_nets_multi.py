@@ -23,11 +23,11 @@ Model_key_list = ["CEnet", #0
                 "CEnet_no_exp",#4
                 "CEnet_no_Aux"]#5
 ##TODO:select model
-ACE_model_key = Model_key_list[1]
+ACE_model_key = Model_key_list[0]
 ################################
 Input_c = 3  # the gray is converted into 3 channnels image
 Pixwise_c = object_num+1  #  addtional heathy layer
-Backbone_u_d = 100
+Backbone_u_d = 25
 Backbone_f = 8
 CEnet_f = 8
 Fusion_times = 3
@@ -51,7 +51,9 @@ if ACE_model_key == "CEnet_no_Aux":
 
 
 class _BackBoneUnet(nn.Module):
-    def __init__(self, input_nc=3, output_nc=256, num_downs=8, ngf=32, norm_layer=nn.BatchNorm2d, use_dropout=False):
+    # def __init__(self, input_nc=3, output_nc=256, num_downs=8, ngf=32, norm_layer=nn.BatchNorm2d, use_dropout=False):
+
+    def __init__(self, input_nc=3, output_nc=256, num_downs=5, ngf=2, norm_layer=nn.BatchNorm2d, use_dropout=False):
         super(_BackBoneUnet, self).__init__()
         ## depth rescaler: -1~1 -> min_deph~max_deph
         norm_layer = get_norm_layer(norm_type='instance')
@@ -275,13 +277,15 @@ class _2layerFusionNets_(nn.Module):
 
         if UnetBack_flag == True:
             unetf = Backbone_u_d
-            self.Unet_back = _BackBoneUnet(output_nc=unetf, use_dropout=True)
+            self.Unet_back = _BackBoneUnet(output_nc=unetf, use_dropout=False)
             self.pixencoding = baseM.conv_keep_all(unetf, Pixwise_c, k=(1, 1), s=(1, 1), p=(0, 0), resnet=False,
                                                    final=True)
             # self.backbone = _BackBonelayer(unetf)
             # self.backbone_e = _BackBonelayer(unetf)
             self.backbone = _BackBonelayer(inputd=Pixwise_c+unetf)
             self.backbone_e = _BackBonelayer(inputd=Pixwise_c+unetf)
+            # self.backbone = _BackBonelayer(inputd=Pixwise_c )
+            # self.backbone_e = _BackBonelayer(inputd=Pixwise_c )
 
         else:
             self.backbone = _BackBonelayer()
@@ -327,7 +331,8 @@ class _2layerFusionNets_(nn.Module):
             # backbone_f = self.backbone(unet_f)
             # backbone_fe = self.backbone_e(unet_f)
             # cat the raw feature and tje encoded one together
-            feature_cat = torch.cat([unet_f*0, pix_seg], 1)
+            feature_cat = torch.cat([unet_f, pix_seg], 1)
+            # feature_cat = pix_seg
             # backbone_f = self.backbone(pix_seg)
             backbone_f = self.backbone(feature_cat)
 

@@ -25,7 +25,8 @@ from working_dir_root import Dataset_root,Output_root
 from scipy.spatial.distance import directed_hausdorff, cdist
 from skimage import metrics
 import numpy as np
-Abasence_imageH = 0.5 # penalize the target
+Disable_bottom_model = False
+Abasence_imageH = 1.0 # penalize the target
 class Validation(object):
     def __init__(self):
         if Sep_Up_Low == False :
@@ -118,7 +119,9 @@ class Validation(object):
             # symatric mean:
             Dtp = Matrix.min(axis=0)
             Dpt = Matrix.min(axis=1)
-            result = max( np.max( Dtp), np.max(Dpt))
+            # result = max( np.max( Dtp), np.max(Dpt))
+            result =  np.mean( Dtp)
+
             return result
 
 
@@ -131,6 +134,9 @@ class Validation(object):
 
         real_pathes = MODEL.real_pathes[0] *real_exv+ (1- real_exv)*Abasence_imageH
         # MODEL.validation_cnt += 1
+        if (Disable_bottom_model == True):
+            MODEL.fake_B_1_hot = MODEL.pix_wise
+            MODEL. out_pathes = None
         if MODEL.out_pathes is not None:
             out_pathes_all = MODEL.out_pathes[0]
             out_exv_all = MODEL.out_exis_vs[0]

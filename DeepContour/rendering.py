@@ -312,7 +312,7 @@ def onehot2integer(onehot):
     return out
 
 
-def onehot2layers(onehot,thre = 0.5):
+def onehot2layers(onehot,thre = 0.3):
     C, H, W = onehot.size()
     layer1 = np.zeros(W)
     layer2 = np.ones(W) * (H - 1)
