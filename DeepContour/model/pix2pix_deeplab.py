@@ -36,7 +36,7 @@ from torchvision import models
 #             model_SETR.cuda(cfg.gpu_ids[0]), device_ids=cfg.gpu_ids)
 Modelkey_list=['DeeplabV3','FCN','PAN','DeeplabV3+','Unet','Unet++','SETR']
 # SETR : Sementation tranformer
-Modelkey = Modelkey_list[3]
+Modelkey = Modelkey_list[2]
 if Modelkey == 'SETR':
     from mmcv.utils import Config, DictAction, get_git_hash
 # from mmseg.apis  import set_random_seed, train_segmentor
@@ -338,9 +338,10 @@ class Pix2Pix_deeplab_Model(BaseModel):
         else:
             self.fake_B = output
         activation = torch.nn.Sigmoid()
-        self.fake_B = activation(self.fake_B)
+        if Modelkey == Modelkey_list[0] or Modelkey == Modelkey_list[2]:
+            self.fake_B = activation(self.fake_B)
         # TODO: for onehot encoding the fakeb one hot is fake_B
-        self.fake_B_1_hot = rendering.integer2onehot(self.fake_B)
+        self.fake_B_1_hot = rendering.integer2onehot_one_channel(self.fake_B)
         # self.fake_B_1_hot  =   self.fake_B
         self.pix_wise =  self.fake_B
         test_time_point = time()

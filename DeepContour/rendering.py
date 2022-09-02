@@ -185,7 +185,7 @@ def boundary_visualized_onehot_encodeing(layers, H):  # this is for sheath conto
 
 
 # encode as sigle channel inte with up and lowe boudnary
-def layers_visualized_integer_encodeing_full(layers,existence, H,reverse_exs=True):  # this is for sheath contour segmentation
+def layers_visualized_integer_encodeing_full(layers,existence, H,reverse_exs=True,Prediction=False):  # this is for sheath contour segmentation
     # inetgral encoding return a  one channel map with different numers
     if (reverse_exs == True):
         existence = 1- existence
@@ -206,9 +206,13 @@ def layers_visualized_integer_encodeing_full(layers,existence, H,reverse_exs=Tru
             combine_exist = existence[j,l, :] * existence[j,l+1, :]
             presence_x  = this_layer_x[torch.where(combine_exist >Existence_thrshold)[0]]
 
+            if Prediction == True:
+                for i in presence_x:
 
-            for i in presence_x:
-                out[j, 0, torch.arange(layers[j,l,i]-4,layers[j,l+1,i]+4), i] =  (l + 2) / layer_n
+                        out[j, 0, torch.arange(layers[j,l,i]-3,layers[j,l+1,i]+3), i] =  (l + 2) / layer_n
+            else:
+                for i in presence_x:
+                    out[j, 0, torch.arange(layers[j, l, i], layers[j, l + 1, i]), i] = (l + 2) / layer_n
     # out   =( out  -0.5)/0.5
     out = out.cuda()
     return out
@@ -289,6 +293,26 @@ def integer2onehot(integer):
     out = out.cuda()
     return out
 
+def integer2onehot_one_channel(integer):
+    bz, c_n, H, W = integer.size()
+    # layers = layers +0.1
+    # layers   =  layers * H
+    # layers = layers.type(torch.IntTensor)
+    # layers = torch.clamp(layers, 0, H-1)
+    # out depth = 3
+    out = torch.zeros([bz, 3, H, W], dtype=torch.float)  # has three channels of output, the none target area is zero
+    # every layer need to mask the front part :
+    # for i in range(layer_n):
+
+    out[:, 0, :, :] = integer[:, 0, :, :] < 0.5  # first chnnel is the backgrond
+    # out[j,0,layers[j,1,k]:H,k]=1 #
+
+    out[:, 1, :, :] = integer[:, 0, :, :] *0 # second channel is the sheath, albels is 1
+
+    out[:, 2, :, :] = integer[:, 0, :, :] > 0.5  # third  channel is the tisue, albels is 1
+    # out   =( out  -0.5)/0.5
+    out = out.cuda()
+    return out
 
 def onehot2integer(onehot):
     bz, c_n, H, W = onehot.size()
@@ -344,7 +368,7 @@ def onehot2layers(onehot,thre = 0.3):
     ex_v = ex_v.cuda()
     return layers,ex_v
 
-def onehot2layers_cut_bound(onehot,Abasence_imageH,thre=0.1): # cut the up and lower boundarys
+def onehot2layers_cut_bound(onehot,Abasence_imageH,thre=0.4): # cut the up and lower boundarys
     C, H, W = onehot.size()
     layers= torch.zeros([2*(C-1), W], dtype=torch.long)+int(H *Abasence_imageH)
     ex_v= torch.zeros([2*(C-1), W], dtype=torch.float)
