@@ -188,7 +188,7 @@ class Auto_json_label(object):
         pth_save_dir = Output_root + "CEnet_trained/"
 
         # folder to auto annotate
-        self.database_root = 'E:/database/Soft phantom synchronized experiment/raw/record close -100   0 99alpq dynqmic NURD/'
+        self.database_root = 'E:/database/Soft phantom synchronized experiment/raw/Endoscopic Phantom No trqns -110 0 alpha 995 +stab/'
 
         # self.all_dir = self.database_root + "pic_all/"
         # self.image_dir   = self.database_root + "img/"

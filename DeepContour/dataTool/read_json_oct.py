@@ -19,7 +19,7 @@ Train_validation_devi = 3  # all data are equally devided by thsi number
 Test_fold = 0  # use the 0 st for training, the other for validation
 Delete_outsider_flag = False
 Consider_overlapping = False
-
+Process_all_folder_flag = True
 class Read_read_check_json_label(object):
     def __init__(self):
         # self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
@@ -326,4 +326,22 @@ class Read_read_check_json_label(object):
 
 if __name__ == '__main__':
     converter = Read_read_check_json_label()
-    converter.check_one_folder()  # convert json files into pkl files
+    if (Process_all_folder_flag == False): # just  the default foler will be convert
+        converter.check_one_folder()  # convert json files into pkl files
+    else:
+        all_img_folder_list = os.listdir(converter.database_root + "img/")
+        folder_num = len(all_img_folder_list)
+        # create the buffer list
+        for sub_folder in all_img_folder_list:
+            this_sub = sub_folder + "/"
+            # if(number_i==0):
+            converter.image_dir = converter.database_root + "img/" + this_sub
+            converter.json_dir = converter.database_root + "label/" + this_sub
+            converter.save_dir = converter.database_root + "seg label pkl/" + this_sub
+            converter.save_dir_train = converter.database_root + "seg label pkl train/" + this_sub
+            converter.save_dir_test = converter.database_root + "seg label pkl test/" + this_sub
+            converter.img_num = 0
+            converter.check_one_folder() # check this folder iteratively
+            print( this_sub + "---is done!")
+
+
