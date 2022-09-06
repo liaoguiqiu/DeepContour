@@ -19,7 +19,9 @@
 
 
 #this is for Guiqiu Windows
-#working_root = "D:/Deep learning/atlas_collab_ivus/data1/"
+# working_root = "D:/Deep learning/atlas_collab_ivus/data1/"
+working_root = "E:/DeeplearningData_jelly/"
+
 
 #this is for marcopolo linux
 
@@ -33,7 +35,7 @@
 
 #this is for Sanat's computer
 # working_root = "/home/beatriz/Documents/Projects/atlas_collab_ivus/"
-working_root = "/home/beatriz/Documents/Projects/Deeplearning_healthy/"
+# working_root = "/home/beatriz/Documents/Projects/Deeplearning_healthy/"
 
 
 Dataset_root =  working_root + "dataset/"

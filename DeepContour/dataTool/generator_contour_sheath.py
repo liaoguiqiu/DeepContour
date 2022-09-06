@@ -99,8 +99,8 @@ class Generator_Contour_sheath(object):
         data_root = Dataset_root + "label data/"
         self.image_dir = data_root + "img/"
         # self.pkl_dir = data_root +"seg label pkl train/"  #TODO: change this to actually use the flag!!!!
-        # self.pkl_dir = data_root + "seg label pkl/"
-        self.pkl_dir = data_root +"seg label pkl train/"
+        self.pkl_dir = data_root + "seg label pkl/"
+        # self.pkl_dir = data_root +"seg label pkl train/"
 
         # for normal generator
         self.save_image_dir = data_root + "img_generate/"  # this dir just save all together

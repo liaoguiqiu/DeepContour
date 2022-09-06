@@ -14,7 +14,8 @@ from scipy import signal
 from image_trans import BaseTransform  
 from random import seed
 from random import random
-import pickle
+import  pickle5 as pickle
+print("highest protocol: ", pickle.HIGHEST_PROTOCOL)
 from basic_operator import Basic_Operator
 from scipy.interpolate import interp1d
 # from test_model.fusion_nets_multi import Out_c
@@ -31,7 +32,7 @@ else:
     Out_c_e = object_num * max_presence
 
 seed(1)
-Batch_size = 2
+Batch_size = 1
 Resample_size =256 # the input and label will be resampled
 Path_length = 256
 Augment_limitation_flag = False
