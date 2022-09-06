@@ -340,6 +340,12 @@ if __name__ == '__main__':
             converter.save_dir = converter.database_root + "seg label pkl/" + this_sub
             converter.save_dir_train = converter.database_root + "seg label pkl train/" + this_sub
             converter.save_dir_test = converter.database_root + "seg label pkl test/" + this_sub
+            if not os.path.exists(converter.save_dir):
+                os.makedirs(converter.save_dir)
+            if not os.path.exists(converter.save_dir_train):
+                os.makedirs(converter.save_dir_train)
+            if not os.path.exists(converter.save_dir_test):
+                os.makedirs(converter.save_dir_test)
             converter.img_num = 0
             converter.check_one_folder() # check this folder iteratively
             print( this_sub + "---is done!")
