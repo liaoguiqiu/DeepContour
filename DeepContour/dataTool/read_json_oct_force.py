@@ -1,3 +1,4 @@
+# THis read Json will compute the tactile by the way
 # Log of modification cre
 # this  is used  to read json files and transfer into a pkl file
 # Guiqiu modify this for spliting the data for train validation
@@ -14,6 +15,8 @@ import pandas as pd
 from collections import OrderedDict
 from dataTool.generator_contour_ivus import Save_Contour_pkl
 from working_dir_root import Dataset_root
+from databufferExcel import EXCEL_saver
+
 Train_validation_split = True  # flag for devide the data
 Train_validation_devi = 3  # all data are equally devided by thsi number
 Test_fold = 0  # use the 0 st for training, the other for validation
@@ -29,7 +32,7 @@ class Read_read_check_json_label(object):
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
         #self.database_root = "../../dataset/ivus/"
         self.database_root = Dataset_root + "label data/"
-
+        self.excel_saver = EXCEL_saver(3) # save the distance, contact region, and merged value
         # self.database_root = "D:/Deep learning/dataset/label data/"
 
 #<<<<<<< HEAD:DeepContour/dataTool/read_json_ivus.py
@@ -38,7 +41,7 @@ class Read_read_check_json_label(object):
         # sub_folder = "capsule_sample/"
 
         # Tania's computer
-        sub_folder="Endoscopic Phantom stiffer + trans open -5 +stab/"
+        sub_folder="Endoscopic Phantom stiffer + trans open -3 +stab/"
 #>>>>>>> b8bb1d19b916df000a1ab2c21c7474cf6fa38b44:dataTool/read_json_ivus.py
         self.max_presence = 9
         self.image_dir = self.database_root + "img/" + sub_folder
@@ -46,6 +49,8 @@ class Read_read_check_json_label(object):
         self.save_dir = self.database_root + "seg label pkl/" + sub_folder
         self.save_dir_train = self.database_root + "seg label pkl train/" + sub_folder
         self.save_dir_test = self.database_root + "seg label pkl test/" + sub_folder
+
+        self.save_excel_dir = self.database_root + "tactile_excel/" + sub_folder
 
         self.img_num = 0
 
@@ -55,6 +60,8 @@ class Read_read_check_json_label(object):
             os.makedirs(self.save_dir_train)
         if not os.path.exists(self.save_dir_test):
             os.makedirs(self.save_dir_test)
+        if not os.path.exists(self.save_excel_dir):
+            os.makedirs(self.save_excel_dir)
 
         # self.contours_x = []  # no predefines # predefine there are 4 contours
         # self.contours_y = []  # predefine there are 4 contours
@@ -118,7 +125,30 @@ class Read_read_check_json_label(object):
             _img[int(dy) + 1, dx, :] = _img[int(dy) - 1, dx, :] = _img[int(dy), dx, :] = painter
 
         return _img
+    def tactile_compute (self,y1,y2,H,W):
+        y = y2 - y1
+        min_idex = np.argmin(y)
+        min_dis = y[min_idex]
+        # min_dis_l2 = np.append(min_dis_l2, [min_dis], axis=0)
+        # min_dis_l2 = np.delete(min_dis_l2, 0, axis=0)
+        # min_dis = sorted(min_dis_l2)[len(min_dis_l2)//2]
+        # msg = Floats()
+        if min_dis < 10: # if min dix is clos use it as threshould
+            thres = min_dis+5
+        else:
+            thres = 10
 
+        contact_contour = y1 * (y < thres)
+        contact = sum(y < thres)  # the size of the contact region
+        # contact_l = np.append(contact_l, [contact], axis=0)
+        # contact_l = np.delete(contact_l, 0, axis=0)
+        # contact = sorted(contact_l)[len(contact_l)//2]
+
+        distance_uni = min_dis/H
+        contact_uni = contact/W
+        integrate = distance_uni - contact_uni
+        # input the contour of catheter sheath and the tissue contour, img H and W
+        return distance_uni,contact_uni,integrate,contact_contour
     def check_one_folder(self):
         # check the image type:
         imagelist = os.listdir(self.image_dir)
@@ -285,6 +315,9 @@ class Read_read_check_json_label(object):
 
                         contours_x = contours_x[:,0,:] # just remain one dimention of x
 
+                    distance_uni, contact_uni, integrate,contact_contour = self.tactile_compute(contours_y[0],contours_y[1],H,W)
+                    excel_vector = [distance_uni,contact_uni,integrate]
+                    self.excel_saver.append_save(excel_vector, self.save_excel_dir)
                     if self.display_flag:  # for loop for display out of previous loop in case of overlap of contours
                         for id in range(len(contours_exist[:,0])):
                             if 1 in contours_exist[id,:]:
@@ -297,7 +330,9 @@ class Read_read_check_json_label(object):
                                                                    int(clr_id))
                                 # img1 = self.draw_coordinates_color(img1, contours_x[id][
                                 #     np.where( contours_exist[id,:] == 1)], contours_y[id][np.where(contours_exist[id,:] == 1)], int(id/self.max_presence))
-
+                        img1 = self.draw_coordinates_color(img1, contours_x[0],
+                                                          contact_contour,
+                                                          int(clr_id)+1)
                     # save this result
                     self.img_num = a  # TODO: why assigning a to another variable?
 
@@ -318,6 +353,7 @@ class Read_read_check_json_label(object):
                         self.saver_train.append_new_name_contour(self.img_num, contours_x, contours_y,
                                                                      contours_exist,
                                                                      self.save_dir_train)
+
                     cv2.imshow('Image with highlighted contours', img1)
                     print(str(a))
                     cv2.waitKey(10)
