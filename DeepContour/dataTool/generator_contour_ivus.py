@@ -94,6 +94,56 @@ class Save_Contour_pkl(object):
         self = pickle.load(open(saved_path + 'contours.pkl', 'rb'), encoding='iso-8859-1')
         return self
 
+class Save_force_contour_pkl(object):
+    def __init__(self):
+        # set = Read_read_check_ROI_label()
+        # self.database_root = set.database_root
+        # check or create this path
+        # self.self_check_path_create(self.signal_data_path)
+        self.img_num = []
+        self.contoursx = []
+        self.contoursy = []
+        self.contours_exist = []
+        self.distance =[]
+        self.contact =[]
+        self.force =[]
+
+    def self_check_path_create(self, directory):
+        try:
+            os.stat(directory)
+        except:
+            os.mkdir(directory)
+            # add new step of all signals
+
+    def append_new_name_contour(self, number, this_contours_x, this_contours_y, this_contours_exist,this_distance,this_contact,this_force, dir):
+        # buffer
+        self.img_num.append(number)
+        self.contoursx.append(this_contours_x)
+        self.contoursy.append(this_contours_y)
+        self.contours_exist.append(this_contours_exist)
+        # Force related
+        self.distance.append(this_distance)
+        self.contact.append(this_contact)
+        self.force.append(this_force)
+
+
+        # TODO: check if this function is used anywhere else other than read_json
+
+        # save the data
+        save_path = dir
+
+        with open(save_path + 'ForceContours.pkl', 'wb') as f:
+            pickle.dump(self, f, pickle.HIGHEST_PROTOCOL)
+        pass
+
+    # read from file
+    def read_data(self, base_root):
+        saved_path = base_root
+        self = pickle.load(open(saved_path + 'ForceContours.pkl', 'rb'), encoding='iso-8859-1')
+        return self
+
+
+
 
 class Generator_Contour_sheath(object):
     def __init__(self):

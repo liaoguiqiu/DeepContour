@@ -65,6 +65,18 @@ folder structure should be like this:
 				----working dir/out/CEnet_trained/telecom
 
 
+Reorganize tactile data folder using the following scripts
+- Obtain force curve by processing camera images:
+https://github.com/liaoguiqiu/Digits-_detection/blob/main/code/Read_raw.py
+
+-Segment OCT image by :
+deploy.DeepAutoJson_jelly_contact
+
+-Reorganize segmnetation output by:
+dataTool.Dataformat
+
+-Synchronize OCT out tactile with camera digit output:
+dataTool.read_json_oct_force
 
 
 1.  Change de defination of working dir in [working_dir.py](https://gitlab.kuleuven.be/u0132260/atlas_collab_ivus/-/blob/main/DeepContour/working_dir_root.py)
