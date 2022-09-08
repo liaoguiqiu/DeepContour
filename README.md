@@ -16,6 +16,21 @@ The following steps are required in order to run CEnet:
         [pip install packages](https://packaging.python.org/en/latest/tutorials/installing-packages/)
         or (if with anaconda)
         [conda install packages](https://docs.anaconda.com/anaconda/user-guide/tasks/install-packages/)
+
+1.  Reorganize tactile data folder using the following scripts
+- Obtain force curve by processing camera images:
+https://github.com/liaoguiqiu/Digits-_detection/blob/main/code/Read_raw.py
+
+-Segment OCT image by :
+deploy.DeepAutoJson_jelly_contact
+
+-Reorganize segmnetation output by:
+dataTool.Dataformat
+
+-Synchronize OCT out tactile with camera digit output:
+dataTool.read_json_oct_force
+
+
 1.  Organize all the folder dir as follows( "working dir" as reference):
 	
 folder structure should be like this:
@@ -63,20 +78,6 @@ folder structure should be like this:
 		--working dir/out/ (store trained models,outputs)
 			---working dir/out/CEnet_trained
 				----working dir/out/CEnet_trained/telecom
-
-
-Reorganize tactile data folder using the following scripts
-- Obtain force curve by processing camera images:
-https://github.com/liaoguiqiu/Digits-_detection/blob/main/code/Read_raw.py
-
--Segment OCT image by :
-deploy.DeepAutoJson_jelly_contact
-
--Reorganize segmnetation output by:
-dataTool.Dataformat
-
--Synchronize OCT out tactile with camera digit output:
-dataTool.read_json_oct_force
 
 
 1.  Change de defination of working dir in [working_dir.py](https://gitlab.kuleuven.be/u0132260/atlas_collab_ivus/-/blob/main/DeepContour/working_dir_root.py)
