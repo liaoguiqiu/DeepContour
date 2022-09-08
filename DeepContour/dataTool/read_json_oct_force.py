@@ -1,4 +1,6 @@
 # THis read Json will compute the tactile by the way
+# When the data is saved to PKL, two values: force and tactile will be added
+# TODO: From the identification, the force read from the scale is about 3 Frames behind the OCT
 # Log of modification cre
 # this  is used  to read json files and transfer into a pkl file
 # Guiqiu modify this for spliting the data for train validation
