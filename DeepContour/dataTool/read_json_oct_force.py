@@ -24,7 +24,7 @@ Train_validation_devi = 3  # all data are equally devided by thsi number
 Test_fold = 0  # use the 0 st for training, the other for validation
 Delete_outsider_flag = False
 Consider_overlapping = False
-Process_all_folder_flag = False
+Process_all_folder_flag = True
 class Read_read_check_json_label(object):
     def __init__(self):
         # self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
