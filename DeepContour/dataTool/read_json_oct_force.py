@@ -43,7 +43,7 @@ class Read_read_check_json_label(object):
         # sub_folder = "capsule_sample/"
 
         # Tania's computer
-        sub_folder="Endoscopic Phantom stiffer + trans open -1 +stab/"
+        sub_folder="Endoscopic Phantom No trqns -110 0 alpha 995 +stab/"
 #>>>>>>> b8bb1d19b916df000a1ab2c21c7474cf6fa38b44:dataTool/read_json_ivus.py
         self.max_presence = 9
         self.image_dir = self.database_root + "img/" + sub_folder

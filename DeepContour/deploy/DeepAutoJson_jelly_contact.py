@@ -40,7 +40,7 @@ from working_dir_root import Dataset_root, config_root, Output_root
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-
+Process_all_folderFlag = True
 def resample(x, n, kind='nearest'):
     factor = float(x.size / n)
     f = interp1d(np.linspace(0, 1, x.size), x, kind)
@@ -172,7 +172,7 @@ def encode_as_coordinates_padding_exv(path, exv, h, w, H, W, rate, points=150):
 
 
 class Auto_json_label(object):
-    def __init__(self):
+    def __init__(self,subfolder= 'Endoscopic Phantom No trqns -110 0 alpha 995 +stab/'):
 
         # FLAGS
         self.display_flag = True
@@ -188,15 +188,16 @@ class Auto_json_label(object):
         pth_save_dir = Output_root + "CEnet_trained/"
 
         # folder to auto annotate
-        self.database_root = 'E:/database/Soft phantom synchronized experiment/raw/Endoscopic Phantom No trqns -110 0 alpha 995 +stab/'
+        self.database_root = 'E:/database/Soft phantom synchronized experiment/raw/'
+
 
         # self.all_dir = self.database_root + "pic_all/"
         # self.image_dir   = self.database_root + "img/"
-        self.image_dir = self.database_root + "oct_only/"
+        self.image_dir = self.database_root + subfolder + "oct_only/"
 
         # self.json_dir = self.database_root + "label/"  # for this class sthis dir ist save the modified json
 
-        self.json_save_dir = self.database_root + "label_generate/"
+        self.json_save_dir = self.database_root + subfolder+"label_generate/"
         try:
             os.stat(self.json_save_dir)
         except:
@@ -403,7 +404,7 @@ class Auto_json_label(object):
                     #                                                   attatch_rate=self.attatch_rate, points=40)
 
                     pred_coordinates, existence_flags = self.predict_contour(gray, Resample_size, Resample_size,
-                                                                             attatch_rate=self.attatch_rate, points=20)
+                                                                             attatch_rate=self.attatch_rate, points=256)
 
                     save_json_file = self.json_save_dir + a + ".json"
 
@@ -434,6 +435,17 @@ class Auto_json_label(object):
 
 
 if __name__ == '__main__':
-    labeler = Auto_json_label()
-    labeler.check_one_folder()
+    if Process_all_folderFlag == False:
+        labeler = Auto_json_label()
+        labeler.check_one_folder()
+    else:
+        labeler = Auto_json_label()
+        all_img_folder_list = os.listdir(labeler.database_root )
+        for sub_folder in all_img_folder_list:
+            this_sub = sub_folder + "/"
+
+            labeler = Auto_json_label(this_sub)
+            labeler.check_one_folder() # check this folder iteratively
+            print(this_sub + "---is done!")
+        pass
     # labeler.downsample_folder()
