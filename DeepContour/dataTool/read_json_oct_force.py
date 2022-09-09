@@ -24,7 +24,7 @@ Train_validation_devi = 3  # all data are equally devided by thsi number
 Test_fold = 0  # use the 0 st for training, the other for validation
 Delete_outsider_flag = False
 Consider_overlapping = False
-Process_all_folder_flag = True
+Process_all_folder_flag = False
 class Read_read_check_json_label(object):
     def __init__(self):
         # self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
@@ -43,7 +43,7 @@ class Read_read_check_json_label(object):
         # sub_folder = "capsule_sample/"
 
         # Tania's computer
-        sub_folder="Endoscopic Phantom stiffer + trans open -3 +stab/"
+        sub_folder="Endoscopic Phantom stiffer + trans open -1 +stab/"
 #>>>>>>> b8bb1d19b916df000a1ab2c21c7474cf6fa38b44:dataTool/read_json_ivus.py
         self.max_presence = 9
         self.image_dir = self.database_root + "img/" + sub_folder
