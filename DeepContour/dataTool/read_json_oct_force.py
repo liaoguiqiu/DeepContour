@@ -15,16 +15,16 @@ from zipfile import ZipFile
 import scipy.signal as signal
 import pandas as pd
 from collections import OrderedDict
-from dataTool.generator_contour_ivus import Save_Contour_pkl
+from dataTool.generator_contour_ivus import Save_Contour_pkl,Save_force_contour_pkl
 from working_dir_root import Dataset_root
 from databufferExcel import EXCEL_saver
-
+import csv
 Train_validation_split = True  # flag for devide the data
 Train_validation_devi = 3  # all data are equally devided by thsi number
 Test_fold = 0  # use the 0 st for training, the other for validation
 Delete_outsider_flag = False
 Consider_overlapping = False
-Process_all_folder_flag = False
+Process_all_folder_flag = True
 class Read_read_check_json_label(object):
     def __init__(self):
         # self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
@@ -34,7 +34,7 @@ class Read_read_check_json_label(object):
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL-BACKSIDE/"
         #self.database_root = "../../dataset/ivus/"
         self.database_root = Dataset_root + "label data/"
-        self.excel_saver = EXCEL_saver(3) # save the distance, contact region, and merged value
+        self.excel_saver = EXCEL_saver(4) # save the distance, contact region, and merged value,and force
         # self.database_root = "D:/Deep learning/dataset/label data/"
 
 #<<<<<<< HEAD:DeepContour/dataTool/read_json_ivus.py
@@ -52,6 +52,7 @@ class Read_read_check_json_label(object):
         self.save_dir_train = self.database_root + "seg label pkl train/" + sub_folder
         self.save_dir_test = self.database_root + "seg label pkl test/" + sub_folder
 
+        self.excel_force_dir = self.database_root + "excel_force_singnals/" + sub_folder
         self.save_excel_dir = self.database_root + "tactile_excel/" + sub_folder
 
         self.img_num = 0
@@ -68,9 +69,9 @@ class Read_read_check_json_label(object):
         # self.contours_x = []  # no predefines # predefine there are 4 contours
         # self.contours_y = []  # predefine there are 4 contours
 
-        self.saver = Save_Contour_pkl()
-        self.saver_train = Save_Contour_pkl()
-        self.saver_test = Save_Contour_pkl()
+        self.saver = Save_force_contour_pkl()
+        self.saver_train = Save_force_contour_pkl()
+        self.saver_test = Save_force_contour_pkl()
         self.display_flag = True
         # hard ecodeing the index number to ensure the index is correspondng tp a specificlly value
         self.labels_lists = {
@@ -152,7 +153,12 @@ class Read_read_check_json_label(object):
         # input the contour of catheter sheath and the tissue contour, img H and W
         return distance_uni,contact_uni,integrate,contact_contour
     def check_one_folder(self):
-        # check the image type:
+        #read the excel force signal
+        if not os.path.exists(self.excel_force_dir +'error_buff.csv'):
+            return
+        force_signal = pd.read_csv (self.excel_force_dir +'error_buff.csv')
+        filter_force = force_signal.values[:,3] # last column is the filtered force
+        index_shift = 4 # actually 3, but read from excel fist row is empty
         imagelist = os.listdir(self.image_dir)
         _, b_i = os.path.splitext(imagelist[0])  # first image of this folder
         within_folder_i = 0
@@ -160,6 +166,9 @@ class Read_read_check_json_label(object):
             # for i in os.listdir("E:\\estimagine\\vs_project\\PythonApplication_data_au\\pic\\"):
             # separate the name of json
             a, b = os.path.splitext(i)
+
+            img_index=int(a)
+
             # if it is a json it will have corresponding image
             if b == ".json":
                 # with ZipFile(self.image_dir, 'r') as zipObj:
@@ -170,7 +179,10 @@ class Read_read_check_json_label(object):
                 img1 = cv2.imread(img_path)
                 if img1 is None:
                     print('No img with path: {0}'.format(img_path))
+                elif (img_index + index_shift)>(len(filter_force)-1) or (img_index)<10:
+                    print('No  force with path: {0}'.format(img_path))
                 else:
+                    this_force = filter_force[img_index + index_shift]
                     json_dir = self.json_dir + a + b
                     with open(json_dir) as f_dir:
                         data = JSON.load(f_dir)
@@ -318,7 +330,7 @@ class Read_read_check_json_label(object):
                         contours_x = contours_x[:,0,:] # just remain one dimention of x
 
                     distance_uni, contact_uni, integrate,contact_contour = self.tactile_compute(contours_y[0],contours_y[1],H,W)
-                    excel_vector = [distance_uni,contact_uni,integrate]
+                    excel_vector = [distance_uni,contact_uni,integrate,this_force]
                     self.excel_saver.append_save(excel_vector, self.save_excel_dir)
                     if self.display_flag:  # for loop for display out of previous loop in case of overlap of contours
                         for id in range(len(contours_exist[:,0])):
@@ -339,21 +351,23 @@ class Read_read_check_json_label(object):
                     self.img_num = a  # TODO: why assigning a to another variable?
 
                     # TODO: check if append_new_name_contour is used anywhere else other than in this script
-                    self.saver.append_new_name_contour(self.img_num, contours_x, contours_y, contours_exist,
+                    self.saver.append_new_name_contour(self.img_num, contours_x, contours_y, contours_exist,distance_uni, contact_uni, this_force,
                                                        self.save_dir)
+                    # [distance_uni, contact_uni, integrate, this_force]
+                    # [distance_uni, contact_uni, this_force]
 
                     if Train_validation_split:
                         if within_folder_i % Train_validation_devi == Test_fold:
                             self.saver_test.append_new_name_contour(self.img_num, contours_x, contours_y,
-                                                                    contours_exist,
+                                                                    contours_exist,distance_uni, contact_uni, this_force,
                                                                     self.save_dir_test)
                         else:
                             self.saver_train.append_new_name_contour(self.img_num, contours_x, contours_y,
-                                                                     contours_exist,
+                                                                     contours_exist,distance_uni, contact_uni, this_force,
                                                                      self.save_dir_train)
                     else:
                         self.saver_train.append_new_name_contour(self.img_num, contours_x, contours_y,
-                                                                     contours_exist,
+                                                                     contours_exist,distance_uni, contact_uni, this_force,
                                                                      self.save_dir_train)
 
                     cv2.imshow('Image with highlighted contours', img1)
@@ -363,14 +377,17 @@ class Read_read_check_json_label(object):
 
 
 if __name__ == '__main__':
-    converter = Read_read_check_json_label()
+
     if (Process_all_folder_flag == False): # just  the default foler will be convert
+        converter = Read_read_check_json_label()
         converter.check_one_folder()  # convert json files into pkl files
     else:
+        converter = Read_read_check_json_label()
         all_img_folder_list = os.listdir(converter.database_root + "img/")
-        folder_num = len(all_img_folder_list)
+
         # create the buffer list
         for sub_folder in all_img_folder_list:
+            converter = Read_read_check_json_label() # initialized the converter every round
             this_sub = sub_folder + "/"
             # if(number_i==0):
             converter.image_dir = converter.database_root + "img/" + this_sub
@@ -378,12 +395,17 @@ if __name__ == '__main__':
             converter.save_dir = converter.database_root + "seg label pkl/" + this_sub
             converter.save_dir_train = converter.database_root + "seg label pkl train/" + this_sub
             converter.save_dir_test = converter.database_root + "seg label pkl test/" + this_sub
+
+            converter.excel_force_dir = converter.database_root + "excel_force_singnals/" + this_sub
+            converter.save_excel_dir = converter.database_root + "tactile_excel/" + this_sub
             if not os.path.exists(converter.save_dir):
                 os.makedirs(converter.save_dir)
             if not os.path.exists(converter.save_dir_train):
                 os.makedirs(converter.save_dir_train)
             if not os.path.exists(converter.save_dir_test):
                 os.makedirs(converter.save_dir_test)
+            if not os.path.exists(converter.save_excel_dir):
+                os.makedirs(converter.save_excel_dir)
             converter.img_num = 0
             converter.check_one_folder() # check this folder iteratively
             print( this_sub + "---is done!")
