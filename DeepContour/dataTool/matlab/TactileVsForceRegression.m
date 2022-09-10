@@ -1,7 +1,7 @@
 
-TrainingSet =['Endoscopic Phantom + trans open -1 +stab',
-            'Endoscopic Phantom + trans open -1 +stab',
-            'Endoscopic Phantom + trans open -1 +stab']
+TrainingSet =['Endoscopic nomoving Phantom  + trans open -1 +stab 4th',
+            'Endoscopic nomoving Phantom  + trans open -3 +stab 4th'
+            ]
 root = 'E:/DeeplearningData_jelly/dataset/label data/tactile_excel/'
 % Train_folder_num = length (TrainingSet(:,1));
 %  
