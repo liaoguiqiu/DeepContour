@@ -40,7 +40,7 @@ from working_dir_root import Dataset_root, config_root, Output_root
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-Process_all_folderFlag = True
+Process_all_folderFlag = False
 def resample(x, n, kind='nearest'):
     factor = float(x.size / n)
     f = interp1d(np.linspace(0, 1, x.size), x, kind)

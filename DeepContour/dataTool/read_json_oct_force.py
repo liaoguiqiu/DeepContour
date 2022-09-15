@@ -18,6 +18,8 @@ from collections import OrderedDict
 from dataTool.generator_contour_ivus import Save_Contour_pkl,Save_force_contour_pkl
 from working_dir_root import Dataset_root
 from databufferExcel import EXCEL_saver
+from deploy.basic_trans import Basic_oper
+
 import csv
 Train_validation_split = True  # flag for devide the data
 Train_validation_devi = 3  # all data are equally devided by thsi number
@@ -26,7 +28,7 @@ Delete_outsider_flag = False
 Consider_overlapping = False
 Process_all_folder_flag = True
 class Read_read_check_json_label(object):
-    def __init__(self):
+    def __init__(self,sub_folder="Endoscopic Phantom No trqns -110 0 alpha 995 +stab/"):
         # self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
         # self.roi_dir =  "../../OCT/beam_scanning/Data set/seg label/NORMAL-BACKSIDE-center/"
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL/"
@@ -43,7 +45,7 @@ class Read_read_check_json_label(object):
         # sub_folder = "capsule_sample/"
 
         # Tania's computer
-        sub_folder="Endoscopic Phantom No trqns -110 0 alpha 995 +stab/"
+
 #>>>>>>> b8bb1d19b916df000a1ab2c21c7474cf6fa38b44:dataTool/read_json_ivus.py
         self.max_presence = 9
         self.image_dir = self.database_root + "img/" + sub_folder
@@ -51,6 +53,9 @@ class Read_read_check_json_label(object):
         self.save_dir = self.database_root + "seg label pkl/" + sub_folder
         self.save_dir_train = self.database_root + "seg label pkl train/" + sub_folder
         self.save_dir_test = self.database_root + "seg label pkl test/" + sub_folder
+        self.save_dir_origin_cir = self.database_root + "img origin cir/" + sub_folder
+        self.save_dir_seg_rect = self.database_root + "img seg rect/" + sub_folder
+        self.save_dir_seg_cir = self.database_root + "img seg cir/" + sub_folder
 
         self.excel_force_dir = self.database_root + "excel_force_singnals/" + sub_folder
         self.save_excel_dir = self.database_root + "tactile_excel/" + sub_folder
@@ -65,6 +70,15 @@ class Read_read_check_json_label(object):
             os.makedirs(self.save_dir_test)
         if not os.path.exists(self.save_excel_dir):
             os.makedirs(self.save_excel_dir)
+
+        if not os.path.exists(self.save_dir_origin_cir):
+            os.makedirs(self.save_dir_origin_cir)
+        if not os.path.exists(self.save_dir_seg_rect):
+            os.makedirs(self.save_dir_seg_rect )
+        if not os.path.exists(self.save_dir_seg_cir):
+            os.makedirs(self.save_dir_seg_cir)
+
+
 
         # self.contours_x = []  # no predefines # predefine there are 4 contours
         # self.contours_y = []  # predefine there are 4 contours
@@ -141,7 +155,7 @@ class Read_read_check_json_label(object):
         else:
             thres = 10
 
-        contact_contour = y1 * (y < thres)
+        contact_contour = y2 * (y < thres)
         contact = sum(y < thres)  # the size of the contact region
         # contact_l = np.append(contact_l, [contact], axis=0)
         # contact_l = np.delete(contact_l, 0, axis=0)
@@ -332,6 +346,8 @@ class Read_read_check_json_label(object):
                     distance_uni, contact_uni, integrate,contact_contour = self.tactile_compute(contours_y[0],contours_y[1],H,W)
                     excel_vector = [distance_uni,contact_uni,integrate,this_force]
                     self.excel_saver.append_save(excel_vector, self.save_excel_dir)
+
+                    img_origin_cir = Basic_oper.tranfer_frome_rec2cir2(img1[0:H,:])
                     if self.display_flag:  # for loop for display out of previous loop in case of overlap of contours
                         for id in range(len(contours_exist[:,0])):
                             if 1 in contours_exist[id,:]:
@@ -347,6 +363,9 @@ class Read_read_check_json_label(object):
                         img1 = self.draw_coordinates_color(img1, contours_x[0],
                                                           contact_contour,
                                                           int(clr_id)+1)
+                    img_seg_rectan = img1
+                    img_seg_cir = Basic_oper.tranfer_frome_rec2cir2(img_seg_rectan[0:H,:])
+
                     # save this result
                     self.img_num = a  # TODO: why assigning a to another variable?
 
@@ -372,6 +391,12 @@ class Read_read_check_json_label(object):
 
                     cv2.imshow('Image with highlighted contours', img1)
                     print(str(a))
+                    cv2.imwrite(self.save_dir_origin_cir +  str(a) + ".jpg", img_origin_cir)
+                    cv2.imwrite(self.save_dir_seg_rect +  str(a) + ".jpg", img_seg_rectan)
+                    cv2.imwrite(self.save_dir_seg_cir +  str(a) + ".jpg", img_seg_cir)
+
+
+
                     cv2.waitKey(10)
                     within_folder_i += 1  # this index is used to determine the train validation split
 
@@ -387,26 +412,27 @@ if __name__ == '__main__':
 
         # create the buffer list
         for sub_folder in all_img_folder_list:
-            converter = Read_read_check_json_label() # initialized the converter every round
             this_sub = sub_folder + "/"
-            # if(number_i==0):
-            converter.image_dir = converter.database_root + "img/" + this_sub
-            converter.json_dir = converter.database_root + "label/" + this_sub
-            converter.save_dir = converter.database_root + "seg label pkl/" + this_sub
-            converter.save_dir_train = converter.database_root + "seg label pkl train/" + this_sub
-            converter.save_dir_test = converter.database_root + "seg label pkl test/" + this_sub
+            converter = Read_read_check_json_label(this_sub) # initialized the converter every round
 
-            converter.excel_force_dir = converter.database_root + "excel_force_singnals/" + this_sub
-            converter.save_excel_dir = converter.database_root + "tactile_excel/" + this_sub
-            if not os.path.exists(converter.save_dir):
-                os.makedirs(converter.save_dir)
-            if not os.path.exists(converter.save_dir_train):
-                os.makedirs(converter.save_dir_train)
-            if not os.path.exists(converter.save_dir_test):
-                os.makedirs(converter.save_dir_test)
-            if not os.path.exists(converter.save_excel_dir):
-                os.makedirs(converter.save_excel_dir)
-            converter.img_num = 0
+            # if(number_i==0):
+            # converter.image_dir = converter.database_root + "img/" + this_sub
+            # converter.json_dir = converter.database_root + "label/" + this_sub
+            # converter.save_dir = converter.database_root + "seg label pkl/" + this_sub
+            # converter.save_dir_train = converter.database_root + "seg label pkl train/" + this_sub
+            # converter.save_dir_test = converter.database_root + "seg label pkl test/" + this_sub
+            #
+            # converter.excel_force_dir = converter.database_root + "excel_force_singnals/" + this_sub
+            # converter.save_excel_dir = converter.database_root + "tactile_excel/" + this_sub
+            # if not os.path.exists(converter.save_dir):
+            #     os.makedirs(converter.save_dir)
+            # if not os.path.exists(converter.save_dir_train):
+            #     os.makedirs(converter.save_dir_train)
+            # if not os.path.exists(converter.save_dir_test):
+            #     os.makedirs(converter.save_dir_test)
+            # if not os.path.exists(converter.save_excel_dir):
+            #     os.makedirs(converter.save_excel_dir)
+            # converter.img_num = 0
             converter.check_one_folder() # check this folder iteratively
             print( this_sub + "---is done!")
 
