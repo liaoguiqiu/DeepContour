@@ -26,9 +26,9 @@ Train_validation_devi = 3  # all data are equally devided by thsi number
 Test_fold = 0  # use the 0 st for training, the other for validation
 Delete_outsider_flag = False
 Consider_overlapping = False
-Process_all_folder_flag = True
+Process_all_folder_flag = False
 class Read_read_check_json_label(object):
-    def __init__(self,sub_folder="Endoscopic Phantom No trqns -110 0 alpha 995 +stab/"):
+    def __init__(self,sub_folder="Endoscopic Phantom no trans open -3 +stab/"):
         # self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
         # self.roi_dir =  "../../OCT/beam_scanning/Data set/seg label/NORMAL-BACKSIDE-center/"
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL/"
@@ -56,9 +56,15 @@ class Read_read_check_json_label(object):
         self.save_dir_origin_cir = self.database_root + "img origin cir/" + sub_folder
         self.save_dir_seg_rect = self.database_root + "img seg rect/" + sub_folder
         self.save_dir_seg_cir = self.database_root + "img seg cir/" + sub_folder
+        self.save_dir_enface = self.database_root + "img enface/" + sub_folder
+        self.save_dir_crop_sheath = self.database_root + "img crop sheath/" + sub_folder
+
+
 
         self.excel_force_dir = self.database_root + "excel_force_singnals/" + sub_folder
         self.save_excel_dir = self.database_root + "tactile_excel/" + sub_folder
+
+
 
         self.img_num = 0
 
@@ -78,7 +84,10 @@ class Read_read_check_json_label(object):
         if not os.path.exists(self.save_dir_seg_cir):
             os.makedirs(self.save_dir_seg_cir)
 
-
+        if not os.path.exists(self.save_dir_enface):
+            os.makedirs(self.save_dir_enface)
+        if not os.path.exists(self.save_dir_crop_sheath):
+            os.makedirs(self.save_dir_crop_sheath)
 
         # self.contours_x = []  # no predefines # predefine there are 4 contours
         # self.contours_y = []  # predefine there are 4 contours
@@ -142,8 +151,27 @@ class Read_read_check_json_label(object):
             _img[int(dy) + 1, dx, :] = _img[int(dy) - 1, dx, :] = _img[int(dy), dx, :] = painter
 
         return _img
+    def crop_sheath_projection(self,crop_contour,img):
+
+        crop_contour = crop_contour.astype(int)
+        h, w= img.shape
+        for j in range(w):
+             img [0:crop_contour[j], j] = 0
+        return img
+    def enface_projection (self, within_folder_id, crop_img, max_in):
+
+        B_line = np.sum(crop_img,axis=0) /  crop_img.shape[0]
+        B_line = 250 * B_line / max_in *4
+        if within_folder_id == 0:
+            self. enface = [B_line]
+        else:
+            self. enface = np.append(self. enface, [B_line], axis=0)
+        self.enface = np.clip (self.enface,1 ,254)
     def tactile_compute (self,y1,y2,H,W):
         y = y2 - y1
+        shift_sheath = y
+        shift_sheath  = np.clip (shift_sheath, 0, 30)
+        crop_contour = y1 + shift_sheath # the crop contour that is ensure to crop out the sheath
         min_idex = np.argmin(y)
         min_dis = y[min_idex]
         # min_dis_l2 = np.append(min_dis_l2, [min_dis], axis=0)
@@ -157,6 +185,8 @@ class Read_read_check_json_label(object):
 
         contact_contour = y2 * (y < thres)
         contact = sum(y < thres)  # the size of the contact region
+
+
         # contact_l = np.append(contact_l, [contact], axis=0)
         # contact_l = np.delete(contact_l, 0, axis=0)
         # contact = sorted(contact_l)[len(contact_l)//2]
@@ -165,7 +195,7 @@ class Read_read_check_json_label(object):
         contact_uni = contact/W
         integrate = distance_uni - contact_uni
         # input the contour of catheter sheath and the tissue contour, img H and W
-        return distance_uni,contact_uni,integrate,contact_contour
+        return distance_uni,contact_uni,integrate,contact_contour,crop_contour
     def check_one_folder(self):
         #read the excel force signal
         if not os.path.exists(self.excel_force_dir +'error_buff.csv'):
@@ -310,8 +340,6 @@ class Read_read_check_json_label(object):
                             # # Check if contour is close to the image height and set existence contour to 0
                             # # to handle when there is no back-scattering but the manual label was put close to H
                             contours_exist[label_index_num][repeat] = contours_exist[label_index_num][repeat] * (contours_y[label_index_num][repeat] < (0.95*H ))
-
-
                             # # Check if contour is close to the image height and set existence contour to 0
                             # # to handle when there is no back-scattering but the manual label was put close to H
                             # contour_y_close_h = np.where(contours_y[current_label] >= 0.96 * H)[0]
@@ -343,7 +371,12 @@ class Read_read_check_json_label(object):
 
                         contours_x = contours_x[:,0,:] # just remain one dimention of x
 
-                    distance_uni, contact_uni, integrate,contact_contour = self.tactile_compute(contours_y[0],contours_y[1],H,W)
+                    distance_uni, contact_uni, integrate,contact_contour,crop_contour = self.tactile_compute(contours_y[0],contours_y[1],H,W)
+                    if within_folder_i <= 1:
+                        self.max_in = np.max(gray)
+                    img_sheath_crop = self.crop_sheath_projection(crop_contour,gray)
+                    self.enface_projection(within_folder_i, img_sheath_crop, self.max_in )
+
                     excel_vector = [distance_uni,contact_uni,integrate,this_force]
                     self.excel_saver.append_save(excel_vector, self.save_excel_dir)
 
@@ -394,7 +427,8 @@ class Read_read_check_json_label(object):
                     cv2.imwrite(self.save_dir_origin_cir +  str(a) + ".jpg", img_origin_cir)
                     cv2.imwrite(self.save_dir_seg_rect +  str(a) + ".jpg", img_seg_rectan)
                     cv2.imwrite(self.save_dir_seg_cir +  str(a) + ".jpg", img_seg_cir)
-
+                    cv2.imwrite(self.save_dir_crop_sheath +  str(a) + ".jpg", img_sheath_crop)
+                    cv2.imwrite(self.save_dir_enface +  'enface' + ".jpg",  self.enface.astype(np.uint8) )
 
 
                     cv2.waitKey(10)
