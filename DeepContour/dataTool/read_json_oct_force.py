@@ -27,8 +27,9 @@ Test_fold = 0  # use the 0 st for training, the other for validation
 Delete_outsider_flag = False
 Consider_overlapping = False
 Process_all_folder_flag = False
+Aligh_surface_flag = True
 class Read_read_check_json_label(object):
-    def __init__(self,sub_folder="Endoscopic Phantom no trans open -3 +stab/"):
+    def __init__(self,sub_folder="Endoscopic Phantom + trans -110 0 alpha 995 +stab 4th/"):
         # self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
         # self.roi_dir =  "../../OCT/beam_scanning/Data set/seg label/NORMAL-BACKSIDE-center/"
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL/"
@@ -167,6 +168,21 @@ class Read_read_check_json_label(object):
         else:
             self. enface = np.append(self. enface, [B_line], axis=0)
         self.enface = np.clip (self.enface,1 ,254)
+    def align_surface (self, id, tissue_contour, img):
+        threshold = (min(tissue_contour) + max(tissue_contour)) / 2.0
+        highpoints = np.argwhere(tissue_contour <= threshold)
+        middle = np.mean(highpoints)
+        if id <= 0:
+            self. ref_position = middle
+
+        # threshold = (min(tissue_contour)+max(tissue_contour))/2.0
+
+        shift = (self. ref_position  - middle)
+        # shift = 0.3*shift + 0.7*self.last_est
+        self.last_est = shift
+
+        New = np.roll(img, int(shift), axis=1)
+        return  New
     def tactile_compute (self,y1,y2,H,W):
         y = y2 - y1
         shift_sheath = y
@@ -374,7 +390,10 @@ class Read_read_check_json_label(object):
                     distance_uni, contact_uni, integrate,contact_contour,crop_contour = self.tactile_compute(contours_y[0],contours_y[1],H,W)
                     if within_folder_i <= 1:
                         self.max_in = np.max(gray)
+
                     img_sheath_crop = self.crop_sheath_projection(crop_contour,gray)
+                    if Aligh_surface_flag == True:
+                        img_sheath_crop = self.align_surface(within_folder_i,contours_y[1], img_sheath_crop)
                     self.enface_projection(within_folder_i, img_sheath_crop, self.max_in )
 
                     excel_vector = [distance_uni,contact_uni,integrate,this_force]
