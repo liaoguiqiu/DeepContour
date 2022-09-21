@@ -3,20 +3,7 @@ TrainingSet ={
 %     'Endoscopic nomoving Phantom  + trans open -1 +stab 4th'; 
 %     'Endoscopic nomoving Phantom  + trans open -3 +stab 4th';
 %     'Endoscopic nomoving Phantom  + trans open -5 +stab 4th';
-%     'Endoscopic nomoving Phantom + trans -90 0 alpha 995 +stab 4th';  
-% 'Endoscopic Phantom + trans open -5 +stab'
-% 'Endoscopic Phantom + trans -110 0 alpha 995 +stab 4th'
-% 'Endoscopic Phantom + trans -90 0 alpha 995 +stab 4th'
-% 'Endoscopic Phantom no trans open -1 +stab'
-% 'Endoscopic Phantom no trans open -3 +stab'
-% 'Endoscopic Phantom no trans open -5 +stab'
-% 'Endoscopic Phantom No trqns -110 0 alpha 995 +stab'
-% 'Endoscopic nomoving stiffer Phantom  + trans -90 0 alpha 995 +stab 4th'
-% 'Endoscopic nomoving stiffer Phantom  + trans open -5 +stab 4th'
-% 'Endoscopic Phantom stiffer no trans open -5 +stab'
-% 'Endoscopic Phantom stiffer no trans -110 0 alpha 995 +stab'
-% 'Endoscopic Phantom stiffer + trans open -5 +stab'
-'Endoscopic Phantom stiffer+ trans -110 0 alpha 995 +stab'
+    'Endoscopic nomoving Phantom + trans -90 0 alpha 995 +stab 4th';  
      };
 root = 'E:/DeeplearningData_jelly/dataset/label data/tactile_excel/';
 % Train_folder_num = length (TrainingSet(:,1));
@@ -42,18 +29,15 @@ Poor_quality_rate = sum(Poor_quality)/length (integrated);
 Middle_quality_rate = sum(Middel_quality)/length (integrated);
 Visible_rate = Good_quality_rate + Middle_quality_rate
 
-force_larger10 =  force_train>10;
-force_larger20 =  force_train>20;
-
-force_larger10rate = sum(force_larger10)/length (force_larger20)
-force_larger20rate = sum(force_larger20)/length (force_larger20)
+force_larger10 =  force_train<10;
+force_larger20 =  force_train<10;
 
 figure(2)
 imagesc (Quality_matrix);
 function [tactile,force,integrated] = DataLoader(root,folder_list )
-    cropflag = 0;
-    crop_start =465;
-    crop_end = 700;
+    cropflag = 1;
+    crop_start =330;
+    crop_end = 830;
     folder_num = length (folder_list);
     
     for k1 = 1: folder_num

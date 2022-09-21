@@ -28,8 +28,9 @@ Delete_outsider_flag = False
 Consider_overlapping = False
 Process_all_folder_flag = False
 Aligh_surface_flag = True
+Max_projection =True
 class Read_read_check_json_label(object):
-    def __init__(self,sub_folder="Endoscopic Phantom + trans -110 0 alpha 995 +stab 4th/"):
+    def __init__(self,sub_folder="Endoscopic Phantom stiffer+ trans -110 0 alpha 995 +stab/"):
         # self.image_dir   = "../../OCT/beam_scanning/Data set/pic/NORMAL-BACKSIDE-center/"
         # self.roi_dir =  "../../OCT/beam_scanning/Data set/seg label/NORMAL-BACKSIDE-center/"
         # self.database_root = "../../OCT/beam_scanning/Data Set Reorganize/NORMAL/"
@@ -160,21 +161,25 @@ class Read_read_check_json_label(object):
              img [0:crop_contour[j], j] = 0
         return img
     def enface_projection (self, within_folder_id, crop_img, max_in):
-
-        B_line = np.sum(crop_img,axis=0) /  crop_img.shape[0]
-        B_line = 250 * B_line / max_in *4
+        if Max_projection == False:
+            B_line = np.sum(crop_img,axis=0) /  crop_img.shape[0]
+            B_line = 250 * B_line / max_in *4
+        else:
+            B_line = np.max(crop_img, axis=0)
         if within_folder_id == 0:
             self. enface = [B_line]
         else:
             self. enface = np.append(self. enface, [B_line], axis=0)
         self.enface = np.clip (self.enface,1 ,254)
-    def align_surface (self, id, tissue_contour, img):
+    def align_surface (self, id, tissue_contour, img,fix_ref = False):
+        W= len(tissue_contour)
         threshold = (min(tissue_contour) + max(tissue_contour)) / 2.0
         highpoints = np.argwhere(tissue_contour <= threshold)
         middle = np.mean(highpoints)
         if id <= 0:
             self. ref_position = middle
-
+        if fix_ref ==True:
+            self.ref_position = 3*W/4
         # threshold = (min(tissue_contour)+max(tissue_contour))/2.0
 
         shift = (self. ref_position  - middle)
@@ -416,6 +421,8 @@ class Read_read_check_json_label(object):
                                                           contact_contour,
                                                           int(clr_id)+1)
                     img_seg_rectan = img1
+                    if Aligh_surface_flag == True:
+                        img_seg_rectan = self.align_surface(within_folder_i,contours_y[1], img_seg_rectan,fix_ref=True)
                     img_seg_cir = Basic_oper.tranfer_frome_rec2cir2(img_seg_rectan[0:H,:])
 
                     # save this result
